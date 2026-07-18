@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 //! Provider boundary, interoperability, invalid-input, and MLS flow tests.
 
 #![cfg(feature = "draft-ietf-mls-pq-ciphersuites")]

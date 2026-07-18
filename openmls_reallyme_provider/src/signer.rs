@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 use std::fmt;
 
 use openmls_traits::{

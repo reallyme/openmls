@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+
+SPDX-License-Identifier: MIT
+-->
+
 # ReallyMe OpenMLS Provider
 
 `openmls_reallyme_provider` is the narrow cryptography provider for ReallyMe's

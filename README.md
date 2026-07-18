@@ -1,107 +1,94 @@
-# OpenMLS
+<!--
+SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
 
-[![OpenMLS Chat][chat-image]][chat-link]
-[![OpenMLS List][list-image]][list-link]
+SPDX-License-Identifier: MIT
+-->
 
-[![Tests & Checks][gh-tests-image]](https://github.com/openmls/openmls/actions/workflows/tests.yml?branch=main)
-[![codecov][codecov-image]](https://codecov.io/gh/openmls/openmls)
+# ReallyMe OpenMLS Fork
 
-[![Docs][docs-release-badge]][docs-release-link]
-[![Book][book-release-badge]][book-release-link]
-![Rust Version][rustc-image]
+This repository is ReallyMe's narrow production fork of
+[OpenMLS](https://github.com/openmls/openmls), a Rust implementation of the
+Messaging Layer Security protocol specified in
+[RFC 9420](https://datatracker.ietf.org/doc/html/rfc9420).
 
-_OpenMLS_ is a Rust implementation of the Messaging Layer Security (MLS) protocol, as specified in [RFC 9420](https://datatracker.ietf.org/doc/html/rfc9420).
+The fork is intentionally small. ReallyMe-specific work should stay close to
+upstream OpenMLS and focus on provider integration, conformance, audited release
+discipline, and future ciphersuite work that is explicitly documented before it
+is enabled.
 
-<!-- The introduction of the book imports the lines up until here (line 13), excluding the headline and separately the lines below (starting from line 19, "Supported ciphersuite"). If the line numbers change here, please modify the imported lines in the book.-->
+## Current ReallyMe Surface
 
-It is a software library that can serve as a building block in applications that require end-to-end encryption of messages.
-It has a safe and easy-to-use interface that hides the complexity of the underlying cryptographic operations.
+The first ReallyMe-specific crate is `openmls_reallyme_provider`, an unpublished
+OpenMLS provider backed by `reallyme-crypto`.
 
-## Supported ciphersuites
+With `draft-ietf-mls-pq-ciphersuites` enabled, the provider advertises exactly
+one behavior-compatible MLS ciphersuite:
 
-- MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (MTI)
-- MLS_128_DHKEMP256_AES128GCM_SHA256_P256
-- MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519
+`MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519`
 
-## Supported platforms
+That provider routes X-Wing-768, ChaCha20-Poly1305, SHA-256, HMAC/HKDF,
+Ed25519, and operating-system randomness through `reallyme-crypto`. It does not
+change MLS serialization, group state, downgrade validation, or wire protocol
+behavior.
 
-OpenMLS is built and tested on the Github CI for the following rust targets.
+## Upstream Relationship
 
-- x86_64-unknown-linux-gnu
-- x86_64-pc-windows-msvc
-- aarch64-apple-darwin
-- aarch64-unknown-linux-gnu
+ReallyMe maintains this fork so it can carry a small number of production
+changes while continuing to rebase against upstream OpenMLS.
 
-### Unsupported, but built on CI
+- Upstream source: <https://github.com/openmls/openmls>
+- ReallyMe fork: <https://github.com/reallyme/openmls>
+- Original upstream README snapshot: [README.upstream.md](README.upstream.md)
+- Fork maintenance notes: [FORK.md](FORK.md)
 
-The Github CI also builds (but doesn't test) the following rust targets.
+OpenMLS modules that are not explicitly ReallyMe-specific should remain
+upstream-shaped. Prefer provider crates, feature gates, and documented private
+fork points over broad edits to shared protocol code.
 
-- i686-unknown-linux-gnu
-- i686-pc-windows-msvc
-- x86_64-apple-darwin
-- aarch64-linux-android
-- aarch64-apple-ios
-- wasm32-unknown-unknown
-- armv7-linux-androideabi
-- x86_64-linux-android
-- i686-linux-android
+## Production Status
 
-OpenMLS supports 32 bit platforms and above.
+The ReallyMe provider is the current production-oriented target for this fork.
+Future CNSA-oriented or ReallyMe-private MLS ciphersuites are not production
+surfaces until their identifiers, validation rules, downgrade policy, vectors,
+and audit boundary are documented and tested.
 
-## Cryptography Dependencies
+For security and release handling, see:
 
-OpenMLS does not implement its own cryptographic primitives. Instead, it relies
-on existing implementations of the cryptographic primitives used by MLS. There
-are two different cryptography providers implemented right now. But consumers
-can bring their own implementation. See [traits](https://github.com/openmls/openmls/tree/main/traits) for more
-details.
+- [SECURITY.md](SECURITY.md)
+- [RELEASE.md](RELEASE.md)
+- [AUDIT_SCOPE.md](AUDIT_SCOPE.md)
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
-## Features
-OpenMLS provides the following features
+## Development Gates
 
-- **extensions-draft**: enable features defined in [MLS extensions draft](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html)
-- **fork-resolution**: helper functionality for [resolving forks](https://book.openmls.tech/user_manual/fork-resolution.html).
-- **js**: enable compilation to wasm
+Before merging production changes, run the relevant focused tests and the
+workspace checks appropriate for the change:
 
-<details>
-<summary>Developer features</summary>
+```sh
+cargo fmt --check
+cargo check --workspace --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+```
 
-- **libcrux-provider**: enable the libcrux crypto provider dependency
-- **openmls_rust_crypto**: enable the rust crypto provider
-- **sqlite-provider**: enable the sqlite provider
-- **backtrace**: enable backtraces
-- **content-debug**: allow printing sensitive content of messages for debugging
-- **crypto-debug**: allow printing cryptographic key material for debugging
-- **test-util**: test utilities
+Crypto-provider changes must also pass the ReallyMe provider interoperability
+and MLS flow tests for the supported ciphersuite.
 
-</details>
+## License
 
-## Working on OpenMLS
+This repository contains upstream OpenMLS code and ReallyMe modifications to
+OpenMLS. Unless a file-level SPDX identifier states otherwise, the code in this
+repository is licensed under the MIT License. See [LICENSE](LICENSE).
 
-For more details when working on OpenMLS itself please see the [Developer.md].
+External repositories and dependencies are licensed under their respective
+licenses. In particular, `reallyme-crypto` is distributed separately under the
+Apache License, Version 2.0, and is not relicensed by this repository.
 
-## Maintenance & Support
+## Copyright And Trademarks
 
-OpenMLS is maintained and developed by [Phoenix R&D] and [CE Labs].
+Copyright © 2026 by ReallyMe LLC.
 
-## Acknowledgements
+OpenMLS is a trademark or trade name of the OpenMLS project and its respective
+owners. ReallyMe does not claim ownership of the OpenMLS name or marks.
 
-[Zulip] graciously provides the OpenMLS community with a "Zulip Cloud Standard" tier [Zulip instance][chat-link].
-
-[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg?style=for-the-badge&logo=zulip
-[chat-link]: https://openmls.zulipchat.com
-[list-image]: https://img.shields.io/badge/mailing-list-blue.svg?style=for-the-badge
-[list-link]: https://groups.google.com/u/0/g/openmls-dev
-[rustc-image]: https://img.shields.io/badge/rustc-1.91+-blue.svg?style=for-the-badge&logo=rust
-[docs-release-badge]: https://img.shields.io/badge/docs-release-blue.svg?style=for-the-badge
-[docs-release-link]: https://docs.rs/crate/openmls/latest
-[book-release-badge]: https://img.shields.io/badge/book-release-blue.svg?style=for-the-badge
-[book-release-link]: https://book.openmls.tech
-[drone-image]: https://img.shields.io/drone/build/openmls/openmls/main?label=ARM64%20Build%20Status&logo=drone&style=for-the-badge
-[codecov-image]: https://img.shields.io/codecov/c/github/openmls/openmls/main?logo=codecov&style=for-the-badge
-[gh-tests-image]: https://img.shields.io/github/actions/workflow/status/openmls/openmls/tests.yml?branch=main&style=for-the-badge&logo=github
-[gh-deploy-docs-image]: https://img.shields.io/github/workflow/status/openmls/openmls/Deploy%20Docs/main?label=Deploy%20Docs&logo=github&style=for-the-badge
-[Developer.md]: https://github.com/openmls/openmls/blob/main/Developer.md
-[Phoenix R&D]: https://phnx.im
-[CE Labs]: https://celabs.eu
-[Zulip]: https://zulip.com/
+ReallyMe<sup>®</sup> is a registered trademark of ReallyMe LLC.

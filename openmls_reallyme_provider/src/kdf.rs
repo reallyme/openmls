@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 use openmls_traits::types::CryptoError;
 use reallyme_crypto::{
     core::MacAlgorithm,

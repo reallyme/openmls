@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 //! End-to-end OpenMLS flow through the ReallyMe provider.
 
 #![cfg(feature = "mls-flow-tests")]

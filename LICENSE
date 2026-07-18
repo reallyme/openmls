@@ -1,4 +1,17 @@
+Licensing Notice
+
+This repository contains upstream OpenMLS code and ReallyMe modifications to
+OpenMLS. Unless a file-level SPDX identifier states otherwise, the code in this
+repository is licensed under the MIT License below.
+
+External repositories and dependencies are licensed under their respective
+licenses. In particular, reallyme-crypto is distributed separately under the
+Apache License, Version 2.0, and is not relicensed by this repository.
+
+MIT License
+
 Copyright (c) 2020 OpenMLS Authors
+Copyright (c) 2026 ReallyMe LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 #[cfg(feature = "targeted-messages-draft")]
 use openmls_traits::crypto::HpkeSealPskResolvedAadError;
 use openmls_traits::{

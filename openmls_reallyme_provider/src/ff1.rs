@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 //! FF1-AES128 adapter required only by the virtual-clients draft.
 //!
 //! FF1 is an auxiliary draft primitive and is not part of the ReallyMe X-Wing

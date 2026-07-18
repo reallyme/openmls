@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+#
+# SPDX-License-Identifier: MIT
+
 [package]
 name = "openmls_reallyme_provider"
 version = "0.1.0"
@@ -5,7 +9,7 @@ edition = "2021"
 rust-version = "1.96"
 publish = false
 description = "ReallyMe Crypto provider for OpenMLS."
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/reallyme/openmls"
 readme = "README.md"
 

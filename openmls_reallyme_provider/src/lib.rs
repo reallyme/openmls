@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC. All rights reserved
+//
+// SPDX-License-Identifier: MIT
+
 //! ReallyMe Crypto provider for OpenMLS.
 //!
 //! This crate deliberately supports a narrow cryptographic surface. With the
