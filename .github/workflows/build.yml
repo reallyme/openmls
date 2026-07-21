@@ -90,4 +90,7 @@ jobs:
       # keep in sync with rust-version in Cargo.toml
       - uses: dtolnay/rust-toolchain@1.91.0
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --locked --workspace --all-features --all-targets
+      # The fork-only ReallyMe provider deliberately tracks reallyme-crypto's
+      # newer MSRV in its own workflow. Keep the upstream workspace MSRV lane
+      # at 1.91 so upstream merges do not force an unrelated baseline bump.
+      - run: cargo check --locked --workspace --all-features --all-targets --exclude openmls_reallyme_provider

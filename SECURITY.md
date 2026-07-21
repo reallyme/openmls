@@ -15,8 +15,8 @@ drift as security-relevant.
 
 Please report vulnerabilities privately before public disclosure. Use
 [GitHub private vulnerability reporting](https://github.com/reallyme/openmls/security/advisories/new)
-for this repository when available; otherwise use the security contact listed
-for ReallyMe LLC.
+for this repository when available; otherwise email **security@really.me**. Do
+not open a public issue for a suspected vulnerability.
 
 Include the affected crate, version or commit, ciphersuite, platform, and the
 smallest reproduction you can share without exposing private keys, plaintext
@@ -38,8 +38,10 @@ In scope:
 Out of scope:
 
 - cryptographic primitive implementation bugs that belong to the separate
-  `reallyme-crypto` repository;
-- unsupported platform combinations that fail closed with typed errors;
+  `reallyme-crypto` repository and should be reported through its private
+  security channel;
+- unsupported feature or platform combinations that cannot produce a release
+  artifact;
 - experimental ciphersuites or draft features that are not documented as
   production surfaces.
 

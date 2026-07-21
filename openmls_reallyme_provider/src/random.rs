@@ -10,6 +10,7 @@ use reallyme_crypto::{
     csprng::{OsSecureRandom, SecureRandom},
 };
 use thiserror::Error;
+use zeroize::Zeroizing;
 
 use crate::CryptoProvider;
 
@@ -58,13 +59,20 @@ impl OpenMlsRand for CryptoProvider {
     type Error = RandError;
 
     fn random_array<const N: usize>(&self) -> Result<[u8; N], Self::Error> {
-        let mut output = [0u8; N];
-        Self::fill_random(&mut output)?;
-        Ok(output)
+        // The OS API is expected to fill atomically, but its error contract
+        // does not guarantee that a future backend cannot partially write.
+        // Keep the destination zeroizing until success so an error never
+        // leaves partially generated key material in a dead stack buffer.
+        let mut output = Zeroizing::new([0u8; N]);
+        Self::fill_random(&mut *output)?;
+        Ok(core::mem::replace(&mut *output, [0u8; N]))
     }
 
     fn random_vec(&self, length: usize) -> Result<Vec<u8>, Self::Error> {
-        let mut output = Vec::new();
+        // As with fixed-size output, the wrapper scrubs any partially filled
+        // allocation on entropy-source failure. On success the allocation is
+        // transferred directly into the trait-required `Vec` without copying.
+        let mut output = Zeroizing::new(Vec::new());
         output
             .try_reserve_exact(length)
             .map_err(|_| RandError::Generation {
@@ -72,6 +80,6 @@ impl OpenMlsRand for CryptoProvider {
             })?;
         output.resize(length, 0);
         Self::fill_random(&mut output)?;
-        Ok(output)
+        Ok(core::mem::take(&mut *output))
     }
 }

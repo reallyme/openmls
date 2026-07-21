@@ -23,6 +23,7 @@ mod random;
 mod signer;
 
 pub use crypto::CryptoProvider;
+#[cfg(feature = "test-utils")]
 pub use openmls_memory_storage::{MemoryStorage, MemoryStorageError};
 pub use random::{RandError, RandErrorReason};
 pub use signer::{ReallyMeSigner, ReallyMeSuiteSigner};
@@ -32,7 +33,7 @@ pub use signer::{ReallyMeSigner, ReallyMeSuiteSigner};
 /// Storage is generic so production applications can supply their audited,
 /// persistent storage implementation without another provider adapter.
 #[derive(Debug)]
-pub struct Provider<S = MemoryStorage> {
+pub struct Provider<S> {
     crypto: CryptoProvider,
     storage: S,
 }
@@ -52,17 +53,18 @@ impl<S> Provider<S> {
     }
 }
 
+#[cfg(feature = "test-utils")]
 impl Provider<MemoryStorage> {
     /// Construct the behavior-compatible in-memory provider.
     ///
-    /// Production applications should generally inject durable storage with
-    /// [`Provider::new`]. This constructor exists for tests and for parity with
-    /// the providers already shipped by OpenMLS.
+    /// This constructor is intentionally available only with `test-utils` so a
+    /// production build cannot silently select ephemeral MLS state storage.
     pub fn in_memory() -> Self {
         Self::new(MemoryStorage::default())
     }
 }
 
+#[cfg(feature = "test-utils")]
 impl Default for Provider<MemoryStorage> {
     fn default() -> Self {
         Self::in_memory()

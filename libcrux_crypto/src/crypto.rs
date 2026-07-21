@@ -62,25 +62,18 @@ impl CryptoProvider {
 
 impl OpenMlsCrypto for CryptoProvider {
     fn supports(&self, ciphersuite: Ciphersuite) -> Result<(), CryptoError> {
-        match ciphersuite.aead_algorithm() {
-            AeadType::ChaCha20Poly1305 | AeadType::Aes128Gcm | AeadType::Aes256Gcm => Ok(()),
-        }?;
-
-        match ciphersuite.signature_algorithm() {
-            SignatureScheme::ED25519 => Ok(()),
+        // Component-by-component checks are insufficient: several draft
+        // suites share supported AEAD, hash, and signature algorithms while
+        // requiring a KEM or KDF this provider cannot execute. Keep this
+        // allowlist identical to `supported_ciphersuites()` so a successful
+        // capability check cannot fail later during HPKE setup.
+        match ciphersuite {
+            Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519
+            | Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519 => Ok(()),
+            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+            Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519 => Ok(()),
             _ => Err(CryptoError::UnsupportedCiphersuite),
-        }?;
-
-        match ciphersuite.hash_algorithm() {
-            HashType::Sha2_256 | HashType::Sha2_384 | HashType::Sha2_512 => Ok(()),
-        }?;
-
-        match ciphersuite.hpke_aead_algorithm() {
-            HpkeAeadType::ChaCha20Poly1305 => Ok(()),
-            _ => Err(CryptoError::UnsupportedCiphersuite),
-        }?;
-
-        Ok(())
+        }
     }
 
     fn supported_ciphersuites(&self) -> Vec<Ciphersuite> {
@@ -564,5 +557,28 @@ fn aead_alg(alg_type: AeadType) -> libcrux_aead::Aead {
         AeadType::ChaCha20Poly1305 => libcrux_aead::Aead::ChaCha20Poly1305,
         AeadType::Aes128Gcm => libcrux_aead::Aead::AesGcm128,
         AeadType::Aes256Gcm => libcrux_aead::Aead::AesGcm256,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn supports_matches_the_advertised_ciphersuite_set() -> Result<(), CryptoError> {
+        let crypto = CryptoProvider::new()?;
+        for ciphersuite in crypto.supported_ciphersuites() {
+            assert_eq!(crypto.supports(ciphersuite), Ok(()));
+        }
+        assert_eq!(
+            crypto.supports(Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256),
+            Err(CryptoError::UnsupportedCiphersuite)
+        );
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        assert_eq!(
+            crypto.supports(Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519),
+            Err(CryptoError::UnsupportedCiphersuite)
+        );
+        Ok(())
     }
 }

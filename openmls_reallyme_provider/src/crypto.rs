@@ -172,14 +172,12 @@ impl OpenMlsCrypto for CryptoProvider {
     fn supported_ciphersuites(&self) -> Vec<Ciphersuite> {
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         {
-            vec![Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519]
-                .into_iter()
-                .chain([
-                    Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
-                    Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
-                    Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384,
-                ])
-                .collect()
+            vec![
+                Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519,
+                Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
+                Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
+                Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384,
+            ]
         }
         #[cfg(not(feature = "draft-ietf-mls-pq-ciphersuites"))]
         {
@@ -198,7 +196,7 @@ impl OpenMlsCrypto for CryptoProvider {
             HashType::Sha2_384 => kdf::hkdf_extract_sha384(salt, ikm),
             HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        .map(|secret| secret.to_vec().into())
+        .map(|mut secret| core::mem::take(&mut *secret).into())
     }
 
     fn hmac(
@@ -212,7 +210,7 @@ impl OpenMlsCrypto for CryptoProvider {
             HashType::Sha2_384 => kdf::hmac_sha384(key, message),
             HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        .map(|tag| tag.to_vec().into())
+        .map(|mut tag| core::mem::take(&mut *tag).into())
     }
 
     fn hkdf_expand(
@@ -227,7 +225,7 @@ impl OpenMlsCrypto for CryptoProvider {
             HashType::Sha2_384 => kdf::hkdf_expand_sha384(prk, info, okm_len),
             HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        .map(|secret| secret.to_vec().into())
+        .map(|mut secret| core::mem::take(&mut *secret).into())
     }
 
     fn hash(&self, hash_type: HashType, data: &[u8]) -> Result<Vec<u8>, CryptoError> {
@@ -274,19 +272,22 @@ impl OpenMlsCrypto for CryptoProvider {
     ) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
         match algorithm {
             SignatureScheme::ED25519 => {
-                let (private, public) = generate_signature_keypair()?;
-                Ok((private.as_slice().to_vec(), public))
+                let (mut private, public) = generate_signature_keypair()?;
+                // The OpenMLS trait requires an owned `Vec`. Move the backend
+                // allocation instead of leaving a second secret-key copy for
+                // the zeroizing source wrapper to clean up.
+                Ok((core::mem::take(&mut *private), public))
             }
             SignatureScheme::ECDSA_SECP384R1_SHA384 => {
-                let (public, private) =
+                let (public, mut private) =
                     generate_p384_keypair().map_err(|_| CryptoError::InsufficientRandomness)?;
                 let public = decompress_p384_public_key(&public)
                     .map_err(|_| CryptoError::InvalidPublicKey)?;
-                Ok((private.as_slice().to_vec(), public))
+                Ok((core::mem::take(&mut *private), public))
             }
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             SignatureScheme::MLDSA87 => generate_ml_dsa_87_keypair()
-                .map(|(public, private)| (private.as_slice().to_vec(), public))
+                .map(|(public, mut private)| (core::mem::take(&mut *private), public))
                 .map_err(|_| CryptoError::InsufficientRandomness),
             _ => Err(CryptoError::UnsupportedSignatureScheme),
         }

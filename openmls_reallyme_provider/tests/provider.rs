@@ -13,6 +13,11 @@ use openmls_traits::{
     random::OpenMlsRand as _,
     types::{AeadType, Ciphersuite, CryptoError, SignatureScheme},
 };
+use reallyme_crypto::hpke::{
+    derive_keypair_from_ikm_raw, open_base_raw, seal_base_derand_raw, HpkeDerandSealRequest,
+    HpkeOpenRequest, HpkeSuite, HPKE_AEAD_NONCE_LEN, HPKE_MLKEM1024P384_SHAKE256_AES256GCM,
+    HPKE_MLKEM1024_SHAKE256_AES256GCM,
+};
 
 const CIPHERSUITE: Ciphersuite = Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519;
 const PURE_MLKEM1024_P384_SUITE: Ciphersuite = Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384;
@@ -80,7 +85,7 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
 
     let aes_key = [0x33; 32];
     let aes_nonce = [0x44; 12];
-    let aes_ciphertext = crypto
+    let mut aes_ciphertext = crypto
         .aead_encrypt(AeadType::Aes256Gcm, &aes_key, plaintext, &aes_nonce, aad)
         .expect("valid ReallyMe AES-256-GCM encryption should succeed");
     assert_eq!(
@@ -94,6 +99,31 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
             )
             .expect("valid ReallyMe AES-256-GCM decryption should succeed"),
         plaintext
+    );
+    if let Some(last) = aes_ciphertext.last_mut() {
+        *last ^= 0x80;
+    }
+    assert_eq!(
+        crypto.aead_decrypt(
+            AeadType::Aes256Gcm,
+            &aes_key,
+            &aes_ciphertext,
+            &aes_nonce,
+            aad
+        ),
+        Err(CryptoError::AeadDecryptionError)
+    );
+    assert_eq!(
+        crypto.aead_encrypt(AeadType::Aes256Gcm, &[0u8; 31], plaintext, &aes_nonce, aad),
+        Err(CryptoError::InvalidLength)
+    );
+    assert_eq!(
+        crypto.aead_encrypt(AeadType::Aes256Gcm, &aes_key, plaintext, &[0u8; 11], aad),
+        Err(CryptoError::InvalidLength)
+    );
+    assert_eq!(
+        crypto.aead_decrypt(AeadType::Aes256Gcm, &aes_key, &[0u8; 15], &aes_nonce, aad),
+        Err(CryptoError::InvalidLength)
     );
 
     let (secret, public) = crypto
@@ -132,6 +162,24 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
             &p384_signature,
         )
         .expect("valid ReallyMe P-384 verification should succeed");
+    assert_eq!(
+        crypto.verify_signature(
+            SignatureScheme::ECDSA_SECP384R1_SHA384,
+            b"tampered",
+            &p384_public,
+            &p384_signature,
+        ),
+        Err(CryptoError::InvalidSignature)
+    );
+    assert_eq!(
+        crypto.verify_signature(
+            SignatureScheme::ECDSA_SECP384R1_SHA384,
+            plaintext,
+            &[0u8; 96],
+            &p384_signature,
+        ),
+        Err(CryptoError::InvalidPublicKey)
+    );
 
     let (ml_dsa_secret, ml_dsa_public) = crypto
         .signature_key_gen(SignatureScheme::MLDSA87)
@@ -147,6 +195,24 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
             &ml_dsa_signature,
         )
         .expect("valid ReallyMe ML-DSA-87 verification should succeed");
+    assert_eq!(
+        crypto.verify_signature(
+            SignatureScheme::MLDSA87,
+            b"tampered",
+            &ml_dsa_public,
+            &ml_dsa_signature,
+        ),
+        Err(CryptoError::InvalidSignature)
+    );
+    assert_eq!(
+        crypto.verify_signature(
+            SignatureScheme::MLDSA87,
+            plaintext,
+            &[0u8; 1],
+            &ml_dsa_signature,
+        ),
+        Err(CryptoError::InvalidPublicKey)
+    );
 }
 
 #[test]
@@ -206,6 +272,157 @@ fn reallyme_hpke_round_trips_new_mlkem1024_suites() {
             .expect("ReallyMe receiver export should succeed");
         assert_eq!(&*sender_export, &*receiver_export);
     }
+}
+
+#[test]
+fn hpke_freshness_and_bound_input_tampering_fail_closed_for_new_suites() {
+    let crypto = CryptoProvider;
+    let info = b"reallyme-pq-hpke-info";
+    let aad = b"reallyme-pq-hpke-aad";
+    let plaintext = b"reallyme-pq-hpke-payload";
+
+    for ciphersuite in [
+        PURE_MLKEM1024_P384_SUITE,
+        CNSA_MLKEM1024_MLDSA87_SUITE,
+        HYBRID_MLKEM1024_P384_SUITE,
+    ] {
+        let keypair = crypto
+            .derive_hpke_keypair(
+                ciphersuite.hpke_config(),
+                b"reallyme-openmls-mlkem1024-tamper-key-material",
+            )
+            .expect("valid deterministic key derivation should succeed");
+        let first = crypto
+            .hpke_seal(
+                ciphersuite.hpke_config(),
+                &keypair.public,
+                info,
+                aad,
+                plaintext,
+            )
+            .expect("first seal should succeed");
+        let second = crypto
+            .hpke_seal(
+                ciphersuite.hpke_config(),
+                &keypair.public,
+                info,
+                aad,
+                plaintext,
+            )
+            .expect("second seal should succeed");
+        assert_ne!(first.kem_output, second.kem_output);
+        assert_ne!(first.ciphertext, second.ciphertext);
+
+        let mut changed_encapsulation = first.clone();
+        let mut changed_encapsulation_bytes: Vec<u8> = changed_encapsulation.kem_output.into();
+        if let Some(first_byte) = changed_encapsulation_bytes.first_mut() {
+            *first_byte ^= 0x80;
+        }
+        changed_encapsulation.kem_output = changed_encapsulation_bytes.into();
+        assert!(crypto
+            .hpke_open(
+                ciphersuite.hpke_config(),
+                &changed_encapsulation,
+                &keypair.private,
+                info,
+                aad,
+            )
+            .is_err());
+
+        let mut changed_ciphertext = first.clone();
+        let mut changed_ciphertext_bytes: Vec<u8> = changed_ciphertext.ciphertext.into();
+        if let Some(last_byte) = changed_ciphertext_bytes.last_mut() {
+            *last_byte ^= 0x80;
+        }
+        changed_ciphertext.ciphertext = changed_ciphertext_bytes.into();
+        assert_eq!(
+            crypto.hpke_open(
+                ciphersuite.hpke_config(),
+                &changed_ciphertext,
+                &keypair.private,
+                info,
+                aad,
+            ),
+            Err(CryptoError::HpkeDecryptionError)
+        );
+        assert!(crypto
+            .hpke_open(
+                ciphersuite.hpke_config(),
+                &first,
+                &keypair.private,
+                b"changed info",
+                aad,
+            )
+            .is_err());
+        assert_eq!(
+            crypto.hpke_open(
+                ciphersuite.hpke_config(),
+                &first,
+                &keypair.private,
+                info,
+                b"changed aad",
+            ),
+            Err(CryptoError::HpkeDecryptionError)
+        );
+        assert!(matches!(
+            crypto.derive_hpke_keypair(ciphersuite.hpke_config(), &[]),
+            Err(CryptoError::InvalidLength)
+        ));
+    }
+}
+
+#[test]
+fn copied_reallyme_vectors_are_deterministic_for_openmls_profiles() {
+    const IKM: &[u8] = b"fixed OpenMLS vector IKM";
+    const INFO: &[u8] = b"fixed OpenMLS vector info";
+    const AAD: &[u8] = b"fixed OpenMLS vector aad";
+    const PLAINTEXT: &[u8] = b"fixed OpenMLS vector plaintext";
+
+    assert_eq!(HPKE_AEAD_NONCE_LEN, 12);
+    for suite in [
+        HPKE_MLKEM1024_SHAKE256_AES256GCM,
+        HPKE_MLKEM1024P384_SHAKE256_AES256GCM,
+    ] {
+        assert_deterministic_reallyme_vector(suite, IKM, INFO, AAD, PLAINTEXT);
+    }
+}
+
+fn assert_deterministic_reallyme_vector(
+    suite: HpkeSuite,
+    ikm: &[u8],
+    info: &[u8],
+    aad: &[u8],
+    plaintext: &[u8],
+) {
+    let recipient = derive_keypair_from_ikm_raw(suite, ikm)
+        .expect("deterministic recipient derivation should succeed");
+    let randomness_length = suite
+        .encapsulation_randomness_len()
+        .expect("reviewed OpenMLS profile should expose its randomness length");
+    let randomness = vec![0x39; randomness_length];
+    let request = HpkeDerandSealRequest {
+        suite,
+        recipient_public_key: &recipient.public_key,
+        encapsulation_randomness: &randomness,
+        info,
+        aad,
+        plaintext,
+    };
+    let first = seal_base_derand_raw(&request).expect("first deterministic seal should succeed");
+    let second = seal_base_derand_raw(&request).expect("second deterministic seal should succeed");
+    assert_eq!(first.encapsulated_key, second.encapsulated_key);
+    assert_eq!(first.ciphertext, second.ciphertext);
+
+    let opened = open_base_raw(&HpkeOpenRequest {
+        suite,
+        encapsulated_key: &first.encapsulated_key,
+        recipient_private_key: recipient.private_key(),
+        info,
+        aad,
+        ciphertext: &first.ciphertext,
+    })
+    .expect("deterministic vector should open");
+    assert_eq!(opened.plaintext.as_slice(), plaintext);
 }
 
 #[test]

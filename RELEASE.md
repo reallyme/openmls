@@ -16,16 +16,51 @@ or tag, the ReallyMe fork commit, the supported ciphersuites, and the exact
 Run the relevant workspace gates before a release candidate:
 
 ```sh
-cargo fmt --check
-cargo check --workspace --all-features
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features
+cargo fmt --all -- --check
+cargo check --workspace --all-features --locked
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+CARGO_PROFILE_TEST_DEBUG=0 cargo test --workspace --all-features --locked -- --test-threads=1
+cargo deny --manifest-path openmls_reallyme_provider/Cargo.toml \
+  --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
+  --locked check --exclude-dev --deny warnings
+cargo build -p openmls_reallyme_provider --release --features draft-ietf-mls-pq-ciphersuites --locked
+cargo test -p openmls_reallyme_provider --all-features --locked
 ```
 
 Provider releases must also run focused ReallyMe interoperability and MLS flow
 tests for each supported ciphersuite. Dependency upgrades that affect crypto,
 serialization, storage, credentials, or FFI require release notes explaining the
 review and test evidence.
+
+The release build deliberately omits `test-utils`: this proves that the normal
+provider surface requires caller-supplied storage and does not expose the
+dev-only deterministic vector API.
+
+The deny gate is rooted at the maximal deployable ReallyMe provider graph and
+excludes development dependencies. `--all-features` is intentionally not used
+for this command because it activates the `interop-tests`, `mls-flow-tests`, and
+`test-utils` adapters that cannot enter a production artifact. Those adapters
+remain covered by the compile, Clippy, and test gates. Upstream's optional
+interop client currently pulls `mls_interop_proto` from a Git repository whose
+crate manifest declares no license; that tool is not part of the production
+artifact and must not be redistributed unless its upstream licensing is
+clarified. Do not weaken the provider graph's license gate to accommodate it.
+
+The workspace test gate is intentionally single-threaded. The all-provider,
+all-ciphersuite test binary can exceed ordinary CI memory limits when Rust runs
+many large post-quantum test cases concurrently; a SIGKILL is not a passing
+security or correctness result.
+
+## Draft-suite deployment gate
+
+The standards-tracking PQ suites remain an IETF draft, and none of the four
+ReallyMe provider suites has a final IANA MLS ciphersuite assignment. Three
+compatibility values are currently unassigned in the MLS registry; the hybrid
+suite uses a private-use codepoint. They may be enabled only in a closed
+deployment where every peer pins the same reviewed fork revision and suite
+registry. Do not advertise these codepoints on an open federation or claim
+final IANA interoperability. Re-review the wire identifiers and vectors before
+replacing any provisional value with an IANA assignment.
 
 ## Dependency Pinning
 

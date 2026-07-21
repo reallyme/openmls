@@ -200,6 +200,7 @@ fn book_operations() {
                 2000, // maximum_forward_distance
             ))
             .with_group_context_extensions(extensions) // NB: the builder method returns a Result
+            .ciphersuite(ciphersuite)
             .use_ratchet_tree_extension(true)
             .build(
                 alice_provider,

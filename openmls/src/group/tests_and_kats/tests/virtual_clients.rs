@@ -1,4 +1,4 @@
-use openmls_traits::{types::Ciphersuite, OpenMlsProvider};
+use openmls_traits::{crypto::OpenMlsCrypto as _, types::Ciphersuite, OpenMlsProvider};
 use tls_codec::Serialize as _;
 
 use crate::{
@@ -16,16 +16,20 @@ use crate::{
     prelude::{Capabilities, LeafNode, LeafNodeParameters},
 };
 
-/// Emulation group suite. Its KDF hash (SHA-384) differs from the
+/// Emulation group suite. Its KDF hash (SHA-512) differs from the
 /// higher-level group's (SHA-256), so a derivation that skips the import into
 /// the target ciphersuite, or imports under the wrong one, silently produces
 /// different bytes rather than erroring out -- which is exactly what these
 /// tests detect.
-const EMULATION_CIPHERSUITE: Ciphersuite =
-    Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519;
+const EMULATION_CIPHERSUITE: Ciphersuite = Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87;
 /// Higher-level group suite: the target ciphersuite of the derivations under
 /// test.
 const GROUP_CIPHERSUITE: Ciphersuite = Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519;
+
+fn supports_test_ciphersuites(provider: &impl OpenMlsProvider) -> bool {
+    provider.crypto().supports(EMULATION_CIPHERSUITE).is_ok()
+        && provider.crypto().supports(GROUP_CIPHERSUITE).is_ok()
+}
 
 /// `Capabilities` declaring `AppDataDictionary` support.
 fn vc_capabilities() -> Capabilities {
@@ -84,6 +88,9 @@ fn registered_emulation_epoch<P: OpenMlsProvider>(provider: &P) -> EpochId {
 #[openmls_test::openmls_test]
 fn register_vc_emulation_epoch_is_idempotent_per_epoch() {
     let provider = &Provider::default();
+    if !supports_test_ciphersuites(provider) {
+        return;
+    }
     let (credential, signer) = new_credential(
         provider,
         b"Emulator",
@@ -137,6 +144,9 @@ fn register_vc_emulation_epoch_is_idempotent_per_epoch() {
 #[openmls_test::openmls_test]
 fn vc_commit_path_material_imports_into_group_ciphersuite() {
     let provider = &Provider::default();
+    if !supports_test_ciphersuites(provider) {
+        return;
+    }
     let bob_provider = &Provider::default();
 
     let epoch_id = registered_emulation_epoch(provider);
@@ -252,6 +262,9 @@ fn vc_commit_path_material_imports_into_group_ciphersuite() {
 #[openmls_test::openmls_test]
 fn vc_group_creation_leaf_key_imports_into_group_ciphersuite() {
     let provider = &Provider::default();
+    if !supports_test_ciphersuites(provider) {
+        return;
+    }
 
     let epoch_id = registered_emulation_epoch(provider);
 

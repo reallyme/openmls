@@ -1,0 +1,43 @@
+# Duplicate versions increase the number of implementations and patch levels
+# that must be audited. Keep the one unavoidable exception exact and documented
+# so it becomes a hard failure as soon as any other duplicate enters the
+# deployable provider graph.
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+highlight = "all"
+skip = [
+    # The optional upstream virtual-client FF1 adapter is still built on the
+    # RustCrypto 0.8 generation, while ReallyMe Crypto uses the audited 0.9
+    # generation. These five entries are the exact transitive split; do not
+    # broaden this exception to the rest of the dependency tree.
+    { crate = "aes@0.8.4", reason = "Required by the optional upstream FF1 virtual-client adapter" },
+    { crate = "cipher@0.4.4", reason = "Required by aes 0.8.4 in the optional FF1 adapter" },
+    { crate = "cpufeatures@0.2.17", reason = "Required by aes 0.8.4 in the optional FF1 adapter" },
+    { crate = "crypto-common@0.1.7", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
+    { crate = "inout@0.1.4", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
+    # ml-kem 0.3.2 still uses sha3 0.11 while hpke 0.13 and ReallyMe Crypto use
+    # sha3 0.12. Remove this exception when the upstream dependency converges.
+    { crate = "sha3@0.11.0", reason = "Unavoidable transitive version split in the reviewed PQ dependency graph" },
+]
+
+# Keep this list exact for the deployable provider graph so a dependency cannot
+# introduce a new license class unnoticed.
+[licenses]
+allow = [
+    "Apache-2.0",
+    "BSD-1-Clause",
+    "BSD-3-Clause",
+    "MIT",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.8
+
+# The deployable provider graph may use crates.io and local workspace paths,
+# but it must not acquire code from an unreviewed registry or Git repository.
+# Git dependencies needed by upstream-only tools remain outside this
+# provider-rooted release gate.
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

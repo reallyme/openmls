@@ -1,0 +1,80 @@
+name: ReallyMe provider
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_PROFILE_TEST_DEBUG: "0"
+
+jobs:
+  provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # Pin actions by immutable commit. The trailing version comments make
+      # intentional upgrades reviewable without restoring mutable tags.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # reallyme-crypto 0.3.1 declares Rust 1.96 as its MSRV. Keeping this
+      # fork-only lane separate minimizes conflicts when pulling upstream.
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c
+        with:
+          toolchain: 1.96.0
+          components: clippy,rustfmt
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check production feature surface
+        run: cargo check -p openmls_reallyme_provider --features draft-ietf-mls-pq-ciphersuites --locked
+      - name: Assert production dependency isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if cargo tree -p openmls_reallyme_provider \
+            --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
+            --locked \
+            --edges normal,build,features \
+            | grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v'; then
+            echo "::error::test-only dependency leaked into the production provider graph"
+            exit 1
+          fi
+      - name: Check every ReallyMe feature on the native target
+        run: cargo check -p openmls_reallyme_provider --all-targets --all-features --locked
+      - name: Check the production WASM feature surface
+        run: cargo check -p openmls_reallyme_provider --target wasm32-unknown-unknown --no-default-features --features wasm,draft-ietf-mls-pq-ciphersuites --locked
+      - name: Clippy with warnings denied
+        run: cargo clippy -p openmls_reallyme_provider --all-targets --all-features --locked -- -D warnings
+      - name: Provider conformance, interoperability, and MLS flows
+        run: cargo test -p openmls_reallyme_provider --all-features --locked -- --test-threads=1
+
+  advisories:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: EmbarkStudios/cargo-deny-action@b66acf5e9fe20f8aba065be86778a8a4c846f902 # v2
+        with:
+          manifest-path: openmls_reallyme_provider/Cargo.toml
+          command: check
+          # Audit the maximal deployable graph. `--all-features` would also
+          # activate the deliberately non-deployable test adapters.
+          arguments: >-
+            --features
+            extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft
+            --locked --exclude-dev --deny warnings

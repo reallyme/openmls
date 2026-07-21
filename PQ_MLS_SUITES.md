@@ -24,7 +24,8 @@ deployed X-Wing-768 compatibility suite
 
 1. `MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87`
 
-   This is the CNSA-facing pure post-quantum target. The draft maps it to:
+   This is the CNSA-oriented pure post-quantum candidate profile. It is not a
+   validated or evaluated product boundary. The draft maps it to:
 
    - HPKE KEM: `0x0042` ML-KEM-1024
    - HPKE KDF: `0x0011` SHAKE256, `Nh = 64`
@@ -66,10 +67,24 @@ PQ draft:
 - map the draft SHA-384 ML-KEM suites to SHAKE256 HPKE KDF values;
 - advertise only the ReallyMe-reviewed suites from the ReallyMe provider.
 
-The hybrid MLKEM1024-P384 MLS ciphersuite still uses a ReallyMe private
-provisional codepoint (`0xF043`) because the draft marks that MLS ciphersuite
-identifier as TBD. Replace it with the final IANA assignment when the draft
-stabilizes.
+None of the four ReallyMe provider suites has a final IANA MLS ciphersuite
+assignment. Their current wire values are:
+
+- X-Wing compatibility suite: `0x004D` (currently unassigned by IANA);
+- ML-KEM-1024 with P-384 signatures: `0x0042` (currently unassigned by IANA);
+- ML-KEM-1024 with ML-DSA-87: `0x0907` (currently unassigned by IANA);
+- hybrid ML-KEM-1024/P-384: `0xF043` (IANA private-use range).
+
+The first three values are inherited compatibility points from the upstream
+draft implementation. The hybrid value was deliberately selected from the MLS
+private-use range because the draft still marks it as TBD5. Replace these values
+only through a versioned group-state migration after final assignments exist.
+
+These provisional values are a production interoperability boundary, not
+merely a documentation detail. They must only be deployed in a closed
+federation whose members pin the same fork revision. They must not be offered
+to arbitrary public MLS peers, persisted without a registry-version migration
+plan, or described as IANA-assigned suites.
 
 ## `reallyme-crypto` Boundary
 
@@ -120,6 +135,31 @@ Provider and MLS tests should continue proving:
   pairs;
 - epoch transitions change encryption secrets;
 - tampered `enc`, AAD, info, ciphertext, or tag fails closed.
+
+The ReallyMe provider copies the deterministic test inputs used by ReallyMe
+Crypto through a dev-only dependency. Deterministic KEM entry points are not a
+downstream-selectable provider feature and cannot be enabled by a normal
+production dependency. These are regression vectors from the pinned backend,
+not independent third-party conformance evidence. X-Wing retains a separate
+cross-provider libcrux interoperability test.
+
+## Production checklist
+
+Before deploying a reviewed revision:
+
+- enable only the suite feature set required by the deployment;
+- construct group and key-package capabilities with
+  `Capabilities::for_provider(provider.crypto())` so leaves advertise only
+  executable ReallyMe suites;
+- use caller-supplied durable storage; the in-memory provider API is compiled
+  only under `test-utils`;
+- pin this repository revision and the exact `reallyme-crypto` release;
+- run the release gates in [RELEASE.md](RELEASE.md), including all four MLS
+  flows and the advisory check;
+- record the provisional suite registry version alongside persisted group
+  state and define the migration behavior for final IANA codepoints;
+- keep credentials, authorization, backup/key wrapping, telemetry redaction,
+  and compromise recovery in the application security boundary.
 
 ## Out Of Scope
 

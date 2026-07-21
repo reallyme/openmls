@@ -22,3 +22,9 @@ ReallyMe Crypto is an external dependency of the ReallyMe provider.
 
 External repositories and dependencies keep their own licenses. This repository
 does not relicense linked dependencies or separately distributed packages.
+
+The upstream-only `interop_client` development tool fetches
+`mls_interop_proto` from the MLS working-group implementations repository. That
+crate currently has no license expression or license file in its pinned source.
+It is excluded from the ReallyMe production artifact and must not be
+redistributed until its upstream licensing is clarified.

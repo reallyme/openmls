@@ -15,7 +15,7 @@ readme = "README.md"
 
 [dependencies]
 openmls_traits = { workspace = true }
-openmls_memory_storage = { workspace = true }
+openmls_memory_storage = { workspace = true, optional = true }
 openmls = { workspace = true, optional = true }
 openmls_libcrux_crypto = { workspace = true, optional = true }
 # Pin the audited provider surface exactly; upgrades require rerunning the MLS
@@ -48,16 +48,16 @@ fpe = { version = "0.6", optional = true }
 default = ["native"]
 native = ["reallyme-crypto/native"]
 wasm = ["reallyme-crypto/wasm"]
-test-utils = ["openmls_memory_storage/test-utils"]
+test-utils = ["dep:openmls_memory_storage", "openmls_memory_storage/test-utils"]
 extensions-draft = [
     "openmls_traits/extensions-draft",
-    "openmls_memory_storage/extensions-draft",
+    "openmls_memory_storage?/extensions-draft",
     "openmls?/extensions-draft",
     "openmls_libcrux_crypto?/extensions-draft",
 ]
 draft-ietf-mls-pq-ciphersuites = [
     "openmls_traits/draft-ietf-mls-pq-ciphersuites",
-    "openmls_memory_storage/draft-ietf-mls-pq-ciphersuites",
+    "openmls_memory_storage?/draft-ietf-mls-pq-ciphersuites",
     "openmls?/draft-ietf-mls-pq-ciphersuites",
     "openmls_libcrux_crypto?/draft-ietf-mls-pq-ciphersuites",
 ]
@@ -69,7 +69,7 @@ targeted-messages-draft = [
 virtual-clients-draft = [
     "extensions-draft",
     "openmls_traits/virtual-clients-draft",
-    "openmls_memory_storage/virtual-clients-draft",
+    "openmls_memory_storage?/virtual-clients-draft",
     "openmls?/virtual-clients-draft",
     "openmls?/virtual-clients-draft-test-dependencies",
     "openmls_libcrux_crypto?/virtual-clients-draft",
@@ -83,11 +83,18 @@ interop-tests = [
 mls-flow-tests = [
     "dep:openmls",
     "openmls/test-utils",
+    "test-utils",
     "draft-ietf-mls-pq-ciphersuites",
 ]
 
 [dev-dependencies]
 hex = "0.4"
+# Deterministic KEM entry points must never be a downstream-selectable provider
+# feature. Feature unification exposes them only while compiling this crate's
+# test targets; normal consumers retain the production ReallyMe API surface.
+reallyme-crypto = { version = "=0.3.1", default-features = false, features = [
+    "test-vectors",
+] }
 
 [lints.rust]
 unsafe_code = "deny"

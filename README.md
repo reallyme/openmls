@@ -21,20 +21,23 @@ is enabled.
 The first ReallyMe-specific crate is `openmls_reallyme_provider`, an unpublished
 OpenMLS provider backed by `reallyme-crypto`.
 
-With `draft-ietf-mls-pq-ciphersuites` enabled, the provider advertises exactly
-one behavior-compatible MLS ciphersuite:
+With `draft-ietf-mls-pq-ciphersuites` enabled, the provider advertises the four
+suites documented in [PQ_MLS_SUITES.md](PQ_MLS_SUITES.md): the deployed X-Wing
+compatibility suite plus the selected ML-KEM-1024, ML-DSA-87, P-384, and hybrid
+ML-KEM-1024/P-384 profiles.
 
-`MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519`
-
-That provider routes X-Wing-768, ChaCha20-Poly1305, SHA-256, HMAC/HKDF,
-Ed25519, and operating-system randomness through `reallyme-crypto`. It does not
-change MLS serialization, group state, downgrade validation, or wire protocol
-behavior.
+The provider delegates HPKE, AEAD, hashes, signatures, and operating-system
+randomness to the exactly pinned `reallyme-crypto` release. It does not change
+MLS group-state serialization or the MLS state machine. None of the four
+provider suite identifiers has a final IANA MLS assignment; the hybrid suite
+uses a private-use value while the compatibility values occupy currently
+unassigned values. All four are therefore restricted to closed,
+revision-pinned deployments.
 
 ## Upstream Relationship
 
 ReallyMe maintains this fork so it can carry a small number of production
-changes while continuing to rebase against upstream OpenMLS.
+changes while continuing to merge updates from upstream OpenMLS.
 
 - Upstream source: <https://github.com/openmls/openmls>
 - ReallyMe fork: <https://github.com/reallyme/openmls>
@@ -48,9 +51,9 @@ fork points over broad edits to shared protocol code.
 ## Production Status
 
 The ReallyMe provider is the current production-oriented target for this fork.
-Future CNSA-oriented or ReallyMe-private MLS ciphersuites are not production
-surfaces until their identifiers, validation rules, downgrade policy, vectors,
-and audit boundary are documented and tested.
+Draft suites are not suitable for arbitrary public federation; deployments must
+follow the feature, revision-pinning, durable-storage, and provisional-codepoint
+requirements in [PQ_MLS_SUITES.md](PQ_MLS_SUITES.md).
 
 For security and release handling, see:
 
@@ -65,15 +68,10 @@ For security and release handling, see:
 Before merging production changes, run the relevant focused tests and the
 workspace checks appropriate for the change:
 
-```sh
-cargo fmt --check
-cargo check --workspace --all-features
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features
-```
-
-Crypto-provider changes must also pass the ReallyMe provider interoperability
-and MLS flow tests for the supported ciphersuite.
+The authoritative locked commands, including the memory-safe exhaustive-test
+configuration and provider interoperability matrix, are in
+[RELEASE.md](RELEASE.md). Crypto-provider changes must pass every advertised
+ciphersuite flow, not only the X-Wing compatibility suite.
 
 ## License
 

@@ -74,7 +74,7 @@ pub(crate) fn open(
     aad: &[u8],
 ) -> Result<Vec<u8>, CryptoError> {
     let suite = reallyme_suite(&config)?;
-    let output = reallyme_hpke::open_base_raw(&HpkeOpenRequest {
+    let mut output = reallyme_hpke::open_base_raw(&HpkeOpenRequest {
         suite,
         encapsulated_key: input.kem_output.as_slice(),
         recipient_private_key: secret_key,
@@ -83,19 +83,31 @@ pub(crate) fn open(
         ciphertext: input.ciphertext.as_slice(),
     })
     .map_err(map_open_error)?;
-    Ok(output.plaintext.to_vec())
+    // OpenMLS currently returns plaintext as a plain `Vec<u8>`. Transfer the
+    // zeroizing backend allocation instead of copying sensitive bytes into a
+    // second allocation that would be dropped without being cleared here.
+    Ok(core::mem::take(&mut *output.plaintext))
 }
 
 pub(crate) fn derive_keypair(config: HpkeConfig, ikm: &[u8]) -> Result<HpkeKeyPair, CryptoError> {
+    if ikm.is_empty() {
+        return Err(CryptoError::InvalidLength);
+    }
     let suite = reallyme_suite(&config)?;
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
     if suite == HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305 {
+        // ReallyMe Crypto 0.3.1 delegates X-Wing DeriveKeyPair to an HPKE
+        // implementation using the older labeled-derive construction. The
+        // OpenMLS X-Wing suite is draft-06, which specifies raw
+        // SHAKE256(ikm, 32). Normalize here until the pinned backend exposes a
+        // draft-06 derivation entry point; the libcrux interoperability test
+        // prevents this compatibility boundary from drifting silently.
         let mut seed = Zeroizing::new([0u8; X_WING_SECRET_KEY_LEN]);
         reallyme_crypto_sha3::shake256_expand(ikm, &mut *seed);
-        let (public, private) = generate_x_wing_768_keypair_derand(&*seed)
+        let (public, mut private) = generate_x_wing_768_keypair_derand(&*seed)
             .map_err(|_| CryptoError::CryptoLibraryError)?;
         return Ok(HpkeKeyPair {
-            private: private.as_slice().into(),
+            private: core::mem::take(&mut *private).into(),
             public,
         });
     }
@@ -116,7 +128,7 @@ pub(crate) fn sender_export(
 ) -> Result<(KemOutput, ExporterSecret), CryptoError> {
     validate_export_length(output_length)?;
     let suite = reallyme_suite(&config)?;
-    let output = reallyme_hpke::sender_export_raw(&HpkeSenderExportRequest {
+    let mut output = reallyme_hpke::sender_export_raw(&HpkeSenderExportRequest {
         suite,
         recipient_public_key: public_key,
         info,
@@ -124,8 +136,12 @@ pub(crate) fn sender_export(
         output_length,
     })
     .map_err(map_sender_export_error)?;
-    let exporter_secret = output.exporter_secret().to_vec();
-    Ok((output.encapsulated_key, exporter_secret.into()))
+    let encapsulated_key = core::mem::take(&mut output.encapsulated_key);
+    let mut exporter_secret = output.into_exporter_secret();
+    Ok((
+        encapsulated_key,
+        core::mem::take(&mut *exporter_secret).into(),
+    ))
 }
 
 pub(crate) fn receiver_export(
@@ -147,6 +163,8 @@ pub(crate) fn receiver_export(
         output_length,
     })
     .map_err(map_receiver_export_error)?;
+    // `HpkeExporterSecret` intentionally exposes only a borrow. The copy is
+    // immediately moved into OpenMLS' zeroizing `SecretVLBytes` wrapper.
     Ok(output.as_slice().to_vec().into())
 }
 
@@ -175,10 +193,10 @@ pub(crate) fn open_psk(
         psk,
         psk_id,
     )?;
-    let output = context
+    let mut output = context
         .open(aad, input.ciphertext.as_slice())
         .map_err(map_open_psk_error)?;
-    Ok(output.plaintext.to_vec())
+    Ok(core::mem::take(&mut *output.plaintext))
 }
 
 #[cfg(feature = "targeted-messages-draft")]

@@ -185,6 +185,36 @@ mod tests {
     }
 
     #[test]
+    fn sha384_independent_known_answer() -> Result<(), CryptoError> {
+        // This vector is independently generated from the RFC 5869 test-case
+        // inputs with HMAC-SHA384. Keeping it here catches accidental routing
+        // to SHA-256 while exercising the exact MLS SHA-384 adapter path.
+        let ikm = [0x0b; 22];
+        let salt = hex::decode("000102030405060708090a0b0c")
+            .map_err(|_| CryptoError::CryptoLibraryError)?;
+        let info =
+            hex::decode("f0f1f2f3f4f5f6f7f8f9").map_err(|_| CryptoError::CryptoLibraryError)?;
+        let expected_prk = hex::decode(
+            "704b39990779ce1dc548052c7dc39f30\
+             3570dd13fb39f7acc564680bef80e8de\
+             c70ee9a7e1f3e293ef68eceb072a5ade",
+        )
+        .map_err(|_| CryptoError::CryptoLibraryError)?;
+        let expected_okm = hex::decode(
+            "9b5097a86038b805309076a44b3a9f38\
+             063e25b516dcbf369f394cfab43685f7\
+             48b6457763e4f0204fc5",
+        )
+        .map_err(|_| CryptoError::CryptoLibraryError)?;
+
+        let prk = hkdf_extract_sha384(&salt, &ikm)?;
+        assert_eq!(&*prk, &expected_prk);
+        let okm = hkdf_expand_sha384(&prk, &info, 42)?;
+        assert_eq!(&*okm, &expected_okm);
+        Ok(())
+    }
+
+    #[test]
     fn expand_rejects_oversized_output() -> Result<(), CryptoError> {
         let maximum = SHA256_OUTPUT_LENGTH
             .checked_mul(HKDF_MAX_BLOCKS)
