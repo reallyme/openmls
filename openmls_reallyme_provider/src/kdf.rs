@@ -154,23 +154,6 @@ fn hkdf_expand(
     Ok(output)
 }
 
-#[cfg(feature = "targeted-messages-draft")]
-pub(crate) fn checked_concat(parts: &[&[u8]]) -> Result<Zeroizing<Vec<u8>>, CryptoError> {
-    let capacity = parts.iter().try_fold(0usize, |total, part| {
-        total
-            .checked_add(part.len())
-            .ok_or(CryptoError::TooMuchData)
-    })?;
-    let mut output = Zeroizing::new(Vec::new());
-    output
-        .try_reserve_exact(capacity)
-        .map_err(|_| CryptoError::TooMuchData)?;
-    for part in parts {
-        output.extend_from_slice(part);
-    }
-    Ok(output)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

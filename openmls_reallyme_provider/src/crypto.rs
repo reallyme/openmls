@@ -442,7 +442,7 @@ impl OpenMlsCrypto for CryptoProvider {
     where
         F: FnOnce(&[u8]) -> Result<Vec<u8>, E>,
     {
-        let (kem_output, context) = hpke::setup_sender_psk(config, pk_r, info, psk, psk_id)
+        let (kem_output, mut context) = hpke::setup_sender_psk(config, pk_r, info, psk, psk_id)
             .map_err(HpkeSealPskResolvedAadError::CryptoError)?;
         let aad = aad_builder(&kem_output).map_err(HpkeSealPskResolvedAadError::AadBuildError)?;
         let ciphertext = context.seal(&aad, ptxt).map_err(|_| {

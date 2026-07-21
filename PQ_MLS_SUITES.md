@@ -75,7 +75,7 @@ stabilizes.
 
 The OpenMLS provider delegates base HPKE, exporter operations, AES-256-GCM,
 SHA-384, P-384 signatures, and ML-DSA-87 signatures to `reallyme-crypto`.
-ReallyMe Crypto v0.3.0 exposes the required suite components:
+ReallyMe Crypto v0.3.1 exposes the required suite components:
 
 Required HPKE support:
 
@@ -86,13 +86,12 @@ Required HPKE support:
 - base-mode seal/open;
 - deterministic key derivation from IKM;
 - sender/receiver exporter APIs;
+- split PSK sender/receiver setup for OpenMLS targeted-message AAD binding;
 - deterministic test-vector mode for KEM randomness.
 
-The remaining local bridge is targeted-message PSK setup for the deployed
-X-Wing suite. OpenMLS builds the authenticated data from the encapsulated key,
-so it needs split sender setup: create the KEM output first, build AAD, then
-seal. Once `reallyme-crypto` exposes split PSK sender/receiver contexts, this
-local bridge should be removed.
+OpenMLS builds targeted-message authenticated data from the encapsulated key, so
+the provider uses ReallyMe Crypto's split PSK sender setup: create the KEM
+output first, build AAD, then seal with the returned opaque context.
 
 Required MLS primitive support:
 
