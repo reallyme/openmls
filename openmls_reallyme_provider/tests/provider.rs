@@ -15,12 +15,27 @@ use openmls_traits::{
 };
 
 const CIPHERSUITE: Ciphersuite = Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519;
+const PURE_MLKEM1024_P384_SUITE: Ciphersuite = Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384;
+const CNSA_MLKEM1024_MLDSA87_SUITE: Ciphersuite =
+    Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87;
+const HYBRID_MLKEM1024_P384_SUITE: Ciphersuite =
+    Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384;
 
 #[test]
-fn advertises_only_the_reallyme_target_suite() {
+fn advertises_only_reallyme_reviewed_suites() {
     let crypto = CryptoProvider;
-    assert_eq!(crypto.supported_ciphersuites(), vec![CIPHERSUITE]);
-    assert_eq!(crypto.supports(CIPHERSUITE), Ok(()));
+    assert_eq!(
+        crypto.supported_ciphersuites(),
+        vec![
+            CIPHERSUITE,
+            PURE_MLKEM1024_P384_SUITE,
+            CNSA_MLKEM1024_MLDSA87_SUITE,
+            HYBRID_MLKEM1024_P384_SUITE,
+        ]
+    );
+    for ciphersuite in crypto.supported_ciphersuites() {
+        assert_eq!(crypto.supports(ciphersuite), Ok(()));
+    }
     assert_eq!(
         crypto.supports(Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519),
         Err(CryptoError::UnsupportedCiphersuite)
@@ -63,6 +78,24 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
         Err(CryptoError::InvalidLength)
     );
 
+    let aes_key = [0x33; 32];
+    let aes_nonce = [0x44; 12];
+    let aes_ciphertext = crypto
+        .aead_encrypt(AeadType::Aes256Gcm, &aes_key, plaintext, &aes_nonce, aad)
+        .expect("valid ReallyMe AES-256-GCM encryption should succeed");
+    assert_eq!(
+        crypto
+            .aead_decrypt(
+                AeadType::Aes256Gcm,
+                &aes_key,
+                &aes_ciphertext,
+                &aes_nonce,
+                aad
+            )
+            .expect("valid ReallyMe AES-256-GCM decryption should succeed"),
+        plaintext
+    );
+
     let (secret, public) = crypto
         .signature_key_gen(SignatureScheme::ED25519)
         .expect("valid ReallyMe Ed25519 key generation should succeed");
@@ -80,6 +113,99 @@ fn primitive_boundaries_reject_invalid_and_tampered_input() {
         crypto.verify_signature(SignatureScheme::ED25519, plaintext, &[0u8; 31], &signature),
         Err(CryptoError::InvalidPublicKey)
     );
+
+    let (p384_secret, p384_public) = crypto
+        .signature_key_gen(SignatureScheme::ECDSA_SECP384R1_SHA384)
+        .expect("valid ReallyMe P-384 key generation should succeed");
+    let p384_signature = crypto
+        .sign(
+            SignatureScheme::ECDSA_SECP384R1_SHA384,
+            plaintext,
+            &p384_secret,
+        )
+        .expect("valid ReallyMe P-384 signing should succeed");
+    crypto
+        .verify_signature(
+            SignatureScheme::ECDSA_SECP384R1_SHA384,
+            plaintext,
+            &p384_public,
+            &p384_signature,
+        )
+        .expect("valid ReallyMe P-384 verification should succeed");
+
+    let (ml_dsa_secret, ml_dsa_public) = crypto
+        .signature_key_gen(SignatureScheme::MLDSA87)
+        .expect("valid ReallyMe ML-DSA-87 key generation should succeed");
+    let ml_dsa_signature = crypto
+        .sign(SignatureScheme::MLDSA87, plaintext, &ml_dsa_secret)
+        .expect("valid ReallyMe ML-DSA-87 signing should succeed");
+    crypto
+        .verify_signature(
+            SignatureScheme::MLDSA87,
+            plaintext,
+            &ml_dsa_public,
+            &ml_dsa_signature,
+        )
+        .expect("valid ReallyMe ML-DSA-87 verification should succeed");
+}
+
+#[test]
+fn reallyme_hpke_round_trips_new_mlkem1024_suites() {
+    let crypto = CryptoProvider;
+    for ciphersuite in [
+        PURE_MLKEM1024_P384_SUITE,
+        CNSA_MLKEM1024_MLDSA87_SUITE,
+        HYBRID_MLKEM1024_P384_SUITE,
+    ] {
+        let keypair = crypto
+            .derive_hpke_keypair(
+                ciphersuite.hpke_config(),
+                b"reallyme-openmls-mlkem1024-key-material",
+            )
+            .expect("deterministic ReallyMe ML-KEM-1024 key derivation should succeed");
+        let ciphertext = crypto
+            .hpke_seal(
+                ciphersuite.hpke_config(),
+                &keypair.public,
+                b"reallyme-pq-hpke-info",
+                b"reallyme-pq-hpke-aad",
+                b"reallyme-pq-hpke-payload",
+            )
+            .expect("ReallyMe HPKE seal should succeed");
+        assert_eq!(
+            crypto
+                .hpke_open(
+                    ciphersuite.hpke_config(),
+                    &ciphertext,
+                    &keypair.private,
+                    b"reallyme-pq-hpke-info",
+                    b"reallyme-pq-hpke-aad",
+                )
+                .expect("ReallyMe HPKE open should succeed"),
+            b"reallyme-pq-hpke-payload"
+        );
+
+        let (encapsulation, sender_export) = crypto
+            .hpke_setup_sender_and_export(
+                ciphersuite.hpke_config(),
+                &keypair.public,
+                b"reallyme-pq-export-info",
+                b"reallyme-pq-export-context",
+                ciphersuite.hash_length(),
+            )
+            .expect("ReallyMe sender export should succeed");
+        let receiver_export = crypto
+            .hpke_setup_receiver_and_export(
+                ciphersuite.hpke_config(),
+                &encapsulation,
+                &keypair.private,
+                b"reallyme-pq-export-info",
+                b"reallyme-pq-export-context",
+                ciphersuite.hash_length(),
+            )
+            .expect("ReallyMe receiver export should succeed");
+        assert_eq!(&*sender_export, &*receiver_export);
+    }
 }
 
 #[test]

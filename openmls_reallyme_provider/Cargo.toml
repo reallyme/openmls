@@ -20,15 +20,20 @@ openmls = { workspace = true, optional = true }
 openmls_libcrux_crypto = { workspace = true, optional = true }
 # Pin the audited provider surface exactly; upgrades require rerunning the MLS
 # interoperability and conformance gates in this crate.
-reallyme-crypto = { version = "=0.2.0", default-features = false, features = [
+reallyme-crypto = { version = "=0.3.0", default-features = false, features = [
+    "aes",
     "chacha20-poly1305",
     "csprng",
     "ed25519",
     "hmac",
+    "hpke",
+    "ml-dsa-87",
+    "p384",
     "sha2",
+    "sha3",
     "x-wing",
 ] }
-reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.2.0" }
+reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.3.0" }
 secrecy = "0.10.3"
 thiserror = { workspace = true }
 tls_codec = { workspace = true }

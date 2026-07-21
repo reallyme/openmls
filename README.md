@@ -57,6 +57,7 @@ For security and release handling, see:
 - [SECURITY.md](SECURITY.md)
 - [RELEASE.md](RELEASE.md)
 - [AUDIT_SCOPE.md](AUDIT_SCOPE.md)
+- [PQ_MLS_SUITES.md](PQ_MLS_SUITES.md)
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 ## Development Gates

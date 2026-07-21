@@ -46,3 +46,5 @@ Current fork point:
 
 Future fork points must be added here before implementation, including their
 reason, affected modules, codepoint ownership, test vectors, and rollback plan.
+The planned standards-tracking PQ MLS expansion is recorded in
+[PQ_MLS_SUITES.md](PQ_MLS_SUITES.md).

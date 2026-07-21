@@ -36,3 +36,7 @@ validated boundary would need to cover the MLS engine, approved cryptographic
 module, entropy path, key schedule, secret tree, storage/key wrapping policy,
 zeroization, and native FFI surface. Interoperability modes and non-approved
 ciphersuites should remain outside that evaluated artifact.
+
+The planned standards-tracking PQ MLS suites and nonce-proof requirements are
+recorded in [PQ_MLS_SUITES.md](PQ_MLS_SUITES.md). They are not part of the
+current provider audit scope until implemented, tested, and explicitly enabled.

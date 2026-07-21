@@ -5,10 +5,10 @@
 //! ReallyMe Crypto provider for OpenMLS.
 //!
 //! This crate deliberately supports a narrow cryptographic surface. With the
-//! `draft-ietf-mls-pq-ciphersuites` feature enabled, it supports only
-//! `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519`. Keeping the provider narrow
-//! prevents an application from silently negotiating a suite that has not
-//! passed ReallyMe's conformance and interoperability testing.
+//! `draft-ietf-mls-pq-ciphersuites` feature enabled, it supports the deployed
+//! ReallyMe X-Wing suite and selected draft ML-KEM-1024 profiles. Keeping the
+//! provider narrow prevents an application from silently negotiating a suite
+//! that has not passed ReallyMe's conformance and interoperability testing.
 
 #![forbid(unsafe_code)]
 
@@ -25,7 +25,7 @@ mod signer;
 pub use crypto::CryptoProvider;
 pub use openmls_memory_storage::{MemoryStorage, MemoryStorageError};
 pub use random::{RandError, RandErrorReason};
-pub use signer::ReallyMeSigner;
+pub use signer::{ReallyMeSigner, ReallyMeSuiteSigner};
 
 /// An OpenMLS provider backed by ReallyMe Crypto and caller-selected storage.
 ///

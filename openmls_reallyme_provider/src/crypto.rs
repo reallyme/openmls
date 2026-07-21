@@ -11,13 +11,28 @@ use openmls_traits::{
         HpkeKeyPair, KemOutput, SignatureScheme,
     },
 };
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+use reallyme_crypto::ml_dsa_87::{
+    generate_ml_dsa_87_keypair, sign_ml_dsa_87, verify_ml_dsa_87, ML_DSA_87_PUBLIC_KEY_LEN,
+    ML_DSA_87_SECRET_SEED_LEN, ML_DSA_87_SIGNATURE_LEN,
+};
 use reallyme_crypto::{
+    aes256_gcm::{
+        aes256_gcm_decrypt, aes256_gcm_encrypt, Aes256GcmKey, Aes256GcmNonce,
+        CiphertextWithTag as Aes256GcmCiphertextWithTag, AES_256_GCM_KEY_LEN,
+        AES_256_GCM_NONCE_LEN, AES_256_GCM_TAG_LEN,
+    },
     chacha20_poly1305::{
         decrypt, encrypt, ChaCha20Poly1305Key, ChaCha20Poly1305Nonce, CiphertextWithTag,
         DecryptRequest, EncryptRequest, CHACHA20_POLY1305_KEY_LENGTH,
         CHACHA20_POLY1305_NONCE_LENGTH, CHACHA20_POLY1305_TAG_LENGTH,
     },
     ed25519::{sign_ed25519, verify_ed25519},
+    p384::{
+        decompress_public_key as decompress_p384_public_key, generate_p384_keypair,
+        sign as sign_p384, verify as verify_p384, P384_PUBLIC_KEY_UNCOMPRESSED_LEN,
+        P384_SECRET_KEY_LEN,
+    },
     sha2,
 };
 use tls_codec::SecretVLBytes;
@@ -33,7 +48,8 @@ const ED25519_SIGNATURE_LENGTH: usize = 64;
 pub(crate) fn generate_signature_keypair() -> Result<(Zeroizing<Vec<u8>>, Vec<u8>), CryptoError> {
     let mut seed = Zeroizing::new([0u8; ED25519_PRIVATE_KEY_LENGTH]);
     CryptoProvider::fill_random(&mut *seed).map_err(|_| CryptoError::InsufficientRandomness)?;
-    let (public, private) = reallyme_crypto::ed25519::generate_ed25519_keypair_from_seed(&seed);
+    let (public, private) = reallyme_crypto::ed25519::generate_ed25519_keypair_from_seed(&seed)
+        .map_err(|_| CryptoError::InsufficientRandomness)?;
     Ok((private, public))
 }
 
@@ -98,11 +114,56 @@ pub(crate) fn chacha_decrypt(
     .map_err(|_| CryptoError::AeadDecryptionError)
 }
 
+fn aes256_gcm_encrypt_adapter(
+    key: &[u8],
+    plaintext: &[u8],
+    nonce: &[u8],
+    aad: &[u8],
+) -> Result<Vec<u8>, CryptoError> {
+    if key.len() != AES_256_GCM_KEY_LEN || nonce.len() != AES_256_GCM_NONCE_LEN {
+        return Err(CryptoError::InvalidLength);
+    }
+    plaintext
+        .len()
+        .checked_add(AES_256_GCM_TAG_LEN)
+        .ok_or(CryptoError::TooMuchData)?;
+    let key = Aes256GcmKey::from_slice(key).map_err(|_| CryptoError::InvalidLength)?;
+    let nonce = Aes256GcmNonce::from_slice(nonce).map_err(|_| CryptoError::InvalidLength)?;
+    aes256_gcm_encrypt(&key, nonce, aad, plaintext)
+        .map(Aes256GcmCiphertextWithTag::into_vec)
+        .map_err(|_| CryptoError::CryptoLibraryError)
+}
+
+fn aes256_gcm_decrypt_adapter(
+    key: &[u8],
+    ciphertext: &[u8],
+    nonce: &[u8],
+    aad: &[u8],
+) -> Result<Vec<u8>, CryptoError> {
+    if key.len() != AES_256_GCM_KEY_LEN
+        || nonce.len() != AES_256_GCM_NONCE_LEN
+        || ciphertext.len() < AES_256_GCM_TAG_LEN
+    {
+        return Err(CryptoError::InvalidLength);
+    }
+    let key = Aes256GcmKey::from_slice(key).map_err(|_| CryptoError::InvalidLength)?;
+    let nonce = Aes256GcmNonce::from_slice(nonce).map_err(|_| CryptoError::InvalidLength)?;
+    let ciphertext = Aes256GcmCiphertextWithTag::from_vec(ciphertext.to_vec())
+        .map_err(|_| CryptoError::InvalidLength)?;
+    aes256_gcm_decrypt(&key, nonce, aad, &ciphertext).map_err(|_| CryptoError::AeadDecryptionError)
+}
+
 impl OpenMlsCrypto for CryptoProvider {
     fn supports(&self, ciphersuite: Ciphersuite) -> Result<(), CryptoError> {
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        if ciphersuite == Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519 {
-            return Ok(());
+        {
+            match ciphersuite {
+                Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519
+                | Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384
+                | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87
+                | Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384 => return Ok(()),
+                _ => {}
+            }
         }
         let _ = ciphersuite;
         Err(CryptoError::UnsupportedCiphersuite)
@@ -112,6 +173,13 @@ impl OpenMlsCrypto for CryptoProvider {
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         {
             vec![Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519]
+                .into_iter()
+                .chain([
+                    Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
+                    Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
+                    Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384,
+                ])
+                .collect()
         }
         #[cfg(not(feature = "draft-ietf-mls-pq-ciphersuites"))]
         {
@@ -125,10 +193,12 @@ impl OpenMlsCrypto for CryptoProvider {
         salt: &[u8],
         ikm: &[u8],
     ) -> Result<SecretVLBytes, CryptoError> {
-        if hash_type != HashType::Sha2_256 {
-            return Err(CryptoError::UnsupportedHashAlgorithm);
+        match hash_type {
+            HashType::Sha2_256 => kdf::hkdf_extract_sha256(salt, ikm),
+            HashType::Sha2_384 => kdf::hkdf_extract_sha384(salt, ikm),
+            HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        kdf::hkdf_extract_sha256(salt, ikm).map(|secret| secret.to_vec().into())
+        .map(|secret| secret.to_vec().into())
     }
 
     fn hmac(
@@ -137,10 +207,12 @@ impl OpenMlsCrypto for CryptoProvider {
         key: &[u8],
         message: &[u8],
     ) -> Result<SecretVLBytes, CryptoError> {
-        if hash_type != HashType::Sha2_256 {
-            return Err(CryptoError::UnsupportedHashAlgorithm);
+        match hash_type {
+            HashType::Sha2_256 => kdf::hmac_sha256(key, message),
+            HashType::Sha2_384 => kdf::hmac_sha384(key, message),
+            HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        kdf::hmac_sha256(key, message).map(|tag| tag.to_vec().into())
+        .map(|tag| tag.to_vec().into())
     }
 
     fn hkdf_expand(
@@ -150,17 +222,20 @@ impl OpenMlsCrypto for CryptoProvider {
         info: &[u8],
         okm_len: usize,
     ) -> Result<SecretVLBytes, CryptoError> {
-        if hash_type != HashType::Sha2_256 {
-            return Err(CryptoError::UnsupportedHashAlgorithm);
+        match hash_type {
+            HashType::Sha2_256 => kdf::hkdf_expand_sha256(prk, info, okm_len),
+            HashType::Sha2_384 => kdf::hkdf_expand_sha384(prk, info, okm_len),
+            HashType::Sha2_512 => return Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        kdf::hkdf_expand_sha256(prk, info, okm_len).map(|secret| secret.to_vec().into())
+        .map(|secret| secret.to_vec().into())
     }
 
     fn hash(&self, hash_type: HashType, data: &[u8]) -> Result<Vec<u8>, CryptoError> {
-        if hash_type != HashType::Sha2_256 {
-            return Err(CryptoError::UnsupportedHashAlgorithm);
+        match hash_type {
+            HashType::Sha2_256 => Ok(sha2::digest(data).as_bytes().to_vec()),
+            HashType::Sha2_384 => Ok(sha2::digest_sha2_384(data).as_bytes().to_vec()),
+            HashType::Sha2_512 => Err(CryptoError::UnsupportedHashAlgorithm),
         }
-        Ok(sha2::digest(data).as_bytes().to_vec())
     }
 
     fn aead_encrypt(
@@ -171,10 +246,11 @@ impl OpenMlsCrypto for CryptoProvider {
         nonce: &[u8],
         aad: &[u8],
     ) -> Result<Vec<u8>, CryptoError> {
-        if algorithm != AeadType::ChaCha20Poly1305 {
-            return Err(CryptoError::UnsupportedAeadAlgorithm);
+        match algorithm {
+            AeadType::ChaCha20Poly1305 => chacha_encrypt(key, data, nonce, aad),
+            AeadType::Aes256Gcm => aes256_gcm_encrypt_adapter(key, data, nonce, aad),
+            AeadType::Aes128Gcm => Err(CryptoError::UnsupportedAeadAlgorithm),
         }
-        chacha_encrypt(key, data, nonce, aad)
     }
 
     fn aead_decrypt(
@@ -185,21 +261,35 @@ impl OpenMlsCrypto for CryptoProvider {
         nonce: &[u8],
         aad: &[u8],
     ) -> Result<Vec<u8>, CryptoError> {
-        if algorithm != AeadType::ChaCha20Poly1305 {
-            return Err(CryptoError::UnsupportedAeadAlgorithm);
+        match algorithm {
+            AeadType::ChaCha20Poly1305 => chacha_decrypt(key, ct_tag, nonce, aad),
+            AeadType::Aes256Gcm => aes256_gcm_decrypt_adapter(key, ct_tag, nonce, aad),
+            AeadType::Aes128Gcm => Err(CryptoError::UnsupportedAeadAlgorithm),
         }
-        chacha_decrypt(key, ct_tag, nonce, aad)
     }
 
     fn signature_key_gen(
         &self,
         algorithm: SignatureScheme,
     ) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
-        if algorithm != SignatureScheme::ED25519 {
-            return Err(CryptoError::UnsupportedSignatureScheme);
+        match algorithm {
+            SignatureScheme::ED25519 => {
+                let (private, public) = generate_signature_keypair()?;
+                Ok((private.as_slice().to_vec(), public))
+            }
+            SignatureScheme::ECDSA_SECP384R1_SHA384 => {
+                let (public, private) =
+                    generate_p384_keypair().map_err(|_| CryptoError::InsufficientRandomness)?;
+                let public = decompress_p384_public_key(&public)
+                    .map_err(|_| CryptoError::InvalidPublicKey)?;
+                Ok((private.as_slice().to_vec(), public))
+            }
+            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+            SignatureScheme::MLDSA87 => generate_ml_dsa_87_keypair()
+                .map(|(public, private)| (private.as_slice().to_vec(), public))
+                .map_err(|_| CryptoError::InsufficientRandomness),
+            _ => Err(CryptoError::UnsupportedSignatureScheme),
         }
-        let (private, public) = generate_signature_keypair()?;
-        Ok((private.as_slice().to_vec(), public))
     }
 
     fn verify_signature(
@@ -209,16 +299,36 @@ impl OpenMlsCrypto for CryptoProvider {
         public_key: &[u8],
         signature: &[u8],
     ) -> Result<(), CryptoError> {
-        if algorithm != SignatureScheme::ED25519 {
-            return Err(CryptoError::UnsupportedSignatureScheme);
+        match algorithm {
+            SignatureScheme::ED25519 => {
+                if public_key.len() != ED25519_PUBLIC_KEY_LENGTH {
+                    return Err(CryptoError::InvalidPublicKey);
+                }
+                if signature.len() != ED25519_SIGNATURE_LENGTH {
+                    return Err(CryptoError::InvalidSignature);
+                }
+                verify_ed25519(public_key, data, signature)
+                    .map_err(|_| CryptoError::InvalidSignature)
+            }
+            SignatureScheme::ECDSA_SECP384R1_SHA384 => {
+                if public_key.len() != P384_PUBLIC_KEY_UNCOMPRESSED_LEN {
+                    return Err(CryptoError::InvalidPublicKey);
+                }
+                verify_p384(public_key, data, signature).map_err(|_| CryptoError::InvalidSignature)
+            }
+            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+            SignatureScheme::MLDSA87 => {
+                if public_key.len() != ML_DSA_87_PUBLIC_KEY_LEN {
+                    return Err(CryptoError::InvalidPublicKey);
+                }
+                if signature.len() != ML_DSA_87_SIGNATURE_LEN {
+                    return Err(CryptoError::InvalidSignature);
+                }
+                verify_ml_dsa_87(public_key, data, signature)
+                    .map_err(|_| CryptoError::InvalidSignature)
+            }
+            _ => Err(CryptoError::UnsupportedSignatureScheme),
         }
-        if public_key.len() != ED25519_PUBLIC_KEY_LENGTH {
-            return Err(CryptoError::InvalidPublicKey);
-        }
-        if signature.len() != ED25519_SIGNATURE_LENGTH {
-            return Err(CryptoError::InvalidSignature);
-        }
-        verify_ed25519(public_key, data, signature).map_err(|_| CryptoError::InvalidSignature)
     }
 
     fn sign(
@@ -227,13 +337,28 @@ impl OpenMlsCrypto for CryptoProvider {
         data: &[u8],
         key: &[u8],
     ) -> Result<Vec<u8>, CryptoError> {
-        if algorithm != SignatureScheme::ED25519 {
-            return Err(CryptoError::UnsupportedSignatureScheme);
+        match algorithm {
+            SignatureScheme::ED25519 => {
+                if key.len() != ED25519_PRIVATE_KEY_LENGTH {
+                    return Err(CryptoError::InvalidLength);
+                }
+                sign_ed25519(key, data).map_err(|_| CryptoError::SigningError)
+            }
+            SignatureScheme::ECDSA_SECP384R1_SHA384 => {
+                if key.len() != P384_SECRET_KEY_LEN {
+                    return Err(CryptoError::InvalidLength);
+                }
+                sign_p384(key, data).map_err(|_| CryptoError::SigningError)
+            }
+            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+            SignatureScheme::MLDSA87 => {
+                if key.len() != ML_DSA_87_SECRET_SEED_LEN {
+                    return Err(CryptoError::InvalidLength);
+                }
+                sign_ml_dsa_87(key, data).map_err(|_| CryptoError::SigningError)
+            }
+            _ => Err(CryptoError::UnsupportedSignatureScheme),
         }
-        if key.len() != ED25519_PRIVATE_KEY_LENGTH {
-            return Err(CryptoError::InvalidLength);
-        }
-        sign_ed25519(key, data).map_err(|_| CryptoError::SigningError)
     }
 
     fn hpke_seal(
