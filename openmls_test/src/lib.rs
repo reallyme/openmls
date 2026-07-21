@@ -196,6 +196,46 @@ pub fn openmls_test(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     }
 
+    #[cfg(feature = "reallyme-provider")]
+    {
+        // Keep these values explicit. This is a conformance lane for the
+        // provider's reviewed suite allowlist, so silently discovering or
+        // broadening it would defeat the purpose of the test expansion.
+        let reallyme_ciphersuites = [0x004d_u16, 0x0042, 0x0907, 0xf043];
+        for val in reallyme_ciphersuites {
+            let ciphersuite = Ciphersuite::try_from(val).expect("reviewed ciphersuite codepoint");
+            let ciphersuite_name = format!("{ciphersuite:?}");
+            let name = format_ident!("{}_reallyme_{}", fn_name, ciphersuite_name);
+            let test_fun = quote! {
+                #(#attrs)*
+                #[allow(non_snake_case)]
+                #[test]
+                fn #name() {
+                    use openmls_reallyme_provider::{MemoryStorage, Provider as ReallyMeProvider};
+                    use openmls_traits::{
+                        crypto::OpenMlsCrypto,
+                        storage::StorageProvider as StorageProviderTrait,
+                        types::Ciphersuite,
+                        OpenMlsProvider,
+                    };
+
+                    type Provider = ReallyMeProvider<MemoryStorage>;
+                    type StorageProvider = <Provider as OpenMlsProvider>::StorageProvider;
+                    type StorageError = <StorageProvider as StorageProviderTrait<
+                        { openmls_traits::storage::CURRENT_VERSION },
+                    >>::Error;
+
+                    let _ = pretty_env_logger::try_init();
+                    let ciphersuite = Ciphersuite::try_from(#val)
+                        .expect("reviewed ReallyMe ciphersuite codepoint");
+
+                    #(#body)*
+                }
+            };
+            test_funs.push(test_fun);
+        }
+    }
+
     let out = quote! {
         #(#test_funs)*
     };

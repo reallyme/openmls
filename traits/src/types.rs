@@ -2,7 +2,7 @@
 //!
 //! This module holds a number of types that are needed by the traits.
 
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use serde::{Deserialize, Serialize};
 use tls_codec::{
@@ -209,9 +209,12 @@ pub enum HpkeKemType {
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
     MlKem1024P384 = 0x0051,
 
-    /// XWing combiner for ML-KEM and X25519
+    /// ML-KEM-768 + X25519 hybrid KEM (identical to X-Wing)
+    ///
+    /// `0x004D` was an obsolete provisional HPKE KEM identifier. The current
+    /// HPKE PQ draft assigns `0x647A` to this construction.
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-    XWingKemDraft6 = 0x004D,
+    XWingKemDraft6 = 0x647A,
 }
 
 /// KDF Types for HPKE
@@ -226,10 +229,6 @@ pub enum HpkeKdfType {
 
     /// HKDF SHA 512
     HkdfSha512 = 0x0003,
-
-    /// SHAKE256 one-stage KDF
-    #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-    Shake256 = 0x0011,
 }
 
 /// AEAD Types for HPKE.
@@ -276,7 +275,6 @@ pub struct HpkeCiphertext {
 
 /// A simple type for HPKE private keys.
 #[derive(
-    Debug,
     Clone,
     serde::Serialize,
     serde::Deserialize,
@@ -288,6 +286,18 @@ pub struct HpkeCiphertext {
 #[cfg_attr(feature = "test-utils", derive(PartialEq, Eq))]
 #[serde(transparent)]
 pub struct HpkePrivateKey(SecretVLBytes);
+
+impl fmt::Debug for HpkePrivateKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // tls_codec's SecretVLBytes Debug implementation emits the complete
+        // byte string. Private keys must remain redacted even when an enclosing
+        // type is captured by panic reporting or application telemetry.
+        formatter
+            .debug_tuple("HpkePrivateKey")
+            .field(&"[REDACTED]")
+            .finish()
+    }
+}
 
 impl From<Vec<u8>> for HpkePrivateKey {
     fn from(bytes: Vec<u8>) -> Self {
@@ -310,15 +320,34 @@ impl std::ops::Deref for HpkePrivateKey {
 }
 
 /// Helper holding a (private, public) key pair as byte vectors.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct HpkeKeyPair {
     pub private: HpkePrivateKey,
     pub public: Vec<u8>,
 }
 
+impl fmt::Debug for HpkeKeyPair {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("HpkeKeyPair")
+            .field("private", &"[REDACTED]")
+            .field("public_key_length", &self.public.len())
+            .finish()
+    }
+}
+
 pub type KemOutput = Vec<u8>;
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ExporterSecret(SecretVLBytes);
+
+impl fmt::Debug for ExporterSecret {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_tuple("ExporterSecret")
+            .field(&"[REDACTED]")
+            .finish()
+    }
+}
 
 impl Deref for ExporterSecret {
     type Target = [u8];
@@ -331,6 +360,44 @@ impl Deref for ExporterSecret {
 impl From<Vec<u8>> for ExporterSecret {
     fn from(secret: Vec<u8>) -> Self {
         Self(secret.into())
+    }
+}
+
+#[cfg(test)]
+mod secret_debug_tests {
+    use super::*;
+
+    const SECRET_MARKER: &str = "PRIVATE_KEY_MARKER";
+
+    #[test]
+    fn hpke_private_key_debug_is_redacted() {
+        let private_key = HpkePrivateKey::from(SECRET_MARKER.as_bytes());
+        let rendered = format!("{private_key:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(!rendered.contains(SECRET_MARKER));
+    }
+
+    #[test]
+    fn hpke_key_pair_debug_omits_key_bytes() {
+        let key_pair = HpkeKeyPair {
+            private: HpkePrivateKey::from(SECRET_MARKER.as_bytes()),
+            public: SECRET_MARKER.as_bytes().to_vec(),
+        };
+        let rendered = format!("{key_pair:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(rendered.contains("public_key_length"));
+        assert!(!rendered.contains(SECRET_MARKER));
+    }
+
+    #[test]
+    fn exporter_secret_debug_is_redacted() {
+        let exporter_secret = ExporterSecret::from(SECRET_MARKER.as_bytes().to_vec());
+        let rendered = format!("{exporter_secret:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(!rendered.contains(SECRET_MARKER));
     }
 }
 
@@ -460,12 +527,12 @@ pub enum Ciphersuite {
     // MLS_128_MLKEM768P256_AES256GCM_SHA384_P256 = TBD4
     /// ML-KEM1024 + P384 | AES-GCM256 | SHA2-384 | EcDSA P384
     ///
-    /// [draft-ietf-mls-pq-ciphersuites-05] TBD5. ReallyMe uses this private
+    /// [draft-ietf-mls-pq-ciphersuites-06] TBD5. ReallyMe uses this private
     /// provisional code point until IANA assigns the final MLS ciphersuite
-    /// value. The HPKE components match the draft: KEM 0x0051, KDF 0x0011,
+    /// value. The HPKE components match the draft: KEM 0x0051, KDF 0x0002,
     /// AEAD 0x0002.
     ///
-    /// [draft-ietf-mls-pq-ciphersuites-05]: https://datatracker.ietf.org/doc/html/draft-ietf-mls-pq-ciphersuites-05
+    /// [draft-ietf-mls-pq-ciphersuites-06]: https://datatracker.ietf.org/doc/html/draft-ietf-mls-pq-ciphersuites-06
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
     MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384 = 0xF043,
 
@@ -746,18 +813,20 @@ impl Ciphersuite {
                 HpkeKdfType::HkdfSha256
             }
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            Self::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519 => HpkeKdfType::HkdfSha256,
+            Self::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519
+            | Ciphersuite::MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519 => {
+                HpkeKdfType::HkdfSha256
+            }
             Ciphersuite::MLS_256_DHKEMP384_AES256GCM_SHA384_P384 => HpkeKdfType::HkdfSha384,
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            Ciphersuite::MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519
-            | Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384
+            Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384
             | Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384
             | Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519
             | Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_P256
             | Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44
             | Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65
             | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87
-            | Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519 => HpkeKdfType::Shake256,
+            | Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519 => HpkeKdfType::HkdfSha384,
             Ciphersuite::MLS_256_DHKEMX448_AES256GCM_SHA512_Ed448
             | Ciphersuite::MLS_256_DHKEMP521_AES256GCM_SHA512_P521
             | Ciphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448 => {
@@ -865,5 +934,47 @@ impl Ciphersuite {
     #[inline]
     pub const fn aead_nonce_length(&self) -> usize {
         self.aead_algorithm().nonce_size()
+    }
+}
+
+#[cfg(all(test, feature = "draft-ietf-mls-pq-ciphersuites"))]
+mod pq_ciphersuite_tests {
+    use super::{Ciphersuite, HpkeKdfType, HpkeKemType};
+
+    #[test]
+    fn draft_06_x25519_mlkem768_suites_use_the_current_hpke_kem_id() {
+        assert_eq!(HpkeKemType::XWingKemDraft6 as u16, 0x647A);
+
+        for ciphersuite in [
+            Ciphersuite::MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519,
+            Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519,
+            Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44,
+        ] {
+            assert_eq!(
+                ciphersuite.hpke_kem_algorithm(),
+                HpkeKemType::XWingKemDraft6
+            );
+        }
+    }
+
+    #[test]
+    fn draft_06_uses_two_stage_hkdf_for_every_implemented_suite() {
+        assert_eq!(
+            Ciphersuite::MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519.hpke_kdf_algorithm(),
+            HpkeKdfType::HkdfSha256
+        );
+
+        for ciphersuite in [
+            Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519,
+            Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384,
+            Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519,
+            Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_P256,
+            Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
+            Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44,
+            Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
+            Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
+        ] {
+            assert_eq!(ciphersuite.hpke_kdf_algorithm(), HpkeKdfType::HkdfSha384);
+        }
     }
 }

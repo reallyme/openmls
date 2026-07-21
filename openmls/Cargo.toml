@@ -75,6 +75,15 @@ sqlite-provider = [
 # test per source function using the MTI ciphersuite. Opt in for nightly
 # CI or release validation.
 all-ciphersuites = ["openmls_test?/all-ciphersuites"]
+# Expand the generic OpenMLS test corpus over the provider's exact reviewed
+# suite allowlist. This is opt-in because the PQ suites make the full corpus a
+# deliberate release/deep-audit lane rather than a per-edit developer test.
+reallyme-provider = [
+    "test-utils",
+    "draft-ietf-mls-pq-ciphersuites",
+    "openmls_test?/reallyme-provider",
+    "openmls_reallyme_provider/draft-ietf-mls-pq-ciphersuites",
+]
 # Compile the KAT regenerators. Opt in when refreshing the bundled JSON test
 # vectors.
 generate-kats = []
@@ -104,6 +113,7 @@ virtual-clients-draft = [
     # `virtual-clients-draft` `openmls_traits` with their own feature on.
     "openmls_rust_crypto?/virtual-clients-draft",
     "openmls_libcrux_crypto?/virtual-clients-draft",
+    "openmls_reallyme_provider/virtual-clients-draft",
 ]
 
 # Same XXX as for `extensions-draft-test-dependencies`: the storage-backend
@@ -143,6 +153,7 @@ targeted-messages-draft = [
     "openmls_traits/targeted-messages-draft",
     "openmls_rust_crypto?/targeted-messages-draft",
     "openmls_libcrux_crypto?/targeted-messages-draft",
+    "openmls_reallyme_provider/targeted-messages-draft",
 ]
 draft-ietf-mls-pq-ciphersuites = [
     "openmls_traits/draft-ietf-mls-pq-ciphersuites",
@@ -172,6 +183,7 @@ clap = { version = "4", features = ["derive"] }
 base64 = "0.22.1"
 flate2 = "1.0"
 indicatif = "0.18.3"
+openmls_reallyme_provider = { workspace = true, features = ["test-utils"] }
 
 # Default test build is rustcrypto-only and MTI-ciphersuite-only.
 # Enable `sqlite-provider`, `libcrux-provider`, and/or `all-ciphersuites`

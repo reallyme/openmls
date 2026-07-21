@@ -124,6 +124,27 @@ fn complete_mls_flow(ciphersuite: Ciphersuite) {
         ProcessedMessageContent::ApplicationMessage(_)
     ));
 
+    let reply_plaintext = b"Bob to Alice through the ReallyMe provider";
+    let reply = bob_group
+        .create_message(&bob_provider, &bob_signer, reply_plaintext)
+        .expect("Bob should encrypt a reply")
+        .into_protocol_message()
+        .expect("Bob's application output should be a protocol message");
+    let reply_processed = alice_group
+        .process_message(&alice_provider, reply)
+        .expect("Alice should process Bob's reply");
+    match reply_processed.into_content() {
+        ProcessedMessageContent::ApplicationMessage(application) => {
+            assert_eq!(application.into_bytes(), reply_plaintext);
+        }
+        other => {
+            assert!(
+                matches!(other, ProcessedMessageContent::ApplicationMessage(_)),
+                "expected Bob's application message"
+            );
+        }
+    }
+
     let first_epoch_secret = alice_group
         .export_secret(
             alice_provider.crypto(),
@@ -194,6 +215,38 @@ fn complete_mls_flow(ciphersuite: Ciphersuite) {
         next_epoch_processed.into_content(),
         ProcessedMessageContent::ApplicationMessage(_)
     ));
+
+    let bob_index = bob_group.own_leaf_index();
+    let (remove_commit, remove_welcome, _) = alice_group
+        .remove_members(&alice_provider, &alice_signer, &[bob_index])
+        .expect("Alice should create a commit removing Bob");
+    assert!(remove_welcome.is_none());
+    let processed_remove = bob_group
+        .process_message(
+            &bob_provider,
+            remove_commit
+                .into_protocol_message()
+                .expect("remove commit should be a protocol message"),
+        )
+        .expect("Bob should authenticate the commit removing him");
+    let staged_remove = match processed_remove.into_content() {
+        ProcessedMessageContent::StagedCommitMessage(staged) => *staged,
+        other => {
+            assert!(
+                matches!(other, ProcessedMessageContent::StagedCommitMessage(_)),
+                "expected a staged remove commit"
+            );
+            return;
+        }
+    };
+    alice_group
+        .merge_pending_commit(&alice_provider)
+        .expect("Alice should merge the remove commit");
+    bob_group
+        .merge_staged_commit(&bob_provider, staged_remove)
+        .expect("Bob should merge the authenticated remove commit");
+    assert!(!bob_group.is_active());
+    assert_eq!(alice_group.members().count(), 1);
 }
 
 #[test]

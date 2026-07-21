@@ -10,6 +10,10 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+openmls_traits = { path = "../traits", features = ["draft-ietf-mls-pq-ciphersuites"] }
+openmls_reallyme_provider = { path = "../openmls_reallyme_provider", features = [
+    "draft-ietf-mls-pq-ciphersuites",
+] }
 
 [dependencies.openmls]
 path = "../openmls"
@@ -41,6 +45,14 @@ bench = false
 [[bin]]
 name = "proposal_decode"
 path = "fuzz_targets/proposal_decode.rs"
+test = false
+doc = false
+harness = false
+bench = false
+
+[[bin]]
+name = "reallyme_provider_boundaries"
+path = "fuzz_targets/reallyme_provider_boundaries.rs"
 test = false
 doc = false
 harness = false

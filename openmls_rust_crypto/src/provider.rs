@@ -72,13 +72,11 @@ fn kem_mode(kem: HpkeKemType) -> Result<hpke_types::KemAlgorithm, CryptoError> {
 }
 
 #[inline(always)]
-fn kdf_mode(kdf: HpkeKdfType) -> Result<hpke_types::KdfAlgorithm, CryptoError> {
+fn kdf_mode(kdf: HpkeKdfType) -> hpke_types::KdfAlgorithm {
     match kdf {
-        HpkeKdfType::HkdfSha256 => Ok(hpke_types::KdfAlgorithm::HkdfSha256),
-        HpkeKdfType::HkdfSha384 => Ok(hpke_types::KdfAlgorithm::HkdfSha384),
-        HpkeKdfType::HkdfSha512 => Ok(hpke_types::KdfAlgorithm::HkdfSha512),
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKdfType::Shake256 => Err(CryptoError::UnsupportedKdf),
+        HpkeKdfType::HkdfSha256 => hpke_types::KdfAlgorithm::HkdfSha256,
+        HpkeKdfType::HkdfSha384 => hpke_types::KdfAlgorithm::HkdfSha384,
+        HpkeKdfType::HkdfSha512 => hpke_types::KdfAlgorithm::HkdfSha512,
     }
 }
 
@@ -654,7 +652,7 @@ fn hpke_from_config(config: HpkeConfig) -> Result<Hpke<HpkeRustCrypto>, CryptoEr
     Ok(Hpke::<HpkeRustCrypto>::new(
         hpke::Mode::Base,
         kem_mode(config.0)?,
-        kdf_mode(config.1)?,
+        kdf_mode(config.1),
         aead_mode(config.2),
     ))
 }
@@ -664,7 +662,7 @@ fn hpke_psk_from_config(config: HpkeConfig) -> Result<Hpke<HpkeRustCrypto>, Cryp
     Ok(Hpke::<HpkeRustCrypto>::new(
         hpke::Mode::Psk,
         kem_mode(config.0)?,
-        kdf_mode(config.1)?,
+        kdf_mode(config.1),
         aead_mode(config.2),
     ))
 }

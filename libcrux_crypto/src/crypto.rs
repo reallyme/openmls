@@ -484,7 +484,7 @@ impl OpenMlsCrypto for CryptoProvider {
 
 fn hpke_config(config: HpkeConfig) -> Result<hpke_rs::Hpke<HpkeLibcrux>, CryptoError> {
     let kem = hpke_kem(config.0)?;
-    let kdf = hpke_kdf(config.1)?;
+    let kdf = hpke_kdf(config.1);
     let aead = hpke_aead(config.2);
 
     Ok(hpke_rs::Hpke::new(hpke_rs::Mode::Base, kem, kdf, aead))
@@ -493,19 +493,17 @@ fn hpke_config(config: HpkeConfig) -> Result<hpke_rs::Hpke<HpkeLibcrux>, CryptoE
 #[cfg(feature = "targeted-messages-draft")]
 fn hpke_psk_from_config(config: HpkeConfig) -> Result<hpke_rs::Hpke<HpkeLibcrux>, CryptoError> {
     let kem = hpke_kem(config.0)?;
-    let kdf = hpke_kdf(config.1)?;
+    let kdf = hpke_kdf(config.1);
     let aead = hpke_aead(config.2);
 
     Ok(hpke_rs::Hpke::new(hpke_rs::Mode::Psk, kem, kdf, aead))
 }
 
-fn hpke_kdf(kdf: HpkeKdfType) -> Result<hpke_rs_crypto::types::KdfAlgorithm, CryptoError> {
+fn hpke_kdf(kdf: HpkeKdfType) -> hpke_rs_crypto::types::KdfAlgorithm {
     match kdf {
-        HpkeKdfType::HkdfSha256 => Ok(hpke_rs_crypto::types::KdfAlgorithm::HkdfSha256),
-        HpkeKdfType::HkdfSha384 => Ok(hpke_rs_crypto::types::KdfAlgorithm::HkdfSha384),
-        HpkeKdfType::HkdfSha512 => Ok(hpke_rs_crypto::types::KdfAlgorithm::HkdfSha512),
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKdfType::Shake256 => Err(CryptoError::UnsupportedKdf),
+        HpkeKdfType::HkdfSha256 => hpke_rs_crypto::types::KdfAlgorithm::HkdfSha256,
+        HpkeKdfType::HkdfSha384 => hpke_rs_crypto::types::KdfAlgorithm::HkdfSha384,
+        HpkeKdfType::HkdfSha512 => hpke_rs_crypto::types::KdfAlgorithm::HkdfSha512,
     }
 }
 

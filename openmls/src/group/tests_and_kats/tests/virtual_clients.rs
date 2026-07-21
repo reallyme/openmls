@@ -31,6 +31,16 @@ fn supports_test_ciphersuites(provider: &impl OpenMlsProvider) -> bool {
         && provider.crypto().supports(GROUP_CIPHERSUITE).is_ok()
 }
 
+#[test]
+fn virtual_client_derivation_tests_have_an_executable_provider_lane() {
+    // The generic tests below intentionally skip providers that cannot run
+    // both their source and target suites. Keep a non-vacuous sentinel tied to
+    // the reference provider so narrowing another provider's allowlist cannot
+    // make every generated instance silently return before its assertions.
+    let provider = openmls_rust_crypto::OpenMlsRustCrypto::default();
+    assert!(supports_test_ciphersuites(&provider));
+}
+
 /// `Capabilities` declaring `AppDataDictionary` support.
 fn vc_capabilities() -> Capabilities {
     Capabilities::builder()

@@ -3,22 +3,44 @@
 // SPDX-License-Identifier: MIT
 
 use openmls_traits::types::{
-    CryptoError, ExporterSecret, HpkeCiphertext, HpkeConfig, HpkeKeyPair, KemOutput,
+    CryptoError, ExporterSecret, HpkeCiphertext, HpkeConfig, HpkeKdfType, HpkeKeyPair, KemOutput,
 };
 #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-use openmls_traits::types::{HpkeAeadType, HpkeKdfType, HpkeKemType};
+use openmls_traits::types::{HpkeAeadType, HpkeKemType};
 use reallyme_crypto::hpke::{
     self as reallyme_hpke, HpkeError, HpkeOpenRequest, HpkeReceiverExportRequest, HpkeSealRequest,
     HpkeSenderExportRequest, HpkeSuite,
 };
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+use reallyme_crypto::hpke::{HpkeAeadId, HpkeKdfId, HpkeKemId};
+
+const HKDF_MAXIMUM_BLOCK_COUNT: usize = 255;
+// HPKE-PQ requires at least 32 bytes for hybrid KEM DeriveKeyPair inputs.
+// Enforcing the same security floor for every exposed PQ profile prevents a
+// direct trait caller from deriving long-lived tree keys from trivial inputs.
+const MINIMUM_DERIVE_KEYPAIR_IKM_LENGTH: usize = 32;
+const SHA256_OUTPUT_LENGTH: usize = 32;
+const SHA384_OUTPUT_LENGTH: usize = 48;
+const SHA512_OUTPUT_LENGTH: usize = 64;
+
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+const HPKE_MLKEM1024_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
+    HpkeKemId::MlKem1024,
+    HpkeKdfId::HkdfSha384,
+    HpkeAeadId::Aes256Gcm,
+);
+
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+const HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
+    HpkeKemId::MlKem1024P384,
+    HpkeKdfId::HkdfSha384,
+    HpkeAeadId::Aes256Gcm,
+);
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+use reallyme_crypto::hpke::HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305;
 #[cfg(feature = "targeted-messages-draft")]
 use reallyme_crypto::hpke::{
     HpkePskIdRef, HpkePskReceiverSetupRequest, HpkePskRef, HpkePskSenderSetupRequest,
-};
-#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-use reallyme_crypto::hpke::{
-    HPKE_MLKEM1024P384_SHAKE256_AES256GCM, HPKE_MLKEM1024_SHAKE256_AES256GCM,
-    HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305,
 };
 #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
 use zeroize::Zeroizing;
@@ -33,12 +55,12 @@ fn reallyme_suite(config: &HpkeConfig) -> Result<HpkeSuite, CryptoError> {
             Ok(HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305)
         }
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        (HpkeKemType::MlKem1024, HpkeKdfType::Shake256, HpkeAeadType::AesGcm256) => {
-            Ok(HPKE_MLKEM1024_SHAKE256_AES256GCM)
+        (HpkeKemType::MlKem1024, HpkeKdfType::HkdfSha384, HpkeAeadType::AesGcm256) => {
+            Ok(HPKE_MLKEM1024_HKDF_SHA384_AES256GCM)
         }
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        (HpkeKemType::MlKem1024P384, HpkeKdfType::Shake256, HpkeAeadType::AesGcm256) => {
-            Ok(HPKE_MLKEM1024P384_SHAKE256_AES256GCM)
+        (HpkeKemType::MlKem1024P384, HpkeKdfType::HkdfSha384, HpkeAeadType::AesGcm256) => {
+            Ok(HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM)
         }
         _ => Err(CryptoError::UnsupportedCiphersuite),
     }
@@ -90,12 +112,16 @@ pub(crate) fn open(
 }
 
 pub(crate) fn derive_keypair(config: HpkeConfig, ikm: &[u8]) -> Result<HpkeKeyPair, CryptoError> {
-    if ikm.is_empty() {
+    if ikm.len() < MINIMUM_DERIVE_KEYPAIR_IKM_LENGTH {
         return Err(CryptoError::InvalidLength);
     }
     let suite = reallyme_suite(&config)?;
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
     if suite == HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305 {
+        // This condition is deliberately profile-specific rather than keyed
+        // only on the X-Wing KEM. Standards-tracking suites using KEM 0x647A
+        // follow HPKE-PQ's labeled derivation and must not inherit this legacy
+        // OpenMLS compatibility rule.
         // ReallyMe Crypto 0.3.1 delegates X-Wing DeriveKeyPair to an HPKE
         // implementation using the older labeled-derive construction. The
         // OpenMLS X-Wing suite is draft-06, which specifies raw
@@ -126,7 +152,7 @@ pub(crate) fn sender_export(
     exporter_context: &[u8],
     output_length: usize,
 ) -> Result<(KemOutput, ExporterSecret), CryptoError> {
-    validate_export_length(output_length)?;
+    validate_export_length(&config, output_length)?;
     let suite = reallyme_suite(&config)?;
     let mut output = reallyme_hpke::sender_export_raw(&HpkeSenderExportRequest {
         suite,
@@ -152,7 +178,7 @@ pub(crate) fn receiver_export(
     exporter_context: &[u8],
     output_length: usize,
 ) -> Result<ExporterSecret, CryptoError> {
-    validate_export_length(output_length)?;
+    validate_export_length(&config, output_length)?;
     let suite = reallyme_suite(&config)?;
     let output = reallyme_hpke::receiver_export_raw(&HpkeReceiverExportRequest {
         suite,
@@ -168,8 +194,19 @@ pub(crate) fn receiver_export(
     Ok(output.as_slice().to_vec().into())
 }
 
-fn validate_export_length(output_length: usize) -> Result<(), CryptoError> {
-    if output_length == 0 || output_length > usize::from(u16::MAX) {
+fn validate_export_length(config: &HpkeConfig, output_length: usize) -> Result<(), CryptoError> {
+    let maximum = match config.1 {
+        HpkeKdfType::HkdfSha256 => SHA256_OUTPUT_LENGTH
+            .checked_mul(HKDF_MAXIMUM_BLOCK_COUNT)
+            .ok_or(CryptoError::ExporterError)?,
+        HpkeKdfType::HkdfSha384 => SHA384_OUTPUT_LENGTH
+            .checked_mul(HKDF_MAXIMUM_BLOCK_COUNT)
+            .ok_or(CryptoError::ExporterError)?,
+        HpkeKdfType::HkdfSha512 => SHA512_OUTPUT_LENGTH
+            .checked_mul(HKDF_MAXIMUM_BLOCK_COUNT)
+            .ok_or(CryptoError::ExporterError)?,
+    };
+    if output_length == 0 || output_length > maximum {
         return Err(CryptoError::ExporterError);
     }
     Ok(())
@@ -276,8 +313,8 @@ fn map_open_error(error: HpkeError) -> CryptoError {
         | HpkeError::UnsupportedKdf
         | HpkeError::UnsupportedAead
         | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
+        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
         HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidPublicKey
         | HpkeError::InvalidEncapsulatedKey
         | HpkeError::InvalidCiphertext
         | HpkeError::InvalidInfoLength
@@ -328,10 +365,10 @@ fn map_receiver_export_error(error: HpkeError) -> CryptoError {
         | HpkeError::UnsupportedKdf
         | HpkeError::UnsupportedAead
         | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
+        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
         HpkeError::InvalidPrivateKey
         | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidPublicKey => CryptoError::InvalidLength,
+        | HpkeError::InvalidCiphertext => CryptoError::InvalidLength,
         HpkeError::LengthOverflow => CryptoError::TooMuchData,
         HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
         HpkeError::InvalidInputKeyMaterial
@@ -408,10 +445,10 @@ fn map_receiver_setup_error(error: HpkeError) -> CryptoError {
         | HpkeError::UnsupportedKdf
         | HpkeError::UnsupportedAead
         | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
+        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
         HpkeError::InvalidPrivateKey
         | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidPublicKey => CryptoError::InvalidLength,
+        | HpkeError::InvalidCiphertext => CryptoError::InvalidLength,
         HpkeError::LengthOverflow => CryptoError::TooMuchData,
         HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
         HpkeError::InvalidInputKeyMaterial
@@ -435,10 +472,10 @@ fn map_open_psk_error(error: HpkeError) -> CryptoError {
         | HpkeError::UnsupportedKdf
         | HpkeError::UnsupportedAead
         | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
+        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
         HpkeError::InvalidPrivateKey
         | HpkeError::InvalidEncapsulatedKey
         | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidPublicKey
         | HpkeError::InvalidPsk
         | HpkeError::InvalidPskIdentifier
         | HpkeError::InvalidInfoLength

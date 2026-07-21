@@ -106,10 +106,10 @@ impl Capabilities {
     /// Creates [`Capabilities`] advertising exactly the ciphersuites supported
     /// by the given crypto provider, with defaults for all other fields.
     ///
-    /// In contrast to [`Capabilities::default()`], which advertises a
-    /// hardcoded ciphersuite list independently of what the crypto provider
-    /// can actually perform, this constructor derives the advertised list from
-    /// [`OpenMlsCrypto::supported_ciphersuites()`].
+    /// [`Capabilities::default()`] is provider-independent and therefore cannot
+    /// promise that one concrete provider implements every listed suite. This
+    /// constructor derives the advertised list from
+    /// [`OpenMlsCrypto::supported_ciphersuites()`] instead.
     pub fn for_provider(crypto: &impl OpenMlsCrypto) -> Self {
         Capabilities {
             ciphersuites: crypto
@@ -405,6 +405,22 @@ pub(super) fn default_versions() -> Vec<ProtocolVersion> {
 }
 
 pub(super) fn default_ciphersuites() -> Vec<Ciphersuite> {
+    // The hybrid profile uses a fork-private provisional codepoint and must
+    // never enter production defaults. Generic provider conformance tests
+    // still contain legacy helpers that construct custom capabilities from
+    // these defaults and therefore need the suite while testing this provider.
+    #[cfg(all(test, feature = "reallyme-provider"))]
+    {
+        let mut ciphersuites = production_default_ciphersuites();
+        ciphersuites.push(Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384);
+        ciphersuites
+    }
+
+    #[cfg(not(all(test, feature = "reallyme-provider")))]
+    production_default_ciphersuites()
+}
+
+fn production_default_ciphersuites() -> Vec<Ciphersuite> {
     vec![
         Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519,
         Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256,
@@ -416,19 +432,7 @@ pub(super) fn default_ciphersuites() -> Vec<Ciphersuite> {
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_P256,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519,
     ]
 }
 
@@ -445,7 +449,7 @@ mod tests {
     };
     use tls_codec::{Deserialize, Serialize};
 
-    use super::Capabilities;
+    use super::{production_default_ciphersuites, Capabilities};
     use crate::{
         credentials::CredentialType, messages::proposals::ProposalType, prelude::ExtensionType,
         versions::ProtocolVersion,
@@ -513,5 +517,31 @@ mod tests {
             .map(VerifiableCiphersuite::from)
             .collect();
         assert_eq!(capabilities.ciphersuites(), expected.as_slice());
+    }
+
+    #[test]
+    fn production_defaults_do_not_advertise_private_use_ciphersuites() {
+        const PRIVATE_USE_START: u16 = 0xF000;
+
+        assert!(production_default_ciphersuites()
+            .into_iter()
+            .map(u16::from)
+            .all(|value| value < PRIVATE_USE_START));
+    }
+
+    #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+    #[test]
+    fn production_draft_defaults_exclude_unimplemented_workspace_suites() {
+        let expected = [
+            Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519,
+            Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256,
+            Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519,
+            Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519,
+            Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
+            Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87,
+            Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
+        ];
+
+        assert_eq!(production_default_ciphersuites(), expected);
     }
 }

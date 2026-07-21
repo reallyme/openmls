@@ -32,6 +32,7 @@ use crate::{
 pub struct MlsGroupBuilder {
     group_id: Option<GroupId>,
     mls_group_create_config_builder: MlsGroupCreateConfigBuilder,
+    capabilities_configured: bool,
     replace_old_group: bool,
     psk_ids: Vec<PreSharedKeyId>,
     #[cfg(feature = "virtual-clients-draft")]
@@ -99,8 +100,23 @@ impl MlsGroupBuilder {
         credential_with_key: CredentialWithKey,
         mls_group_create_config_option: Option<MlsGroupCreateConfig>,
     ) -> Result<MlsGroup, NewGroupError<Provider::StorageError>> {
-        let mls_group_create_config = mls_group_create_config_option
+        let use_provider_capabilities = match mls_group_create_config_option.as_ref() {
+            // `MlsGroup::new` receives a completed config and cannot know
+            // whether its capabilities were left at the hardcoded default.
+            // Equality with that default is the unambiguous compatibility
+            // signal; a genuinely custom allowlist remains untouched.
+            Some(config) => config.capabilities == Capabilities::default(),
+            None => !self.capabilities_configured,
+        };
+        let mut mls_group_create_config = mls_group_create_config_option
             .unwrap_or_else(|| self.mls_group_create_config_builder.build());
+        if use_provider_capabilities {
+            // A hardcoded default can advertise algorithms the selected
+            // provider cannot execute, or omit a provider-specific suite used
+            // by this group. Derive the default at the provider boundary while
+            // preserving any capabilities the caller set explicitly.
+            mls_group_create_config.capabilities = Capabilities::for_provider(provider.crypto());
+        }
         let group_id = self
             .group_id
             .unwrap_or_else(|| GroupId::random(provider.rand()));
@@ -373,6 +389,7 @@ impl MlsGroupBuilder {
         self.mls_group_create_config_builder = self
             .mls_group_create_config_builder
             .capabilities(capabilities);
+        self.capabilities_configured = true;
         self
     }
 }

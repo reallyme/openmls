@@ -15,7 +15,8 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::crypto::{generate_signature_keypair, CryptoProvider};
 
-const ED25519_SEED_LENGTH: usize = 32;
+const ED25519_SECRET_SEED_LENGTH: usize = 32;
+const ED25519_PUBLIC_KEY_LENGTH: usize = 32;
 
 /// Ed25519 signer backed by ReallyMe Crypto.
 ///
@@ -23,21 +24,22 @@ const ED25519_SEED_LENGTH: usize = 32;
 /// The type intentionally does not implement `Clone` or expose raw secret bytes.
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct ReallyMeSigner {
-    secret_seed: SecretBox<[u8; ED25519_SEED_LENGTH]>,
-    public_key: [u8; ED25519_SEED_LENGTH],
+    secret_seed: SecretBox<[u8; ED25519_SECRET_SEED_LENGTH]>,
+    public_key: [u8; ED25519_PUBLIC_KEY_LENGTH],
 }
 
 impl ReallyMeSigner {
     /// Generate a signer from the ReallyMe operating-system CSPRNG.
     pub fn generate() -> Result<Self, CryptoError> {
         let (private, public) = generate_signature_keypair()?;
-        if private.len() != ED25519_SEED_LENGTH {
+        if private.len() != ED25519_SECRET_SEED_LENGTH {
             return Err(CryptoError::CryptoLibraryError);
         }
-        let secret_seed = SecretBox::init_with_mut(|seed: &mut [u8; ED25519_SEED_LENGTH]| {
-            seed.copy_from_slice(&private);
-        });
-        let public_key = <[u8; ED25519_SEED_LENGTH]>::try_from(public)
+        let secret_seed =
+            SecretBox::init_with_mut(|seed: &mut [u8; ED25519_SECRET_SEED_LENGTH]| {
+                seed.copy_from_slice(&private);
+            });
+        let public_key = <[u8; ED25519_PUBLIC_KEY_LENGTH]>::try_from(public)
             .map_err(|_| CryptoError::CryptoLibraryError)?;
         Ok(Self {
             secret_seed,
@@ -48,7 +50,7 @@ impl ReallyMeSigner {
     /// Construct a signer from a caller-owned secret seed.
     #[cfg(not(all(feature = "wasm", target_arch = "wasm32", not(feature = "native"))))]
     pub fn from_secret_seed(
-        secret_seed: SecretBox<[u8; ED25519_SEED_LENGTH]>,
+        secret_seed: SecretBox<[u8; ED25519_SECRET_SEED_LENGTH]>,
     ) -> Result<Self, CryptoError> {
         let (public_key, derived_private) =
             reallyme_crypto::ed25519::generate_ed25519_keypair_from_seed(
@@ -59,7 +61,7 @@ impl ReallyMeSigner {
         // zeroizing value. Drop it immediately; this signer retains only the
         // caller's secrecy-wrapped seed.
         drop(derived_private);
-        let public_key = <[u8; ED25519_SEED_LENGTH]>::try_from(public_key)
+        let public_key = <[u8; ED25519_PUBLIC_KEY_LENGTH]>::try_from(public_key)
             .map_err(|_| CryptoError::CryptoLibraryError)?;
         Ok(Self {
             secret_seed,
@@ -68,7 +70,7 @@ impl ReallyMeSigner {
     }
 
     /// Return the public verification key.
-    pub fn public_key(&self) -> &[u8; ED25519_SEED_LENGTH] {
+    pub fn public_key(&self) -> &[u8; ED25519_PUBLIC_KEY_LENGTH] {
         &self.public_key
     }
 }
