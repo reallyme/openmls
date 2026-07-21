@@ -11,10 +11,10 @@ the ReallyMe OpenMLS fork. It is intentionally narrow: ReallyMe only advertises
 the suites that are wired to `reallyme-crypto`, covered by provider tests, and
 reviewed as part of the fork boundary.
 
-The current reference is `draft-ietf-mls-pq-ciphersuites-05`, published
-2026-07-02:
+The current reference is `draft-ietf-mls-pq-ciphersuites-06`, published
+2026-07-21:
 
-<https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/>
+<https://datatracker.ietf.org/doc/html/draft-ietf-mls-pq-ciphersuites-06>
 
 ## Supported Suites
 
@@ -28,7 +28,7 @@ deployed X-Wing-768 compatibility suite
    validated or evaluated product boundary. The draft maps it to:
 
    - HPKE KEM: `0x0042` ML-KEM-1024
-   - HPKE KDF: `0x0011` SHAKE256, `Nh = 64`
+   - HPKE KDF: `0x0002` HKDF-SHA384, `Nh = 48`
    - HPKE AEAD: `0x0002` AES-256-GCM
    - MLS hash: SHA-384
    - Signature: ML-DSA-87
@@ -40,7 +40,7 @@ deployed X-Wing-768 compatibility suite
    while retaining traditional P-384 authentication. The draft maps it to:
 
    - HPKE KEM: `0x0042` ML-KEM-1024
-   - HPKE KDF: `0x0011` SHAKE256, `Nh = 64`
+   - HPKE KDF: `0x0002` HKDF-SHA384, `Nh = 48`
    - HPKE AEAD: `0x0002` AES-256-GCM
    - MLS hash: SHA-384
    - Signature: ECDSA secp384r1 SHA-384
@@ -51,21 +51,37 @@ deployed X-Wing-768 compatibility suite
    maps it to:
 
    - HPKE KEM: `0x0051` ML-KEM-1024 + P-384
-   - HPKE KDF: `0x0011` SHAKE256, `Nh = 64`
+   - HPKE KDF: `0x0002` HKDF-SHA384, `Nh = 48`
    - HPKE AEAD: `0x0002` AES-256-GCM
    - MLS hash: SHA-384
    - Signature: ECDSA secp384r1 SHA-384
 
 ## OpenMLS Fork Point
 
-The fork carries the minimal trait/type additions required by the current MLS
-PQ draft:
+The fork carries the minimal trait/type additions and compatibility rules
+required by the current MLS PQ draft:
 
-- HPKE KDF `0x0011` SHAKE256;
 - HPKE KEM `0x0051` ML-KEM-1024 + P-384;
+- HPKE KEM `0x647A` ML-KEM-768 + X25519 (the construction standardized
+  from X-Wing; `0x004D` is its obsolete HPKE identifier);
 - keep HPKE AEAD `0x0002` as ordinary AES-256-GCM, not AES-GCM-SIV;
-- map the draft SHA-384 ML-KEM suites to SHAKE256 HPKE KDF values;
+- map draft SHA-256 suites to HKDF-SHA256 and draft SHA-384 suites to
+  HKDF-SHA384;
 - advertise only the ReallyMe-reviewed suites from the ReallyMe provider.
+
+Revision 05 briefly selected the single-stage SHAKE256 KDF for every suite,
+including `MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519`. Revision 06
+supersedes that mapping because MLS requires both Extract and Expand, and the
+HPKE PQ draft does not define those operations for single-stage KDFs. This fork
+tracks revision 06's HKDF mapping.
+
+HPKE-PQ revision 05 defines the underlying ML-KEM `DeriveKeyPair` operation
+with suite-labeled SHAKE256 expansion. ReallyMe Crypto follows that definition,
+and the official HPKE-PQ vectors below pin the same derived keys through the
+OpenMLS provider boundary. The bundled hpke-rs providers currently use an
+older raw-SHAKE derivation convention, so their allowlists deliberately exclude
+the standards-tracking ML-KEM suites. Do not enable those suites in another
+provider until its derived public and private keys match the official vectors.
 
 None of the four ReallyMe provider suites has a final IANA MLS ciphersuite
 assignment. Their current wire values are:
@@ -75,16 +91,31 @@ assignment. Their current wire values are:
 - ML-KEM-1024 with ML-DSA-87: `0x0907` (currently unassigned by IANA);
 - hybrid ML-KEM-1024/P-384: `0xF043` (IANA private-use range).
 
-The first three values are inherited compatibility points from the upstream
-draft implementation. The hybrid value was deliberately selected from the MLS
-private-use range because the draft still marks it as TBD5. Replace these values
-only through a versioned group-state migration after final assignments exist.
+The first three values are inherited provisional values, not IANA assignments.
+The hybrid value was deliberately selected from the MLS private-use range
+because the draft still marks it as TBD5. Replace these values only through a
+versioned group-state migration after final assignments exist.
+
+The inherited values occupy unassigned public registry space. A future IANA
+assignment could give one of those values different semantics, so registry
+changes must fail closed and trigger an explicit migration rather than being
+accepted under the existing group-state version.
 
 These provisional values are a production interoperability boundary, not
 merely a documentation detail. They must only be deployed in a closed
 federation whose members pin the same fork revision. They must not be offered
 to arbitrary public MLS peers, persisted without a registry-version migration
 plan, or described as IANA-assigned suites.
+
+Fork revisions that implemented draft-05's SHAKE256 mapping are wire- and
+state-incompatible with this draft-06 HKDF mapping despite using the same
+provisional MLS values. Persisted groups created by such a revision must not be
+opened with this provider: identical identifiers would select different key
+schedules and decryption cannot recover the old state. Record the fork's
+suite-registry version with every persisted group and migrate by creating a new
+group under the reviewed mapping. Do not add an automatic KDF fallback,
+because accepting two algorithms behind one wire identifier would create an
+algorithm-confusion boundary.
 
 ## `reallyme-crypto` Boundary
 
@@ -96,7 +127,7 @@ Required HPKE support:
 
 - `HpkeKemId::MlKem1024 = 0x0042`
 - `HpkeKemId::MlKem1024P384 = 0x0051`
-- `HpkeKdfId::Shake256 = 0x0011`
+- `HpkeKdfId::HkdfSha384 = 0x0002`
 - `HpkeAeadId::Aes256Gcm = 0x0002`
 - base-mode seal/open;
 - deterministic key derivation from IKM;
@@ -147,6 +178,8 @@ cross-provider libcrux interoperability test.
 
 Before deploying a reviewed revision:
 
+- compare the pinned draft revision with the latest IETF publication and treat
+  any component-mapping change as a state-migration event;
 - enable only the suite feature set required by the deployment;
 - construct group and key-package capabilities with
   `Capabilities::for_provider(provider.crypto())` so leaves advertise only

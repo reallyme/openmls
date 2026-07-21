@@ -22,6 +22,12 @@ a reviewed release event. All four MLS wire identifiers are provisional; their
 different registry statuses are documented in
 [PQ_MLS_SUITES.md](../PQ_MLS_SUITES.md).
 
+This deliberately narrow provider does not implement RFC 9420's mandatory
+classical ciphersuite
+`MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`. That prevents negotiation from
+downgrading this provider to classical key establishment, but it also means the
+provider is not a standalone general-purpose RFC 9420 interoperability surface.
+
 ## Usage
 
 ```toml
@@ -55,9 +61,13 @@ by accident.
 Use `Capabilities::for_provider(provider.crypto())` for group configurations
 and key packages. Global OpenMLS defaults cover suites from several providers;
 advertising them unchanged would claim support for algorithms this narrow
-provider intentionally rejects. `ReallyMeSigner` is Ed25519-only and is
-appropriate for the X-Wing compatibility suite. Use `ReallyMeSuiteSigner` with
-the selected suite's signature algorithm for P-384 and ML-DSA-87 suites.
+provider intentionally rejects. The standard group and key-package builders
+now derive capabilities from the selected provider when the caller does not
+set an explicit capability list; using `Capabilities::for_provider` remains
+the clearest choice for a persisted, reviewable configuration.
+`ReallyMeSigner` is Ed25519-only and is appropriate for the X-Wing
+compatibility suite. Use `ReallyMeSuiteSigner` with the selected suite's
+signature algorithm for P-384 and ML-DSA-87 suites.
 
 Production consumers must replace `<reviewed-commit>` with the same immutable
 fork revision for both crates. Following the moving `main` branch is not a
@@ -71,7 +81,17 @@ openmls_reallyme_provider = { git = "https://github.com/reallyme/openmls.git", r
 ```
 
 Disabling default features without selecting `wasm` is not a supported
-configuration in ReallyMe Crypto 0.3.1 and does not produce a provider artifact.
+configuration. The provider rejects that configuration with a compile-time
+diagnostic before attempting to compile a backendless ReallyMe Crypto graph.
+Enabling both `native` and `wasm` for a `wasm32` target is also rejected at
+compile time so Cargo feature unification cannot silently select native key
+generation or randomness in a WASM artifact.
+
+Selecting a backend without `draft-ietf-mls-pq-ciphersuites` deliberately
+advertises no ciphersuites and every cryptographic operation fails with
+`UnsupportedCiphersuite`. The draft/private wire identifiers remain opt-in;
+silently enabling provisional suites in the crate's default feature set would
+be unsafe for open-federation consumers.
 
 The `interop-tests` and `mls-flow-tests` features exist only to validate the
 provider in this unpublished fork crate. Deterministic backend vector APIs are

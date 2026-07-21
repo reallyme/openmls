@@ -12,9 +12,14 @@ Messaging Layer Security protocol specified in
 [RFC 9420](https://datatracker.ietf.org/doc/html/rfc9420).
 
 The fork is intentionally small. ReallyMe-specific work should stay close to
-upstream OpenMLS and focus on provider integration, conformance, audited release
-discipline, and future ciphersuite work that is explicitly documented before it
-is enabled.
+upstream OpenMLS and focus on provider integration, conformance, reviewed
+release discipline, and future ciphersuite work that is explicitly documented
+before it is enabled.
+
+The fork-specific additions are not covered by any third-party assessment of
+upstream OpenMLS. “Reviewed” in this repository means the documented local
+review and release gates; it is not a claim of an independent security audit or
+formal evaluation.
 
 ## Current ReallyMe Surface
 
@@ -85,7 +90,9 @@ Apache License, Version 2.0, and is not relicensed by this repository.
 
 ## Copyright And Trademarks
 
-Copyright © 2026 by ReallyMe LLC.
+Upstream OpenMLS portions are copyright © 2020 OpenMLS Authors. ReallyMe
+modifications are copyright © 2026 ReallyMe LLC. File-level SPDX notices and
+[LICENSE](LICENSE) control where they provide more specific attribution.
 
 OpenMLS is a trademark or trade name of the OpenMLS project and its respective
 owners. ReallyMe does not claim ownership of the OpenMLS name or marks.

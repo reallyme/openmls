@@ -6,6 +6,10 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+  schedule:
+    # The full generic OpenMLS corpus is intentionally a deep weekly lane: PQ
+    # signatures make it too expensive for every developer edit.
+    - cron: "23 3 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,25 +34,37 @@ jobs:
           persist-credentials: false
       # reallyme-crypto 0.3.1 declares Rust 1.96 as its MSRV. Keeping this
       # fork-only lane separate minimizes conflicts when pulling upstream.
-      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # revision containing Rust 1.97.1 metadata
         with:
           toolchain: 1.96.0
           components: clippy,rustfmt
           targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       - name: Format
         run: cargo fmt --all -- --check
       - name: Check production feature surface
         run: cargo check -p openmls_reallyme_provider --features draft-ietf-mls-pq-ciphersuites --locked
+      - name: Reject a missing cryptographic backend with an actionable error
+        shell: bash
+        run: |
+          set -euo pipefail
+          backend_error="${RUNNER_TEMP}/reallyme-provider-backend-error.txt"
+          if cargo check -p openmls_reallyme_provider --no-default-features --locked \
+            2>"${backend_error}"; then
+            echo "::error::backendless provider configuration unexpectedly compiled"
+            exit 1
+          fi
+          grep -F "openmls_reallyme_provider requires a backend" "${backend_error}"
       - name: Assert production dependency isolation
         shell: bash
         run: |
           set -euo pipefail
-          if cargo tree -p openmls_reallyme_provider \
+          dependency_tree="$(cargo tree -p openmls_reallyme_provider \
             --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
             --locked \
-            --edges normal,build,features \
-            | grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v'; then
+            --edges normal,build,features)"
+          if grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v' \
+            <<<"${dependency_tree}"; then
             echo "::error::test-only dependency leaked into the production provider graph"
             exit 1
           fi
@@ -56,10 +72,40 @@ jobs:
         run: cargo check -p openmls_reallyme_provider --all-targets --all-features --locked
       - name: Check the production WASM feature surface
         run: cargo check -p openmls_reallyme_provider --target wasm32-unknown-unknown --no-default-features --features wasm,draft-ietf-mls-pq-ciphersuites --locked
+      - name: Reject unified native and WASM backends on wasm32
+        shell: bash
+        run: |
+          set -euo pipefail
+          feature_error="${RUNNER_TEMP}/reallyme-provider-wasm-features-error.txt"
+          if cargo check -p openmls_reallyme_provider --target wasm32-unknown-unknown \
+            --no-default-features \
+            --features native,wasm,draft-ietf-mls-pq-ciphersuites \
+            --locked 2>"${feature_error}"; then
+            echo "::error::conflicting native and wasm backends unexpectedly compiled"
+            exit 1
+          fi
+          grep -F "cannot enable both \`native\` and \`wasm\` on wasm32" "${feature_error}"
       - name: Clippy with warnings denied
         run: cargo clippy -p openmls_reallyme_provider --all-targets --all-features --locked -- -D warnings
       - name: Provider conformance, interoperability, and MLS flows
         run: cargo test -p openmls_reallyme_provider --all-features --locked -- --test-threads=1
+      - name: Compile the generic OpenMLS corpus for every reviewed suite
+        run: cargo test -p openmls --lib --features reallyme-provider --locked --no-run
+      - name: Run generic OpenMLS provider smoke coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            test_hpke_seal_open_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            update_path_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            test_remove_operation_variants_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            external_commit_builder_reallyme_ -- --test-threads=1
+      - name: Run the full generic OpenMLS corpus for every reviewed suite
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: cargo test -p openmls --lib --features reallyme-provider --locked -- --test-threads=1
 
   advisories:
     runs-on: ubuntu-24.04
@@ -68,7 +114,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: EmbarkStudios/cargo-deny-action@b66acf5e9fe20f8aba065be86778a8a4c846f902 # v2
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
         with:
           manifest-path: openmls_reallyme_provider/Cargo.toml
           command: check
@@ -77,4 +123,5 @@ jobs:
           arguments: >-
             --features
             extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft
-            --locked --exclude-dev --deny warnings
+            --locked
+          command-arguments: --exclude-dev --deny warnings

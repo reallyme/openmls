@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -30,21 +33,25 @@ jobs:
       - name: Install dependencies
         if: matrix.os == 'macos-latest'
         run: brew install protobuf
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # revision containing Rust 1.97.1 metadata
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: |
             . -> target
       - name: Build workspace
         run: |
-          cargo build --workspace --all-targets --exclude openmls-fuzz
+          cargo build --workspace --all-targets --exclude openmls-fuzz --locked
       - name: Test workspace
         run: |
-          cargo test --workspace --all-targets --exclude=openmls --exclude openmls-fuzz
+          cargo test --workspace --all-targets --exclude=openmls --exclude openmls-fuzz --locked
       - name: Build workspace with experimental features
         run: |
-          cargo build --workspace -F extensions-draft,draft-ietf-mls-pq-ciphersuites --all-targets --exclude openmls-fuzz
+          cargo build --workspace -F extensions-draft,draft-ietf-mls-pq-ciphersuites --all-targets --exclude openmls-fuzz --locked
       - name: Test workspace with experimental features
         run: |
-          cargo test --workspace -F extensions-draft,draft-ietf-mls-pq-ciphersuites --all-targets --exclude=openmls --exclude openmls-fuzz
+          cargo test --workspace -F extensions-draft,draft-ietf-mls-pq-ciphersuites --all-targets --exclude=openmls --exclude openmls-fuzz --locked

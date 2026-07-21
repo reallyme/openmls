@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tests: [welcome_decode, mls_message_decode, proposal_decode]
+        tests: [welcome_decode, mls_message_decode, proposal_decode, reallyme_provider_boundaries]
         include:
           - tests: welcome_decode
             runs: 10000
@@ -37,6 +37,11 @@ jobs:
             runs: 50000
           - tests: proposal_decode
             runs: 50000
+          # PQ verification and decapsulation are intentionally expensive;
+          # keep this spot-fuzz lane bounded while preserving continuous
+          # malformed-input coverage at both provider entry points.
+          - tests: reallyme_provider_boundaries
+            runs: 2000
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
