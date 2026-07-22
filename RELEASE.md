@@ -59,19 +59,12 @@ Running `cargo deny check` at the workspace root is therefore not the release
 gate and includes upstream demonstration, test, and interoperability tooling
 that is deliberately outside the deployable provider graph.
 
-The pinned ReallyMe HPKE backend currently brings `x448 0.14.0-pre.12` into the
-native production dependency graph. The provider's exact HPKE suite mapping
-does not expose X448, but ReallyMe Crypto 0.3.1 enables it as part of its
-monolithic native HPKE backend feature. Treat this pre-release transitive crate
-as a release residual risk, keep it lockfile-pinned, and remove it when the
-backend offers a narrower feature or migrates to a stable X448 release.
-
-The facade's exact `reallyme-crypto =0.3.1` requirement does not make its
-published first-party sub-crate requirements exact. The committed lockfile and
-every fork CI/release command therefore use `--locked`. A ReallyMe Crypto
-release should additionally pin its coordinated internal crates with exact
-requirements so regenerating this lockfile cannot silently mix patch releases
-from different reviewed publication sets.
+ReallyMe Crypto 0.3.3 component-level HPKE features keep X448, P-256, P-521,
+and secp256k1/K-256 outside this provider's production graph. Its coordinated
+first-party crate dependencies are exact-pinned to `=0.3.3`; the committed
+lockfile and every fork CI/release command additionally use `--locked`. The
+dependency-isolation gate must continue proving that unrelated HPKE algorithms
+and mixed ReallyMe Crypto patch versions have not re-entered the graph.
 
 Before a public production release, document and review the publishing controls
 for every ReallyMe Crypto crate used by this provider. Prefer crates.io Trusted

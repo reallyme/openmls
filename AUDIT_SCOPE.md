@@ -52,18 +52,14 @@ outputs on drop. That behavior is part of the reviewed dependency boundary:
 upgrading `reallyme-crypto` requires revalidating both its zeroization contracts
 and the adapter's move-without-clone assumptions.
 
-The enabled ReallyMe facade features are narrower than the transitive build
-surface of ReallyMe Crypto 0.3.1. In particular, its monolithic HPKE `native`
-feature compiles P-256, P-384, P-521, secp256k1/K-256, X448, ML-KEM, SHAKE, and
-TurboSHAKE support even though this provider selects only X-Wing,
-ML-KEM-1024, and ML-KEM-1024/P-384 HPKE KEMs. These additional algorithms are
-not advertised or selected by the provider, but their source and build scripts
-remain inside the dependency review boundary. The locked graph currently
-includes `x448 0.14.0-pre.12`, `ed448-goldilocks 0.14.0-pre.15`, `ml-dsa
-0.1.1`, `turboshake 0.7.1`, `x-wing 0.1.0`, and
-`reallyme-crypto-x-wing 0.3.1`. ReallyMe Crypto should replace the monolithic
-HPKE backend feature with component-level features so the provider can compile
-only its reviewed KEM, KDF, and AEAD implementations.
+ReallyMe Crypto 0.3.3 exposes a corrected `hpke-openmls` aggregate backed by
+component-level HPKE features. The provider enables only X-Wing,
+ML-KEM-1024, ML-KEM-1024/P-384, HKDF-SHA256, HKDF-SHA384, AES-256-GCM, and
+ChaCha20-Poly1305 for its production HPKE graph. P-256, P-521,
+secp256k1/K-256, X448, and their pre-release transitive implementations are
+therefore outside the provider's production dependency graph. The separately
+enabled P-384 primitive supports the provider's signature scheme and hybrid
+KEM.
 
 Backend failures are intentionally collapsed into fixed OpenMLS error variants.
 This prevents key material, plaintext, peer input, or backend-specific details

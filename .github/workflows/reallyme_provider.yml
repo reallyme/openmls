@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      # reallyme-crypto 0.3.1 declares Rust 1.96 as its MSRV. Keeping this
+      # reallyme-crypto 0.3.3 declares Rust 1.96 as its MSRV. Keeping this
       # fork-only lane separate minimizes conflicts when pulling upstream.
       - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # revision containing Rust 1.97.1 metadata
         with:
@@ -66,6 +66,36 @@ jobs:
           if grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v' \
             <<<"${dependency_tree}"; then
             echo "::error::test-only dependency leaked into the production provider graph"
+            exit 1
+          fi
+          if grep -E 'reallyme-crypto-(p256|p521|secp256k1|x448) v|(^|[^[:alnum:]_-])(p256|p521|k256|x448|ed448-goldilocks) v' \
+            <<<"${dependency_tree}"; then
+            echo "::error::an unrelated HPKE algorithm leaked into the production provider graph"
+            exit 1
+          fi
+          if grep -E 'reallyme-crypto feature "hpke"|reallyme-crypto-hpke feature "(native|kdf-shake256|kdf-hkdf-sha512|kem-dh-p256|kem-dh-p521|kem-secp256k1|kem-x448)"' \
+            <<<"${dependency_tree}"; then
+            echo "::error::the full or draft-05 HPKE feature surface leaked into production"
+            exit 1
+          fi
+          for required_feature in \
+            "reallyme-crypto feature \"hpke-openmls\"" \
+            "reallyme-crypto-hpke feature \"kem-ml-kem-1024\"" \
+            "reallyme-crypto-hpke feature \"kem-ml-kem-1024-p384\"" \
+            "reallyme-crypto-hpke feature \"kem-x-wing\"" \
+            "reallyme-crypto-hpke feature \"kdf-hkdf-sha256\"" \
+            "reallyme-crypto-hpke feature \"kdf-hkdf-sha384\"" \
+            "reallyme-crypto-hpke feature \"aead-aes256-gcm\"" \
+            "reallyme-crypto-hpke feature \"aead-chacha20-poly1305\""; do
+            if ! grep -F "${required_feature}" <<<"${dependency_tree}"; then
+              echo "::error::required narrow HPKE feature missing: ${required_feature}"
+              exit 1
+            fi
+          done
+          reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
+            <<<"${dependency_tree}" | sort -u)"
+          if grep -Ev ' v0\.3\.3$' <<<"${reallyme_packages}"; then
+            echo "::error::mixed ReallyMe Crypto publication versions entered production"
             exit 1
           fi
       - name: Check every ReallyMe feature on the native target

@@ -17,8 +17,9 @@ use openmls_traits::{
     },
 };
 use reallyme_crypto::hpke::{
-    derive_keypair_from_ikm_raw, open_base_raw, seal_base_derand_raw, HpkeAeadId,
-    HpkeDerandSealRequest, HpkeKdfId, HpkeKemId, HpkeOpenRequest, HpkeSuite, HPKE_AEAD_NONCE_LEN,
+    derive_keypair_from_ikm_raw, open_base_raw, seal_base_derand_raw, HpkeDerandSealRequest,
+    HpkeOpenRequest, HpkeSuite, HPKE_AEAD_NONCE_LEN, HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM,
+    HPKE_MLKEM1024_HKDF_SHA384_AES256GCM,
 };
 use reallyme_crypto::{
     ml_dsa_87::generate_ml_dsa_87_keypair_from_seed,
@@ -32,17 +33,6 @@ const CNSA_MLKEM1024_MLDSA87_SUITE: Ciphersuite =
     Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87;
 const HYBRID_MLKEM1024_P384_SUITE: Ciphersuite =
     Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384;
-const HPKE_MLKEM1024_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
-    HpkeKemId::MlKem1024,
-    HpkeKdfId::HkdfSha384,
-    HpkeAeadId::Aes256Gcm,
-);
-const HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
-    HpkeKemId::MlKem1024P384,
-    HpkeKdfId::HkdfSha384,
-    HpkeAeadId::Aes256Gcm,
-);
-
 fn assert_private_keys_match(left: &[u8], right: &[u8]) {
     let crypto = CryptoProvider;
     let left_digest = crypto

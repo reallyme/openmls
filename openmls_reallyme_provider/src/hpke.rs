@@ -12,7 +12,10 @@ use reallyme_crypto::hpke::{
     HpkeSenderExportRequest, HpkeSuite,
 };
 #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-use reallyme_crypto::hpke::{HpkeAeadId, HpkeKdfId, HpkeKemId};
+use reallyme_crypto::hpke::{
+    HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM, HPKE_MLKEM1024_HKDF_SHA384_AES256GCM,
+    HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305,
+};
 
 const HKDF_MAXIMUM_BLOCK_COUNT: usize = 255;
 // HPKE-PQ requires at least 32 bytes for hybrid KEM DeriveKeyPair inputs.
@@ -23,21 +26,6 @@ const SHA256_OUTPUT_LENGTH: usize = 32;
 const SHA384_OUTPUT_LENGTH: usize = 48;
 const SHA512_OUTPUT_LENGTH: usize = 64;
 
-#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-const HPKE_MLKEM1024_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
-    HpkeKemId::MlKem1024,
-    HpkeKdfId::HkdfSha384,
-    HpkeAeadId::Aes256Gcm,
-);
-
-#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-const HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM: HpkeSuite = HpkeSuite::new(
-    HpkeKemId::MlKem1024P384,
-    HpkeKdfId::HkdfSha384,
-    HpkeAeadId::Aes256Gcm,
-);
-#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-use reallyme_crypto::hpke::HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305;
 #[cfg(feature = "targeted-messages-draft")]
 use reallyme_crypto::hpke::{
     HpkePskIdRef, HpkePskReceiverSetupRequest, HpkePskRef, HpkePskSenderSetupRequest,
@@ -122,7 +110,7 @@ pub(crate) fn derive_keypair(config: HpkeConfig, ikm: &[u8]) -> Result<HpkeKeyPa
         // only on the X-Wing KEM. Standards-tracking suites using KEM 0x647A
         // follow HPKE-PQ's labeled derivation and must not inherit this legacy
         // OpenMLS compatibility rule.
-        // ReallyMe Crypto 0.3.1 delegates X-Wing DeriveKeyPair to an HPKE
+        // ReallyMe Crypto 0.3.3 delegates X-Wing DeriveKeyPair to an HPKE
         // implementation using the older labeled-derive construction. The
         // OpenMLS X-Wing suite is draft-06, which specifies raw
         // SHAKE256(ikm, 32). Normalize here until the pinned backend exposes a
