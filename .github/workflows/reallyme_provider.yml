@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      # reallyme-crypto 0.3.3 declares Rust 1.96 as its MSRV. Keeping this
+      # reallyme-crypto 0.3.4 declares Rust 1.96 as its MSRV. Keeping this
       # fork-only lane separate minimizes conflicts when pulling upstream.
       - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # revision containing Rust 1.97.1 metadata
         with:
@@ -94,7 +94,7 @@ jobs:
           done
           reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
             <<<"${dependency_tree}" | sort -u)"
-          if grep -Ev ' v0\.3\.3$' <<<"${reallyme_packages}"; then
+          if grep -Ev ' v0\.3\.4$' <<<"${reallyme_packages}"; then
             echo "::error::mixed ReallyMe Crypto publication versions entered production"
             exit 1
           fi

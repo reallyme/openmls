@@ -1,5 +1,5 @@
 # Duplicate versions increase the number of implementations and patch levels
-# that must be audited. Keep the one unavoidable exception exact and documented
+# that must be audited. Keep unavoidable exceptions exact and documented
 # so it becomes a hard failure as soon as any other duplicate enters the
 # deployable provider graph.
 [bans]
@@ -16,9 +16,13 @@ skip = [
     { crate = "cpufeatures@0.2.17", reason = "Required by aes 0.8.4 in the optional FF1 adapter" },
     { crate = "crypto-common@0.1.7", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
     { crate = "inout@0.1.4", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
-    # ml-kem 0.3.2 still uses sha3 0.11 while hpke 0.13 and ReallyMe Crypto use
+    # ml-kem 0.3.2 still uses sha3 0.11 while hpke 0.14 and ReallyMe Crypto use
     # sha3 0.12. Remove this exception when the upstream dependency converges.
     { crate = "sha3@0.11.0", reason = "Unavoidable transitive version split in the reviewed PQ dependency graph" },
+    # Current serde and thiserror derive macros use Syn 3, while tls_codec and
+    # several cryptographic derive macros still use Syn 2. Both are build-time
+    # proc-macro dependencies and do not create duplicate runtime parsers.
+    { crate = "syn@3.0.3", reason = "Build-time derive ecosystem is transitioning from Syn 2 to Syn 3" },
 ]
 
 # Keep this list exact for the deployable provider graph so a dependency cannot

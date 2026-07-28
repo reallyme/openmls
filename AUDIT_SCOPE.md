@@ -52,7 +52,7 @@ outputs on drop. That behavior is part of the reviewed dependency boundary:
 upgrading `reallyme-crypto` requires revalidating both its zeroization contracts
 and the adapter's move-without-clone assumptions.
 
-ReallyMe Crypto 0.3.3 exposes a corrected `hpke-openmls` aggregate backed by
+ReallyMe Crypto 0.3.4 exposes a corrected `hpke-openmls` aggregate backed by
 component-level HPKE features. The provider enables only X-Wing,
 ML-KEM-1024, ML-KEM-1024/P-384, HKDF-SHA256, HKDF-SHA384, AES-256-GCM, and
 ChaCha20-Poly1305 for its production HPKE graph. P-256, P-521,

@@ -78,8 +78,9 @@ Current test and infrastructure fork points:
   provider-derived defaults replaced hardcoded global capabilities.
 - `.github/workflows/reallyme_provider.yml`: fork-provider MSRV, native/WASM,
   dependency-isolation, conformance, and scheduled generic-corpus gates.
-- `.github/workflows/build.yml`: excludes the fork-only provider from the
-  older upstream MSRV lane; its newer MSRV is enforced in the provider lane.
+- `.github/workflows/build.yml`: raises the workspace MSRV lane to the
+  ReallyMe provider's Rust 1.96 floor and checks every workspace target and
+  feature at that boundary.
 - `.github/workflows/fuzz.yml`, `fuzz/Cargo.toml`, and the ReallyMe provider
   fuzz target: malformed HPKE and signature-input coverage.
 - `serialization_helpers/Cargo.toml`: disables Postcard's unnecessary default

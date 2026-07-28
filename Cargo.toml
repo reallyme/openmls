@@ -26,7 +26,7 @@ exclude = ["compat_tests", "sqlx_storage"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.91.0"
+rust-version = "1.96.0"
 
 # Central dependency management for some crates
 [workspace.dependencies]

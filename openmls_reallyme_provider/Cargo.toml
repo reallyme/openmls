@@ -20,7 +20,7 @@ openmls = { workspace = true, optional = true }
 openmls_libcrux_crypto = { workspace = true, optional = true }
 # Pin the audited provider surface exactly; upgrades require rerunning the MLS
 # interoperability and conformance gates in this crate.
-reallyme-crypto = { version = "=0.3.3", default-features = false, optional = true, features = [
+reallyme-crypto = { version = "=0.3.4", default-features = false, optional = true, features = [
     "aes",
     "chacha20-poly1305",
     "csprng",
@@ -33,7 +33,7 @@ reallyme-crypto = { version = "=0.3.3", default-features = false, optional = tru
     "sha3",
     "x-wing",
 ] }
-reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.3.3", optional = true }
+reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.3.4", optional = true }
 secrecy = "0.10.3"
 thiserror = { workspace = true }
 tls_codec = { workspace = true }
@@ -100,7 +100,7 @@ hex = "0.4"
 # Deterministic KEM entry points must never be a downstream-selectable provider
 # feature. Feature unification exposes them only while compiling this crate's
 # test targets; normal consumers retain the production ReallyMe API surface.
-reallyme-crypto = { version = "=0.3.3", default-features = false, features = [
+reallyme-crypto = { version = "=0.3.4", default-features = false, features = [
     "ml-kem-1024",
     "test-vectors",
 ] }
