@@ -154,4 +154,6 @@ jobs:
             --features
             extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft
             --locked
-          command-arguments: --exclude-dev --deny warnings
+            --exclude-dev
+          command-arguments: --deny warnings
+          rust-version: 1.96.0

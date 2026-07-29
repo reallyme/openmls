@@ -82,7 +82,8 @@ ciphersuite flow, not only the X-Wing compatibility suite.
 
 This repository contains upstream OpenMLS code and ReallyMe modifications to
 OpenMLS. Unless a file-level SPDX identifier states otherwise, the code in this
-repository is licensed under the MIT License. See [LICENSE](LICENSE).
+repository is licensed under the MIT License. See the repository's
+[LICENSE](https://github.com/reallyme/openmls/blob/main/LICENSE).
 
 External repositories and dependencies are licensed under their respective
 licenses. In particular, `reallyme-crypto` is distributed separately under the
@@ -92,7 +93,9 @@ Apache License, Version 2.0, and is not relicensed by this repository.
 
 Upstream OpenMLS portions are copyright © 2020 OpenMLS Authors. ReallyMe
 modifications are copyright © 2026 ReallyMe LLC. File-level SPDX notices and
-[LICENSE](LICENSE) control where they provide more specific attribution.
+the repository's
+[LICENSE](https://github.com/reallyme/openmls/blob/main/LICENSE) control where
+they provide more specific attribution.
 
 OpenMLS is a trademark or trade name of the OpenMLS project and its respective
 owners. ReallyMe does not claim ownership of the OpenMLS name or marks.
