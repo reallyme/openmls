@@ -6,13 +6,15 @@ on:
       - main
   workflow_dispatch:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   documentation:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: hecrj/setup-rust-action@master
       - uses: actions/checkout@v7

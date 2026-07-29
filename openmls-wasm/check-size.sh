@@ -1,30 +1,31 @@
 #!/usr/bin/env bash
 
-pushd $(dirname $0) >/dev/null
-trap "popd >/dev/null" EXIT
+set -euo pipefail
+
+script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+pushd "${script_directory}" >/dev/null
+trap 'popd >/dev/null' EXIT
 
 function die() {
-	echo error: $@
+	printf 'error: %s\n' "$*" >&2
 	exit 1
 }
 
-set -e
-
 ./build.sh
 
-raw_size=$(tar c pkg | wc -c)
-gzip_size=$(tar cj pkg | wc -c)
+raw_size="$(tar c pkg | wc -c)"
+gzip_size="$(tar cj pkg | wc -c)"
 
-raw_thresh=2000000
-gzip_thresh=650000
+readonly raw_thresh=2000000
+readonly gzip_thresh=650000
 
-if [ $raw_size -gt $raw_thresh ]; then
+if ((raw_size > raw_thresh)); then
 	die "raw size is too large: $raw_size > $raw_thresh"
 else
 	echo "raw size $raw_size is below threshold $raw_thresh"
 fi
 
-if [ $gzip_size -gt $gzip_thresh ]; then
+if ((gzip_size > gzip_thresh)); then
 	die "gzip'd size is too large: $gzip_size > $gzip_thresh"
 else
 	echo "gzip'd size $gzip_size is below threshold $gzip_thresh"
