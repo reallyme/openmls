@@ -64,6 +64,14 @@ use openmls_compat::prelude::{
     *,
 };
 use openmls_current::prelude::tls_codec::{Deserialize as _, Serialize as _};
+// The feature-toggle migration test calls provider trait methods on a concrete
+// current-version provider. Keep the trait import scoped to that exact lane so
+// the other migration combinations remain warning-free under `-D warnings`.
+#[cfg(all(
+    feature = "extensions-draft-current",
+    not(feature = "extensions-draft-compat")
+))]
+use openmls_current::prelude::OpenMlsProvider as _;
 use openmls_traits_compat::signatures::Signer;
 
 use openmls as openmls_current;
