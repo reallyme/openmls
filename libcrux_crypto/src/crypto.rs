@@ -579,4 +579,52 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn advertised_ciphersuites_actually_work() -> Result<(), CryptoError> {
+        let provider = CryptoProvider::new()?;
+        for ciphersuite in provider.supported_ciphersuites() {
+            let key = vec![0u8; ciphersuite.aead_key_length()];
+            let nonce = vec![0u8; ciphersuite.aead_nonce_length()];
+            let ciphertext = provider.aead_encrypt(
+                ciphersuite.aead_algorithm(),
+                &key,
+                b"plaintext",
+                &nonce,
+                b"aad",
+            )?;
+            let plaintext = provider.aead_decrypt(
+                ciphersuite.aead_algorithm(),
+                &key,
+                &ciphertext,
+                &nonce,
+                b"aad",
+            )?;
+            assert_eq!(plaintext, b"plaintext", "{ciphersuite:?}: aead round trip");
+
+            let mut ikm = vec![0u8; ciphersuite.hash_length()];
+            provider.fill_random(&mut ikm)?;
+            let key_pair = provider.derive_hpke_keypair(ciphersuite.hpke_config(), &ikm)?;
+            let sealed = provider.hpke_seal(
+                ciphersuite.hpke_config(),
+                &key_pair.public,
+                b"info",
+                b"aad",
+                b"plaintext",
+            )?;
+            let opened = provider.hpke_open(
+                ciphersuite.hpke_config(),
+                &sealed,
+                &key_pair.private,
+                b"info",
+                b"aad",
+            )?;
+            assert_eq!(
+                opened.as_slice(),
+                b"plaintext",
+                "{ciphersuite:?}: hpke round trip"
+            );
+        }
+        Ok(())
+    }
 }

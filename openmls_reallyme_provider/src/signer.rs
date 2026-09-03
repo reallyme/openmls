@@ -152,8 +152,6 @@ impl Signer for ReallyMeSuiteSigner {
 
 #[cfg(test)]
 mod tests {
-    use openmls_traits::{crypto::OpenMlsCrypto as _, signatures::Signer as _};
-
     use super::*;
     use crate::CryptoProvider;
 

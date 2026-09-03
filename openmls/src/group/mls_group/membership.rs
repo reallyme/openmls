@@ -4,7 +4,7 @@
 
 #[cfg(any(not(feature = "virtual-clients-draft"), feature = "test-utils", test))]
 use errors::EmptyInputError;
-use openmls_traits::{signatures::Signer, storage::StorageProvider as _};
+use openmls_traits::signatures::Signer;
 use proposal_store::QueuedRemoveProposal;
 
 #[cfg(any(not(feature = "virtual-clients-draft"), feature = "test-utils", test))]
@@ -174,9 +174,9 @@ impl MlsGroup {
             .build(provider.rand(), provider.crypto(), signer, |_| true)?
             .stage_commit(provider)?;
 
-        let welcome: MlsMessageOut = bundle.to_welcome_msg().ok_or(LibraryError::custom(
-            "No secrets to generate commit message.",
-        ))?;
+        let welcome: MlsMessageOut = bundle
+            .to_welcome_msg()
+            .ok_or_else(|| LibraryError::custom("No secrets to generate commit message."))?;
         let (commit, _, group_info) = bundle.into_contents();
 
         self.reset_aad();
