@@ -25,6 +25,9 @@ jobs:
           mkdir -p target/debug/coverage
           cargo test --no-fail-fast -p openmls
         env:
+          # Coverage relies on unstable compiler flags; override the repository's
+          # stable development pin for this nightly-only step.
+          RUSTUP_TOOLCHAIN: nightly
           CARGO_INCREMENTAL: '0'
           LLVM_PROFILE_FILE: 'target/debug/coverage/openmls-%p-%m.profraw'
           RUSTFLAGS: '-Cinstrument-coverage -Cpanic=abort -Zpanic_abort_tests'

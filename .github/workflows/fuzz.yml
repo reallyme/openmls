@@ -75,4 +75,8 @@ jobs:
         with:
           crate: cargo-fuzz
           version: latest
+      # cargo-fuzz launches nested Cargo processes, so a +nightly prefix on the
+      # outer command is insufficient to override the repository toolchain pin.
       - run: cargo fuzz run ${{ matrix.tests }} -- -runs=${{ matrix.runs }}
+        env:
+          RUSTUP_TOOLCHAIN: nightly
