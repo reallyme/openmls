@@ -31,7 +31,7 @@ cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 CARGO_PROFILE_TEST_DEBUG=0 cargo test --workspace --all-features --locked -- --test-threads=1
 cargo deny --manifest-path openmls_reallyme_provider/Cargo.toml \
   --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
-  --locked check --exclude-dev --deny warnings
+  --locked --exclude-dev check --deny warnings
 cargo build -p openmls_reallyme_provider --release --features draft-ietf-mls-pq-ciphersuites --locked
 cargo test -p openmls_reallyme_provider --all-features --locked
 cargo test -p openmls --lib --features reallyme-provider --locked -- --test-threads=1
@@ -59,9 +59,9 @@ Running `cargo deny check` at the workspace root is therefore not the release
 gate and includes upstream demonstration, test, and interoperability tooling
 that is deliberately outside the deployable provider graph.
 
-ReallyMe Crypto 0.3.4 component-level HPKE features keep X448, P-256, P-521,
+ReallyMe Crypto 0.3.5 component-level HPKE features keep X448, P-256, P-521,
 and secp256k1/K-256 outside this provider's production graph. Its coordinated
-first-party crate dependencies are exact-pinned to `=0.3.4`; the committed
+first-party crate dependencies are exact-pinned to `=0.3.5`; the committed
 lockfile and every fork CI/release command additionally use `--locked`. The
 dependency-isolation gate must continue proving that unrelated HPKE algorithms
 and mixed ReallyMe Crypto patch versions have not re-entered the graph.

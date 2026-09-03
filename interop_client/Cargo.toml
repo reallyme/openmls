@@ -25,9 +25,9 @@ openmls_traits = { path = "../traits" }
 mls_interop_proto = { git = "https://github.com/mlswg/mls-implementations/" }
 
 tonic = "0.14"
-tokio = { version = "1.52.1", features = ["macros", "net", "rt-multi-thread"] }
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread"] }
 clap = "4.6"
-clap_derive = "4.1"
+clap_derive = "4.6"
 serde = { workspace = true, features = ["derive"] }
 serde_json = "^1.0"
 tls_codec = { workspace = true }

@@ -1155,7 +1155,11 @@ macro_rules! impl_storage_provider_virtual_clients_draft {
         ) -> Result<(), $error> {
             let mut data = self.0 .0.lock().unwrap();
             write(group_id, bindings, &mut data.vc_emulation_bindings)?;
-            write_bound_epochs(group_id, bound_epochs, &mut data.vc_emulation_binding_epochs)
+            write_bound_epochs(
+                group_id,
+                bound_epochs,
+                &mut data.vc_emulation_binding_epochs,
+            )
         }
 
         #[cfg(feature = "virtual-clients-draft")]
@@ -1225,7 +1229,9 @@ macro_rules! impl_storage_provider_virtual_clients_draft {
         }
 
         #[cfg(feature = "virtual-clients-draft")]
-        fn delete_vc_derivation_epoch_state_if_unreferenced<EpochId: traits::VcEpochId<$version>>(
+        fn delete_vc_derivation_epoch_state_if_unreferenced<
+            EpochId: traits::VcEpochId<$version>,
+        >(
             &self,
             epoch_id: &EpochId,
         ) -> Result<bool, $error> {
@@ -1774,10 +1780,10 @@ mod postcard_compat {
         fn iter_group_ids<GroupId: traits::GroupId<CURRENT_VERSION>>(
             &self,
         ) -> Result<Vec<GroupId>, postcard::Error> {
-            let mut data = self.0 .0.lock().unwrap();
+            let data = self.0 .0.lock().unwrap();
             data.group_context
-                .iter()
-                .map(|(k, _v)| postcard::from_bytes(k))
+                .keys()
+                .map(|key| postcard::from_bytes(key))
                 .collect::<Result<Vec<_>, _>>()
         }
     }

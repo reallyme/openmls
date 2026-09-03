@@ -16,7 +16,7 @@ OpenMLS fork. It does not change MLS serialization or protocol state. With
 - `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384`.
 
 The provider delegates the supported base and PSK HPKE operations, exporter
-operations, AEAD, hashes, signatures, and randomness to ReallyMe Crypto 0.3.4.
+operations, AEAD, hashes, signatures, and randomness to ReallyMe Crypto 0.3.5.
 The dependency is exactly pinned because changing the cryptographic backend is
 a reviewed release event. All four MLS wire identifiers are provisional; their
 different registry statuses are documented in

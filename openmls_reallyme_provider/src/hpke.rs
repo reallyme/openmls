@@ -110,7 +110,7 @@ pub(crate) fn derive_keypair(config: HpkeConfig, ikm: &[u8]) -> Result<HpkeKeyPa
         // only on the X-Wing KEM. Standards-tracking suites using KEM 0x647A
         // follow HPKE-PQ's labeled derivation and must not inherit this legacy
         // OpenMLS compatibility rule.
-        // ReallyMe Crypto 0.3.4 delegates X-Wing DeriveKeyPair to an HPKE
+        // ReallyMe Crypto 0.3.5 delegates X-Wing DeriveKeyPair to an HPKE
         // implementation using the older labeled-derive construction. The
         // OpenMLS X-Wing suite is draft-06, which specifies raw
         // SHAKE256(ikm, 32). Normalize here until the pinned backend exposes a

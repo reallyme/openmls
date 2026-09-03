@@ -12,6 +12,12 @@ readme = "../README.md"
 keywords = ["MLS", "IETF", "RFC9420", "Encryption", "E2EE"]
 exclude = ["/test_vectors"]
 
+[package.metadata.cargo-machete]
+# These optional dependencies exist to activate target-specific randomness
+# backends through Cargo features; they are intentionally not imported by Rust
+# source files.
+ignored = ["getrandom", "getrandom_old"]
+
 [dependencies]
 openmls_traits = { workspace = true }
 openmls_rust_crypto = { workspace = true, optional = true }
@@ -36,12 +42,12 @@ thiserror = { workspace = true }
 rand = { version = "0.10", optional = true }
 serde_json = { version = "1.0", optional = true }
 # Crypto providers required for KAT and testing - "test-utils" feature
-itertools = { version = "0.14", optional = true }
-getrandom = { version = "0.4.2", optional = true }
-getrandom_old = { package = "getrandom", version = "0.2.15", optional = true }
+itertools = { version = "0.15", optional = true }
+getrandom = { version = "0.4.3", optional = true }
+getrandom_old = { package = "getrandom", version = "0.2.17", optional = true }
 web-time = { version = "1.1", optional = true, features = ["serde"] }
-zeroize = "1.8.1"
-serde_bytes = "0.11.17"
+zeroize = "1.9.0"
+serde_bytes = "0.11.19"
 
 [features]
 # enable for compatibility with openmls=0.8.1
@@ -179,9 +185,9 @@ hex = { version = "0.4", features = ["serde"] }
 openmls_traits = { workspace = true, features = ["test-utils"] }
 pretty_env_logger = "0.5"
 clap = { version = "4", features = ["derive"] }
-base64 = "0.22.1"
-flate2 = "1.0"
-indicatif = "0.18.3"
+base64 = "0.23.1"
+flate2 = "1.1"
+indicatif = "0.18.6"
 openmls_reallyme_provider = { workspace = true, features = ["test-utils"] }
 
 # Default test build is rustcrypto-only and MTI-ciphersuite-only.

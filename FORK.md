@@ -71,6 +71,10 @@ Current test and infrastructure fork points:
 - `openmls_test`, `openmls/Cargo.toml`, and the test-only capability entry in
   `openmls/src/treesync/node/leaf_node/capabilities.rs`: opt-in expansion of
   the generic OpenMLS corpus over the ReallyMe provider's exact allowlist.
+- `openmls/src/group/tests_and_kats/utils.rs`,
+  `openmls/src/storage/kat_storage_stability.rs`, and
+  `openmls/test_vectors/storage-stability.json`: provider construction and
+  persisted-state vectors for every ReallyMe suite.
 - `openmls/src/group/tests_and_kats/tests/virtual_clients.rs`: executable-lane
   sentinel and provider capability guards for generic virtual-client tests.
 - `openmls/src/group/mls_group/tests_and_kats/tests/mls_group.rs` and
@@ -78,16 +82,28 @@ Current test and infrastructure fork points:
   provider-derived defaults replaced hardcoded global capabilities.
 - `.github/workflows/reallyme_provider.yml`: fork-provider MSRV, native/WASM,
   dependency-isolation, conformance, and scheduled generic-corpus gates.
-- `.github/workflows/build.yml`: raises the workspace MSRV lane to the
-  ReallyMe provider's Rust 1.96 floor and checks every workspace target and
-  feature at that boundary.
+- `.github/workflows/build.yml`, `build_test_workspace.yml`, `clippy.yml`,
+  `gh-pages.yml`, and `wasm-bench.yml`: immutable action pins, locked
+  dependency resolution, and the ReallyMe provider's Rust 1.96 workspace
+  floor.
 - `.github/workflows/fuzz.yml`, `fuzz/Cargo.toml`, and the ReallyMe provider
   fuzz target: malformed HPKE and signature-input coverage.
+- `compat_tests` and `book/src/user_manual/migration.md`: current-version
+  storage migration tests and documentation, including the 0.7/0.8 to 0.9
+  bridges. These are kept outside the root workspace because they intentionally
+  resolve multiple incompatible OpenMLS versions.
+- `sqlx_storage`: SQLx 0.9 adaptation, native migration-table naming, and
+  lifecycle coverage. This crate remains outside the root workspace and must
+  be formatted, linted, and tested through its own manifest.
+- `openmls-wasm/Cargo.toml`, `openmls-wasm/build.sh`, and
+  `openmls-wasm/check-size.sh`: locked and explicitly feature-scoped WASM
+  build surface.
 - `serialization_helpers/Cargo.toml`: disables Postcard's unnecessary default
   feature in host-only tests to exclude the unmaintained `atomic-polyfill`
   dependency.
-- root `Cargo.toml`, `Cargo.lock`, and `deny.toml`: workspace membership,
-  exact dependency resolution, and deployable-provider policy.
+- root `Cargo.toml`, `Cargo.lock`, `deny.toml`, and dependency-only changes in
+  member `Cargo.toml` files: workspace membership, exact dependency resolution,
+  current compatible dependency versions, and deployable-provider policy.
 
 Current repository-policy fork points are `README.md`, `README.upstream.md`,
 `LICENSE`, `SECURITY.md`, `RELEASE.md`, `AUDIT_SCOPE.md`,

@@ -16,12 +16,12 @@ tls_codec = { workspace = true }
 serde = { workspace = true }
 
 # Rust Crypto
-ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+ed25519-dalek = { version = "2.2", features = ["rand_core"] }
 p256 = { version = "0.13" }
 p384 = { version = "0.13" }
-ml-dsa = { version = "0.1.0", optional = true }
+ml-dsa = { version = "0.1.1", optional = true }
 rand_core = { version = "0.6", features = ["getrandom"] }
-zeroize = "1.8.2"
+zeroize = "1.9.0"
 
 [features]
 clonable = [] # Make the keys clonable
@@ -32,4 +32,4 @@ draft-ietf-mls-pq-ciphersuites = [
 ]
 
 [dev-dependencies]
-serde_json = "1.0.149"
+serde_json = "1.0.151"
