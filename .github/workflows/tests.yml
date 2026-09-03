@@ -43,7 +43,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: Swatinem/rust-cache@v2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
 
       - name: Tests
         run: cargo test ${{ matrix.mode_arg }} -p openmls --verbose --no-default-features ${{ matrix.features_arg }}
@@ -58,7 +58,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: Swatinem/rust-cache@v2
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
 
       - name: Tests
         run: ./test.sh
@@ -75,7 +75,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Install toolchain
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
         with:
           targets: wasm32-unknown-unknown
 

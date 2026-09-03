@@ -104,6 +104,8 @@ Current test and infrastructure fork points:
 - root `Cargo.toml`, `Cargo.lock`, `deny.toml`, and dependency-only changes in
   member `Cargo.toml` files: workspace membership, exact dependency resolution,
   current compatible dependency versions, and deployable-provider policy.
+- `rust-toolchain.toml`: pins development and ordinary CI to Rust 1.98.1 while
+  the dedicated MSRV job continues to enforce the published Rust 1.96 floor.
 
 Current repository-policy fork points are `README.md`, `README.upstream.md`,
 `LICENSE`, `SECURITY.md`, `RELEASE.md`, `AUDIT_SCOPE.md`,

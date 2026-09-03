@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # Install the required target
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
         with:
           target: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2

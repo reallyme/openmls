@@ -35,7 +35,7 @@ jobs:
     name: full matrix (${{ matrix.mode.name }}/${{ matrix.features.name }})
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
       - uses: Swatinem/rust-cache@v2
 
       - name: Tests with all providers and ciphersuites

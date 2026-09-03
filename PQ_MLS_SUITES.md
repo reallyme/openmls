@@ -121,7 +121,7 @@ algorithm-confusion boundary.
 
 The OpenMLS provider delegates base HPKE, exporter operations, AES-256-GCM,
 SHA-384, P-384 signatures, and ML-DSA-87 signatures to `reallyme-crypto`.
-ReallyMe Crypto v0.3.5 exposes the required suite components through its
+ReallyMe Crypto v0.3.6 exposes the required suite components through its
 corrected `hpke-openmls` aggregate. That aggregate selects the granular HPKE
 KEM, KDF, and AEAD features required by this fork's draft-06 HKDF mapping:
 

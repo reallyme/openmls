@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
         with:
           target: ${{ matrix.arch }}
       - uses: Swatinem/rust-cache@v2
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@cargo-hack
 
@@ -93,4 +93,5 @@ jobs:
       # ReallyMe Crypto sets the workspace floor. Check every target and
       # feature together so no package can silently retain a lower, untested
       # compiler boundary.
-      - run: cargo check --locked --workspace --all-features --all-targets
+      # The repository-level development pin must not shadow this MSRV check.
+      - run: cargo +1.96.0 check --locked --workspace --all-features --all-targets
