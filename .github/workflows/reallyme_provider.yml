@@ -94,7 +94,7 @@ jobs:
           done
           reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
             <<<"${dependency_tree}" | sort -u)"
-          if grep -Ev ' v0\.3\.6$' <<<"${reallyme_packages}"; then
+          if grep -Ev ' v0\.3\.7$' <<<"${reallyme_packages}"; then
             echo "::error::mixed ReallyMe Crypto publication versions entered production"
             exit 1
           fi
