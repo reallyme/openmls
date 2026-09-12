@@ -6,28 +6,32 @@ on:
       - main
   workflow_dispatch:
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   documentation:
     runs-on: ubuntu-latest
     steps:
-      - uses: hecrj/setup-rust-action@master
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # pinned action revision
         with:
           toolchain: nightly
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v2
+        uses: peaceiris/actions-mdbook@062dc9e3eab0bad35531417c6bb6c6a7a184764f # v2
         with:
           mdbook-version: 'latest'
       - name: Build docs
         run: |
           cd openmls
-          RUSTDOCFLAGS="--cfg doc_cfg --cfg docsrs" cargo +nightly doc --all-features --no-deps
+          RUSTDOCFLAGS="--cfg doc_cfg --cfg docsrs" cargo +nightly doc --all-features --no-deps --locked
           touch ../target/doc/.nojekyll
           cd ..
           mkdir temp_docs
@@ -44,8 +48,31 @@ jobs:
           <a href="book/index.html">Book</a>
           </html>
           EOF
+      - name: Upload generated documentation
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: generated-documentation
+          path: temp_docs
+          if-no-files-found: error
+          include-hidden-files: true
+
+  deploy:
+    needs: documentation
+    runs-on: ubuntu-latest
+    # Dependency build scripts and documentation generators must never run
+    # with repository-write credentials. This job only publishes their output.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: generated-documentation
+          path: temp_docs
       - name: Deploy docs to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@329bcc8f12caed2cefe5a5b80781499a6f3b361b # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: temp_docs
