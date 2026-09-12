@@ -1,107 +1,159 @@
-# OpenMLS
+<div align="center">
 
-[![OpenMLS Chat][chat-image]][chat-link]
-[![OpenMLS List][list-image]][list-link]
+# ReallyMe OpenMLS Fork
 
-[![Tests & Checks][gh-tests-image]](https://github.com/openmls/openmls/actions/workflows/tests.yml?branch=main)
-[![codecov][codecov-image]](https://codecov.io/gh/openmls/openmls)
+**Post-quantum MLS ciphersuites for OpenMLS, backed by ReallyMe Crypto.**
 
-[![Docs][docs-release-badge]][docs-release-link]
-[![Book][book-release-badge]][book-release-link]
-![Rust Version][rustc-image]
+[![ReallyMe provider](https://github.com/reallyme/openmls/actions/workflows/reallyme_provider.yml/badge.svg)](https://github.com/reallyme/openmls/actions/workflows/reallyme_provider.yml)
+[![Workspace](https://github.com/reallyme/openmls/actions/workflows/build_test_workspace.yml/badge.svg)](https://github.com/reallyme/openmls/actions/workflows/build_test_workspace.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
 
-_OpenMLS_ is a Rust implementation of the Messaging Layer Security (MLS) protocol, as specified in [RFC 9420](https://datatracker.ietf.org/doc/html/rfc9420).
+**[PQ suites](PQ_MLS_SUITES.md) · [Release](RELEASE.md) · [Security](SECURITY.md) · [Fork policy](FORK.md) · [Provider source](https://github.com/reallyme/openmls/tree/main/openmls_reallyme_provider)**
 
-<!-- The introduction of the book imports the lines up until here (line 13), excluding the headline and separately the lines below (starting from line 19, "Supported ciphersuite"). If the line numbers change here, please modify the imported lines in the book.-->
+</div>
 
-It is a software library that can serve as a building block in applications that require end-to-end encryption of messages.
-It has a safe and easy-to-use interface that hides the complexity of the underlying cryptographic operations.
+---
 
-## Supported ciphersuites
+[OpenMLS](https://github.com/openmls/openmls) is a Rust implementation of the
+Messaging Layer Security protocol defined in
+[RFC 9420](https://datatracker.ietf.org/doc/html/rfc9420). ReallyMe maintains
+this fork to add post-quantum MLS ciphersuites backed by
+[`reallyme-crypto`](https://github.com/reallyme/crypto), while staying close to
+upstream OpenMLS.
 
-- MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (MTI)
-- MLS_128_DHKEMP256_AES128GCM_SHA256_P256
-- MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519
+The fork currently supports six PQ ciphersuites. The cryptographic backend is
+pinned to an exact release, and changes to cryptographic dependencies or
+provisional ciphersuite mappings go through the fork's release review.
 
-## Supported platforms
+## Post-Quantum Ciphersuites
 
-OpenMLS is built and tested on the Github CI for the following rust targets.
+Enable `draft-ietf-mls-pq-ciphersuites` to make the six PQ ciphersuites
+available.
 
-- x86_64-unknown-linux-gnu
-- x86_64-pc-windows-msvc
-- aarch64-apple-darwin
-- aarch64-unknown-linux-gnu
+Five suites track
+[Post-Quantum and Post-Quantum/Traditional Hybrid Ciphersuites for MLS](https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/).
+They use AES-256-GCM with SHA-384. The X-Wing compatibility suite uses
+ChaCha20-Poly1305 with SHA-256.
 
-### Unsupported, but built on CI
-
-The Github CI also builds (but doesn't test) the following rust targets.
-
-- i686-unknown-linux-gnu
-- i686-pc-windows-msvc
-- x86_64-apple-darwin
-- aarch64-linux-android
-- aarch64-apple-ios
-- wasm32-unknown-unknown
-- armv7-linux-androideabi
-- x86_64-linux-android
-- i686-linux-android
-
-OpenMLS supports 32 bit platforms and above.
-
-## Cryptography Dependencies
-
-OpenMLS does not implement its own cryptographic primitives. Instead, it relies
-on existing implementations of the cryptographic primitives used by MLS. There
-are two different cryptography providers implemented right now. But consumers
-can bring their own implementation. See [traits](https://github.com/openmls/openmls/tree/main/traits) for more
-details.
-
-## Features
-OpenMLS provides the following features
-
-- **extensions-draft**: enable features defined in [MLS extensions draft](https://messaginglayersecurity.rocks/mls-extensions/draft-ietf-mls-extensions.html)
-- **fork-resolution**: helper functionality for [resolving forks](https://book.openmls.tech/user_manual/fork-resolution.html).
-- **js**: enable compilation to wasm
+| Ciphersuite | Key establishment | Signature | Wire |
+|---|---|---|---:|
+| **X-Wing compatibility** | ML-KEM-768 + X25519 | Ed25519 | `0x004D` |
+| **ML-KEM-768 PQ** | ML-KEM-768 | ML-DSA-65 | `0x0051` |
+| **ML-KEM-1024 PQ** | ML-KEM-1024 | ML-DSA-87 | `0x0907` |
+| **ML-KEM-768/X25519 hybrid** | ML-KEM-768 + X25519 | Ed25519 | `0x004E` |
+| **ML-KEM-1024/P-384 hybrid** | ML-KEM-1024 + P-384 | P-384 | `0xF043` |
+| **ML-KEM-1024 + P-384 signature** | ML-KEM-1024 | P-384 | `0x0042` |
 
 <details>
-<summary>Developer features</summary>
+<summary>Rust ciphersuite variants</summary>
 
-- **libcrux-provider**: enable the libcrux crypto provider dependency
-- **openmls_rust_crypto**: enable the rust crypto provider
-- **sqlite-provider**: enable the sqlite provider
-- **backtrace**: enable backtraces
-- **content-debug**: allow printing sensitive content of messages for debugging
-- **crypto-debug**: allow printing cryptographic key material for debugging
-- **test-util**: test utilities
+| Suite | `Ciphersuite` variant |
+|---|---|
+| X-Wing compatibility | `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519` |
+| ML-KEM-768 PQ | `MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65` |
+| ML-KEM-1024 PQ | `MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87` |
+| ML-KEM-1024 + P-384 signature | `MLS_192_MLKEM1024_AES256GCM_SHA384_P384` |
+| ML-KEM-1024/P-384 hybrid | `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384` |
+| ML-KEM-768/X25519 hybrid | `MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519` |
 
 </details>
 
-## Working on OpenMLS
+These identifiers do not yet have final IANA MLS assignments. Five currently
+use unassigned registry values; the ML-KEM-1024/P-384 hybrid uses a private-use
+value.
 
-For more details when working on OpenMLS itself please see the [Developer.md].
+Until final assignments are available, communicating implementations must agree
+on the ciphersuite identifiers they use. Pinning the same fork revision ensures
+the mappings remain consistent.
 
-## Maintenance & Support
+See [PQ_MLS_SUITES.md](PQ_MLS_SUITES.md) for the exact mappings, registry
+status, and interoperability requirements.
 
-OpenMLS is maintained and developed by [Phoenix R&D] and [CE Labs].
+## Provider
 
-## Acknowledgements
+`openmls_reallyme_provider` implements the OpenMLS provider traits using
+`reallyme-crypto` for HPKE, AEAD, hashing, signatures, and randomness.
+`reallyme-crypto` is pinned to an exact release so that changes to the
+cryptographic backend are explicit and reviewable.
 
-[Zulip] graciously provides the OpenMLS community with a "Zulip Cloud Standard" tier [Zulip instance][chat-link].
+```toml
+[dependencies]
+openmls = { git = "https://github.com/reallyme/openmls.git", rev = "<reviewed-commit>", features = ["draft-ietf-mls-pq-ciphersuites"] }
+openmls_reallyme_provider = { git = "https://github.com/reallyme/openmls.git", rev = "<reviewed-commit>", features = ["draft-ietf-mls-pq-ciphersuites"] }
+```
 
-[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg?style=for-the-badge&logo=zulip
-[chat-link]: https://openmls.zulipchat.com
-[list-image]: https://img.shields.io/badge/mailing-list-blue.svg?style=for-the-badge
-[list-link]: https://groups.google.com/u/0/g/openmls-dev
-[rustc-image]: https://img.shields.io/badge/rustc-1.91+-blue.svg?style=for-the-badge&logo=rust
-[docs-release-badge]: https://img.shields.io/badge/docs-release-blue.svg?style=for-the-badge
-[docs-release-link]: https://docs.rs/crate/openmls/latest
-[book-release-badge]: https://img.shields.io/badge/book-release-blue.svg?style=for-the-badge
-[book-release-link]: https://book.openmls.tech
-[drone-image]: https://img.shields.io/drone/build/openmls/openmls/main?label=ARM64%20Build%20Status&logo=drone&style=for-the-badge
-[codecov-image]: https://img.shields.io/codecov/c/github/openmls/openmls/main?logo=codecov&style=for-the-badge
-[gh-tests-image]: https://img.shields.io/github/actions/workflow/status/openmls/openmls/tests.yml?branch=main&style=for-the-badge&logo=github
-[gh-deploy-docs-image]: https://img.shields.io/github/workflow/status/openmls/openmls/Deploy%20Docs/main?label=Deploy%20Docs&logo=github&style=for-the-badge
-[Developer.md]: https://github.com/openmls/openmls/blob/main/Developer.md
-[Phoenix R&D]: https://phnx.im
-[CE Labs]: https://celabs.eu
-[Zulip]: https://zulip.com/
+Use the same fixed revision or release tag for both crates rather than following
+`main`.
+
+```rust,ignore
+use openmls::prelude::{
+    Capabilities, Ciphersuite, MlsGroupCreateConfig, OpenMlsProvider as _,
+};
+use openmls_reallyme_provider::{Provider, ReallyMeSuiteSigner};
+
+let storage = AuditedDurableStorage::open()?;
+let provider = Provider::new(storage);
+
+let suite =
+    Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384;
+let signer =
+    ReallyMeSuiteSigner::generate(suite.signature_algorithm())?;
+
+let group_config = MlsGroupCreateConfig::builder()
+    .ciphersuite(suite)
+    .capabilities(Capabilities::for_provider(provider.crypto()))
+    .build();
+```
+
+Production callers provide durable storage through `Provider::new(storage)`.
+The in-memory provider is available only with `test-utils`.
+
+Provider source lives in
+[`openmls_reallyme_provider`](https://github.com/reallyme/openmls/tree/main/openmls_reallyme_provider).
+
+## Fork Policy
+
+Changes specific to ReallyMe should remain narrow and easy to distinguish from
+upstream OpenMLS. Prefer provider crates, feature gates, and focused fork points
+over changes to shared protocol code.
+
+Upstream changes are merged from `openmls/main` through pull requests. See
+[FORK.md](FORK.md) for the fork points and upstream sync process.
+
+## Release
+
+Passing the required checks on `main` is not by itself a production release.
+
+[RELEASE.md](RELEASE.md) defines the release checks for the provider,
+ciphersuites, interoperability, and dependency graph.
+
+The term **reviewed** in this repository refers to this local review and release
+process. It does not mean that the ReallyMe additions have received an
+independent security audit or formal evaluation.
+
+## Security
+
+Security issues should be reported according to
+[SECURITY.md](SECURITY.md).
+
+## License
+
+This repository contains upstream OpenMLS code and ReallyMe modifications.
+Unless a file-level notice states otherwise, the code is licensed under the MIT
+License. See [LICENSE](https://github.com/reallyme/openmls/blob/main/LICENSE).
+
+`reallyme-crypto` is distributed separately under the Apache License, Version
+2.0, and is not relicensed by this repository.
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for third-party
+attributions and notices.
+
+## Copyright and Trademarks
+
+Upstream OpenMLS portions are copyright © 2020 OpenMLS Authors. ReallyMe
+modifications are copyright © 2026 ReallyMe LLC.
+
+OpenMLS is a trademark or trade name of the OpenMLS project and its respective
+owners. ReallyMe does not claim ownership of the OpenMLS name or marks.
+
+ReallyMe<sup>®</sup> is a registered trademark of ReallyMe LLC.
