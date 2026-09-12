@@ -17,7 +17,7 @@ The main migration use case is switching to a self-describing `serde` storage fo
 between `openmls` versions that introduce breaking changes when using non-self-describing formats (which have not been disallowed by OpenMLS so far).
 
 The approach described here can be used to migrate data serialized using `0.7.4` or `0.8.1`
-into the format used by `0.9.0`, which requires a self-describing format. 
+into the format used by `0.9.0`, which requires a self-describing format.
 
 > [!NOTE]
 > As of this version, non-self-describing formats are no longer supported.
