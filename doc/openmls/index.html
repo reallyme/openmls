@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="ReallyMe OpenMLS Fork"><title>openmls - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="openmls" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0-nightly (0fc141305 2026-09-11)" data-channel="nightly" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../static.files/storage-41dd4d93.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Crate openmls</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../openmls/index.html">openmls</a><span class="version">0.9.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#reallyme-openmls-fork" title="ReallyMe OpenMLS Fork">ReallyMe OpenMLS Fork</a><ul><li><a href="#post-quantum-ciphersuites" title="Post-Quantum Ciphersuites">Post-Quantum Ciphersuites</a></li><li><a href="#provider" title="Provider">Provider</a></li><li><a href="#fork-policy" title="Fork Policy">Fork Policy</a></li><li><a href="#release" title="Release">Release</a></li><li><a href="#security" title="Security">Security</a></li><li><a href="#license" title="License">License</a></li><li><a href="#copyright-and-trademarks" title="Copyright and Trademarks">Copyright and Trademarks</a></li><li><a href="#quick-start" title="Quick Start">Quick Start</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1>Crate <span>openmls</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/openmls/lib.rs.html#1-204">Source</a> </span></div><span class="item-info"><div class="stab portability">Available on <strong>32-bit or 64-bit</strong> only.</div></span><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><div align="center">
+<h2 id="reallyme-openmls-fork"><a class="doc-anchor" href="#reallyme-openmls-fork">§</a>ReallyMe OpenMLS Fork</h2>
+<p><strong>Post-quantum MLS ciphersuites for OpenMLS, backed by ReallyMe Crypto.</strong></p>
+<p><a href="https://github.com/reallyme/openmls/actions/workflows/reallyme_provider.yml"><img src="https://github.com/reallyme/openmls/actions/workflows/reallyme_provider.yml/badge.svg" alt="ReallyMe provider" /></a>
+<a href="https://github.com/reallyme/openmls/actions/workflows/build_test_workspace.yml"><img src="https://github.com/reallyme/openmls/actions/workflows/build_test_workspace.yml/badge.svg" alt="Workspace" /></a>
+<a href="#license"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a></p>
+<p><strong><a href="PQ_MLS_SUITES.md">PQ suites</a> · <a href="RELEASE.md">Release</a> · <a href="SECURITY.md">Security</a> · <a href="FORK.md">Fork policy</a> · <a href="https://github.com/reallyme/openmls/tree/main/openmls_reallyme_provider">Provider source</a></strong></p>
+</div>
+<hr />
+<p><a href="https://github.com/openmls/openmls">OpenMLS</a> is a Rust implementation of the
+Messaging Layer Security protocol defined in
+<a href="https://datatracker.ietf.org/doc/html/rfc9420">RFC 9420</a>. ReallyMe maintains
+this fork to add post-quantum MLS ciphersuites backed by
+<a href="https://github.com/reallyme/crypto"><code>reallyme-crypto</code></a>, while staying close to
+upstream OpenMLS.</p>
+<p>The fork currently supports six PQ ciphersuites. The cryptographic backend is
+pinned to an exact release, and changes to cryptographic dependencies or
+provisional ciphersuite mappings go through the fork’s release review.</p>
+<h3 id="post-quantum-ciphersuites"><a class="doc-anchor" href="#post-quantum-ciphersuites">§</a>Post-Quantum Ciphersuites</h3>
+<p>Enable <code>draft-ietf-mls-pq-ciphersuites</code> to make the six PQ ciphersuites
+available.</p>
+<p>Five suites track
+<a href="https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/">Post-Quantum and Post-Quantum/Traditional Hybrid Ciphersuites for MLS</a>.
+They use AES-256-GCM with SHA-384. The X-Wing compatibility suite uses
+ChaCha20-Poly1305 with SHA-256.</p>
+<div class="table"><table><thead><tr><th>Ciphersuite</th><th>Key establishment</th><th>Signature</th><th style="text-align: right">Wire</th></tr></thead><tbody>
+<tr><td><strong>X-Wing compatibility</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004D</code></td></tr>
+<tr><td><strong>ML-KEM-768 PQ</strong></td><td>ML-KEM-768</td><td>ML-DSA-65</td><td style="text-align: right"><code>0x0051</code></td></tr>
+<tr><td><strong>ML-KEM-1024 PQ</strong></td><td>ML-KEM-1024</td><td>ML-DSA-87</td><td style="text-align: right"><code>0x0907</code></td></tr>
+<tr><td><strong>ML-KEM-768/X25519 hybrid</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004E</code></td></tr>
+<tr><td><strong>ML-KEM-1024/P-384 hybrid</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xF043</code></td></tr>
+<tr><td><strong>ML-KEM-1024 + P-384 signature</strong></td><td>ML-KEM-1024</td><td>P-384</td><td style="text-align: right"><code>0x0042</code></td></tr>
+</tbody></table>
+</div><details>
+<summary>Rust ciphersuite variants</summary>
+<div class="table"><table><thead><tr><th>Suite</th><th><code>Ciphersuite</code> variant</th></tr></thead><tbody>
+<tr><td>X-Wing compatibility</td><td><code>MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519</code></td></tr>
+<tr><td>ML-KEM-768 PQ</td><td><code>MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65</code></td></tr>
+<tr><td>ML-KEM-1024 PQ</td><td><code>MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87</code></td></tr>
+<tr><td>ML-KEM-1024 + P-384 signature</td><td><code>MLS_192_MLKEM1024_AES256GCM_SHA384_P384</code></td></tr>
+<tr><td>ML-KEM-1024/P-384 hybrid</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384</code></td></tr>
+<tr><td>ML-KEM-768/X25519 hybrid</td><td><code>MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519</code></td></tr>
+</tbody></table>
+</div></details>
+<p>These identifiers do not yet have final IANA MLS assignments. Five currently
+use unassigned registry values; the ML-KEM-1024/P-384 hybrid uses a private-use
+value.</p>
+<p>Until final assignments are available, communicating implementations must agree
+on the ciphersuite identifiers they use. Pinning the same fork revision ensures
+the mappings remain consistent.</p>
+<p>See <a href="PQ_MLS_SUITES.md">PQ_MLS_SUITES.md</a> for the exact mappings, registry
+status, and interoperability requirements.</p>
+<h3 id="provider"><a class="doc-anchor" href="#provider">§</a>Provider</h3>
+<p><code>openmls_reallyme_provider</code> implements the OpenMLS provider traits using
+<code>reallyme-crypto</code> for HPKE, AEAD, hashing, signatures, and randomness.
+<code>reallyme-crypto</code> is pinned to an exact release so that changes to the
+cryptographic backend are explicit and reviewable.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+openmls = { git = &quot;https://github.com/reallyme/openmls.git&quot;, rev = &quot;&lt;reviewed-commit&gt;&quot;, features = [&quot;draft-ietf-mls-pq-ciphersuites&quot;] }
+openmls_reallyme_provider = { git = &quot;https://github.com/reallyme/openmls.git&quot;, rev = &quot;&lt;reviewed-commit&gt;&quot;, features = [&quot;draft-ietf-mls-pq-ciphersuites&quot;] }</code></pre></div>
+<p>Use the same fixed revision or release tag for both crates rather than following
+<code>main</code>.</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>openmls::prelude::{
+    Capabilities, Ciphersuite, MlsGroupCreateConfig, OpenMlsProvider <span class="kw">as _</span>,
+};
+<span class="kw">use </span>openmls_reallyme_provider::{Provider, ReallyMeSuiteSigner};
+
+<span class="kw">let </span>storage = AuditedDurableStorage::open()<span class="question-mark">?</span>;
+<span class="kw">let </span>provider = Provider::new(storage);
+
+<span class="kw">let </span>suite =
+    Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384;
+<span class="kw">let </span>signer =
+    ReallyMeSuiteSigner::generate(suite.signature_algorithm())<span class="question-mark">?</span>;
+
+<span class="kw">let </span>group_config = MlsGroupCreateConfig::builder()
+    .ciphersuite(suite)
+    .capabilities(Capabilities::for_provider(provider.crypto()))
+    .build();</code></pre></div>
+<p>Production callers provide durable storage through <code>Provider::new(storage)</code>.
+The in-memory provider is available only with <code>test-utils</code>.</p>
+<p>Provider source lives in
+<a href="https://github.com/reallyme/openmls/tree/main/openmls_reallyme_provider"><code>openmls_reallyme_provider</code></a>.</p>
+<h3 id="fork-policy"><a class="doc-anchor" href="#fork-policy">§</a>Fork Policy</h3>
+<p>Changes specific to ReallyMe should remain narrow and easy to distinguish from
+upstream OpenMLS. Prefer provider crates, feature gates, and focused fork points
+over changes to shared protocol code.</p>
+<p>Upstream changes are merged from <code>openmls/main</code> through pull requests. See
+<a href="FORK.md">FORK.md</a> for the fork points and upstream sync process.</p>
+<h3 id="release"><a class="doc-anchor" href="#release">§</a>Release</h3>
+<p>Passing the required checks on <code>main</code> is not by itself a production release.</p>
+<p><a href="RELEASE.md">RELEASE.md</a> defines the release checks for the provider,
+ciphersuites, interoperability, and dependency graph.</p>
+<p>The term <strong>reviewed</strong> in this repository refers to this local review and release
+process. It does not mean that the ReallyMe additions have received an
+independent security audit or formal evaluation.</p>
+<h3 id="security"><a class="doc-anchor" href="#security">§</a>Security</h3>
+<p>Security issues should be reported according to
+<a href="SECURITY.md">SECURITY.md</a>.</p>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3>
+<p>This repository contains upstream OpenMLS code and ReallyMe modifications.
+Unless a file-level notice states otherwise, the code is licensed under the MIT
+License. See <a href="https://github.com/reallyme/openmls/blob/main/LICENSE">LICENSE</a>.</p>
+<p><code>reallyme-crypto</code> is distributed separately under the Apache License, Version
+2.0, and is not relicensed by this repository.</p>
+<p>See <a href="THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a> for third-party
+attributions and notices.</p>
+<h3 id="copyright-and-trademarks"><a class="doc-anchor" href="#copyright-and-trademarks">§</a>Copyright and Trademarks</h3>
+<p>Upstream OpenMLS portions are copyright © 2020 OpenMLS Authors. ReallyMe
+modifications are copyright © 2026 ReallyMe LLC.</p>
+<p>OpenMLS is a trademark or trade name of the OpenMLS project and its respective
+owners. ReallyMe does not claim ownership of the OpenMLS name or marks.</p>
+<p>ReallyMe<sup>®</sup> is a registered trademark of ReallyMe LLC.</p>
+<h3 id="quick-start"><a class="doc-anchor" href="#quick-start">§</a>Quick Start</h3>
+<p>For a quick start to learn how OpenMLS works here’s the basic code to set
+up to parties and have them create a group.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>openmls::{prelude::{<span class="kw-2">*</span>,  tls_codec::<span class="kw-2">*</span>}};
+<span class="kw">use </span>openmls_rust_crypto::{OpenMlsRustCrypto};
+<span class="kw">use </span>openmls_basic_credential::SignatureKeyPair;
+
+<span class="comment">// Define ciphersuite ...
+</span><span class="kw">let </span>ciphersuite = Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519;
+<span class="comment">// ... and providers for both parties to use.
+</span><span class="kw">let </span>sasha_provider = <span class="kw-2">&amp;</span>OpenMlsRustCrypto::default();
+<span class="kw">let </span>maxim_provider = <span class="kw-2">&amp;</span>OpenMlsRustCrypto::default();
+
+<span class="comment">// Now let's create two participants.
+
+// A helper to create and store credentials.
+</span><span class="kw">fn </span>generate_credential_with_key(
+    identity: Vec&lt;u8&gt;,
+    credential_type: CredentialType,
+    signature_algorithm: SignatureScheme,
+    provider: <span class="kw-2">&amp;</span><span class="kw">impl </span>OpenMlsProvider,
+) -&gt; (CredentialWithKey, SignatureKeyPair) {
+    <span class="kw">let </span>credential = BasicCredential::new(identity);
+    <span class="kw">let </span>signature_keys =
+        SignatureKeyPair::new(signature_algorithm)
+            .expect(<span class="string">"Error generating a signature key pair."</span>);
+
+    <span class="comment">// Store the signature key into the key store so OpenMLS has access
+    // to it.
+    </span>signature_keys
+        .store(provider.storage())
+        .expect(<span class="string">"Error storing signature keys in key store."</span>);
+
+    (
+        CredentialWithKey {
+            credential: credential.into(),
+            signature_key: signature_keys.public().into(),
+        },
+        signature_keys,
+    )
+}
+
+<span class="comment">// A helper to create key package bundles.
+</span><span class="kw">fn </span>generate_key_package(
+    ciphersuite: Ciphersuite,
+    provider: <span class="kw-2">&amp;</span><span class="kw">impl </span>OpenMlsProvider,
+    signer: <span class="kw-2">&amp;</span>SignatureKeyPair,
+    credential_with_key: CredentialWithKey,
+) -&gt; KeyPackageBundle {
+    <span class="comment">// Create the key package
+    </span>KeyPackage::builder()
+        .build(
+            ciphersuite,
+            provider,
+            signer,
+            credential_with_key,
+        )
+        .unwrap()
+}
+
+<span class="comment">// First they need credentials to identify them
+</span><span class="kw">let </span>(sasha_credential_with_key, sasha_signer) = generate_credential_with_key(
+    <span class="string">"Sasha"</span>.into(),
+    CredentialType::Basic,
+    ciphersuite.signature_algorithm(),
+    sasha_provider,
+);
+
+<span class="kw">let </span>(maxim_credential_with_key, maxim_signer) = generate_credential_with_key(
+    <span class="string">"Maxim"</span>.into(),
+    CredentialType::Basic,
+    ciphersuite.signature_algorithm(),
+    maxim_provider,
+);
+
+<span class="comment">// Then they generate key packages to facilitate the asynchronous handshakes
+// in MLS
+
+// Generate KeyPackages
+</span><span class="kw">let </span>maxim_key_package = generate_key_package(ciphersuite, maxim_provider, <span class="kw-2">&amp;</span>maxim_signer, maxim_credential_with_key);
+
+<span class="comment">// Now Sasha starts a new group ...
+</span><span class="kw">let </span><span class="kw-2">mut </span>sasha_group = MlsGroup::new(
+    sasha_provider,
+    <span class="kw-2">&amp;</span>sasha_signer,
+    <span class="kw-2">&amp;</span>MlsGroupCreateConfig::default(),
+    sasha_credential_with_key,
+)
+.expect(<span class="string">"An unexpected error occurred."</span>);
+
+<span class="comment">// ... and invites Maxim.
+// The key package has to be retrieved from Maxim in some way. Most likely
+// via a server storing key packages for users.
+</span><span class="kw">let </span>(mls_message_out, welcome_out, group_info) = sasha_group
+    .add_members(sasha_provider, <span class="kw-2">&amp;</span>sasha_signer, core::slice::from_ref(maxim_key_package.key_package()))
+    .expect(<span class="string">"Could not add members."</span>);
+
+<span class="comment">// Sasha merges the pending commit that adds Maxim.
+</span>sasha_group
+   .merge_pending_commit(sasha_provider)
+   .expect(<span class="string">"error merging pending commit"</span>);
+
+<span class="comment">// Sasha serializes the [`MlsMessageOut`] containing the [`Welcome`].
+</span><span class="kw">let </span>serialized_welcome = welcome_out
+   .tls_serialize_detached()
+   .expect(<span class="string">"Error serializing welcome"</span>);
+
+<span class="comment">// Maxim can now de-serialize the message as an [`MlsMessageIn`] ...
+</span><span class="kw">let </span>mls_message_in = MlsMessageIn::tls_deserialize(<span class="kw-2">&amp;mut </span>serialized_welcome.as_slice())
+   .expect(<span class="string">"An unexpected error occurred."</span>);
+
+<span class="comment">// ... and inspect the message.
+</span><span class="kw">let </span>welcome = <span class="kw">match </span>mls_message_in.extract() {
+   MlsMessageBodyIn::Welcome(welcome) =&gt; welcome,
+   <span class="comment">// We know it's a welcome message, so we ignore all other cases.
+   </span><span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Unexpected message type."</span>),
+};
+
+<span class="comment">// Now Maxim can build a staged join for the group in order to inspect the welcome
+</span><span class="kw">let </span>maxim_staged_join = StagedWelcome::new_from_welcome(
+    maxim_provider,
+    <span class="kw-2">&amp;</span>MlsGroupJoinConfig::default(),
+    welcome,
+    <span class="comment">// The public tree is needed and transferred out of band.
+    // It is also possible to use the [`RatchetTreeExtension`]
+    </span><span class="prelude-val">Some</span>(sasha_group.export_ratchet_tree().into()),
+)
+.expect(<span class="string">"Error creating a staged join from Welcome"</span>);
+
+<span class="comment">// Finally, Maxim can create the group
+</span><span class="kw">let </span><span class="kw-2">mut </span>maxim_group = maxim_staged_join
+    .into_group(maxim_provider)
+    .expect(<span class="string">"Error creating the group from the staged join"</span>);</code></pre></div></div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="ciphersuite/index.html" title="mod openmls::ciphersuite">ciphersuite</a></dt><dd>Ciphersuites for MLS</dd><dt><a class="mod" href="component/index.html" title="mod openmls::component">component</a><wbr><span class="stab portability" title="Available on crate feature `extensions-draft` only"><code>extensions-draft</code></span></dt><dd>Components from the extensions draft.</dd><dt><a class="mod" href="components/index.html" title="mod openmls::components">components</a><wbr><span class="stab portability" title="Available on crate feature `extensions-draft` only"><code>extensions-draft</code></span></dt><dd>Component-specific helpers for application-level extensions built on top
+of the safe-export interface (e.g. the virtual-clients draft).</dd><dt><a class="mod" href="credentials/index.html" title="mod openmls::credentials">credentials</a></dt><dd>Credentials</dd><dt><a class="mod" href="error/index.html" title="mod openmls::error">error</a></dt><dd>OpenMLS Errors</dd><dt><a class="mod" href="extensions/index.html" title="mod openmls::extensions">extensions</a></dt><dd>Extensions</dd><dt><a class="mod" href="framing/index.html" title="mod openmls::framing">framing</a></dt><dd>Message framing</dd><dt><a class="mod" href="grease/index.html" title="mod openmls::grease">grease</a></dt><dd>GREASE Support for MLS</dd><dt><a class="mod" href="group/index.html" title="mod openmls::group">group</a></dt><dd>Group API for MLS</dd><dt><a class="mod" href="key_packages/index.html" title="mod openmls::key_packages">key_<wbr>packages</a></dt><dd>Key Packages</dd><dt><a class="mod" href="messages/index.html" title="mod openmls::messages">messages</a></dt><dd>Messages</dd><dt><a class="mod" href="prelude/index.html" title="mod openmls::prelude">prelude</a></dt><dd>Single place, re-exporting the most used public functions.
+Prelude for OpenMLS.
+Include this to get access to all the public functions of OpenMLS.</dd><dt><a class="mod" href="prelude_test/index.html" title="mod openmls::prelude_test">prelude_<wbr>test</a><wbr><span class="stab portability" title="Available on crate features `test-utils` only"><code>test-utils</code></span></dt><dd>Single place, re-exporting all structs and functions needed for integration tests
+Testing prelude for OpenMLS.
+Include this to get access to all necessary pub(crate) functions of OpenMLS testing.</dd><dt><a class="mod" href="schedule/index.html" title="mod openmls::schedule">schedule</a></dt><dd>Key Schedule</dd><dt><a class="mod" href="storage/index.html" title="mod openmls::storage">storage</a></dt><dd>OpenMLS Storage</dd><dt><a class="mod" href="targeted_messages/index.html" title="mod openmls::targeted_messages">targeted_<wbr>messages</a><wbr><span class="stab portability" title="Available on crate feature `targeted-messages-draft` only"><code>targeted-messages-draft</code></span></dt><dd>Targeted Messages (draft-ietf-mls-targeted-messages)</dd><dt><a class="mod" href="test_utils/index.html" title="mod openmls::test_utils">test_<wbr>utils</a><wbr><span class="stab portability" title="Available on crate features `test-utils` only"><code>test-utils</code></span></dt><dd>Test utilities</dd><dt><a class="mod" href="treesync/index.html" title="mod openmls::treesync">treesync</a></dt><dd>This module implements the ratchet tree component of MLS.</dd><dt><a class="mod" href="versions/index.html" title="mod openmls::versions">versions</a></dt><dd>MLS versions</dd></dl><script type="text/json" id="notable-traits-data">{"&<Vec<T, A> as Index<I>>::Output":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","&[u8]":"<h3>Notable traits for <code>&amp;[<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>]</code></h3><pre><code><div class=\"where\">impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/alloc/io/read/trait.Read.html\" title=\"trait alloc::io::read::Read\">Read</a> for &amp;[<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>]</div>","&mut <Vec<T, A> as Index<I>>::Output":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","<Vec<T, A> as IntoIterator>::IntoIter":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","<Vec<T> as IntoDeserializer<'de, E>>::Deserializer":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","<Vec<T> as IntoParallelIterator>::Iter":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>","Drain<'_, T, A>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/drain/struct.Drain.html\" title=\"struct alloc::vec::drain::Drain\">Drain</a>&lt;'_, T, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;T, A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/drain/struct.Drain.html\" title=\"struct alloc::vec::drain::Drain\">Drain</a>&lt;'_, T, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div><div class=\"where\">    type <a href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item\" class=\"associatedtype\">Item</a> = T;</div>","ExtractIf<'_, T, F, A>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/extract_if/struct.ExtractIf.html\" title=\"struct alloc::vec::extract_if::ExtractIf\">ExtractIf</a>&lt;'_, T, F, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;T, F, A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/extract_if/struct.ExtractIf.html\" title=\"struct alloc::vec::extract_if::ExtractIf\">ExtractIf</a>&lt;'_, T, F, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,\n    F: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/ops/function/trait.FnMut.html\" title=\"trait core::ops::function::FnMut\">FnMut</a>(<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.reference.html\">&amp;mut T</a>) -&gt; <a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.bool.html\">bool</a>,</div></div><div class=\"where\">    type <a href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item\" class=\"associatedtype\">Item</a> = T;</div>","Splice<'_, <I as IntoIterator>::IntoIter, A>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/splice/struct.Splice.html\" title=\"struct alloc::vec::splice::Splice\">Splice</a>&lt;'_, I, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;I, A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/splice/struct.Splice.html\" title=\"struct alloc::vec::splice::Splice\">Splice</a>&lt;'_, I, A&gt;<div class=\"where\">where\n    I: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a>,\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div><div class=\"where\">    type <a href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item\" class=\"associatedtype\">Item</a> = &lt;I as <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html\" title=\"trait core::iter::traits::iterator::Iterator\">Iterator</a>&gt;::<a class=\"associatedtype\" href=\"https://doc.rust-lang.org/nightly/core/iter/traits/iterator/trait.Iterator.html#associatedtype.Item\" title=\"type core::iter::traits::iterator::Iterator::Item\">Item</a>;</div>","Vec<u8>":"<h3>Notable traits for <code><a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;</code></h3><pre><code><div class=\"where\">impl&lt;A&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/io/write/trait.Write.html\" title=\"trait core::io::write::Write\">Write</a> for <a class=\"struct\" href=\"https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html\" title=\"struct alloc::vec::Vec\">Vec</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>, A&gt;<div class=\"where\">where\n    A: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/alloc/trait.Allocator.html\" title=\"trait core::alloc::Allocator\">Allocator</a>,</div></div>"}</script></section></div></main></body></html>
