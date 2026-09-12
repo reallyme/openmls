@@ -3020,6 +3020,7 @@ dependencies = [
  "openmls_basic_credential",
  "openmls_libcrux_crypto",
  "openmls_memory_storage",
+ "openmls_reallyme_provider",
  "openmls_rust_crypto",
  "openmls_serialization_helpers",
  "openmls_sqlite_storage",

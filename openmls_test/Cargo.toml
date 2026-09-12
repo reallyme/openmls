@@ -17,6 +17,10 @@ proc-macro = true
 # This needs to be enabled explicity to allow disabling on some platforms
 libcrux-provider = ["dep:openmls_libcrux_crypto"]
 sqlite-provider = ["dep:openmls_sqlite_storage"]
+# Emit the generic OpenMLS corpus for the provider supplied by the consuming
+# `openmls` test target. The proc-macro crate deliberately does not depend on
+# that provider, avoiding a package cycle through the provider's MLS flow tests.
+reallyme-provider = []
 draft-ietf-mls-pq-ciphersuites = [
     "openmls_rust_crypto/draft-ietf-mls-pq-ciphersuites",
     "openmls_libcrux_crypto?/draft-ietf-mls-pq-ciphersuites",

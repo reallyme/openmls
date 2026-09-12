@@ -59,6 +59,8 @@ fn virtual_client_derivation_tests_have_executable_provider_lanes() {
         }
     }
     assert_sources(&openmls_rust_crypto::OpenMlsRustCrypto::default());
+    #[cfg(feature = "reallyme-provider")]
+    assert_sources(&openmls_reallyme_provider::Provider::in_memory());
 }
 
 /// `Capabilities` declaring `AppDataDictionary` support.
