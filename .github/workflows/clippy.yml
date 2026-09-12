@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  RUSTUP_TOOLCHAIN: stable
+
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
