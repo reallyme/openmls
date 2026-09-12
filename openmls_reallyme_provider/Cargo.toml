@@ -1,0 +1,122 @@
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT
+
+[package]
+name = "openmls_reallyme_provider"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.96"
+publish = false
+description = "ReallyMe Crypto provider for OpenMLS."
+license = "MIT"
+repository = "https://github.com/reallyme/openmls"
+
+[dependencies]
+openmls_traits = { workspace = true }
+openmls_memory_storage = { workspace = true, optional = true }
+openmls = { workspace = true, optional = true }
+openmls_libcrux_crypto = { workspace = true, optional = true }
+# Pin the audited provider surface exactly; upgrades require rerunning the MLS
+# interoperability and conformance gates in this crate.
+reallyme-crypto = { version = "=0.3.9", default-features = false, optional = true, features = [
+    "aes",
+    "chacha20-poly1305",
+    "csprng",
+    "ed25519",
+    "hmac",
+    "hpke-openmls",
+    "ml-dsa-65",
+    "ml-dsa-87",
+    "p384",
+    "sha2",
+    "sha3",
+    "x-wing",
+] }
+reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.3.9", optional = true }
+secrecy = "0.10.3"
+thiserror = { workspace = true }
+tls_codec = { workspace = true }
+zeroize = { version = "1.9", features = ["derive"] }
+
+# FF1 is only required by the optional virtual-clients draft. ReallyMe Crypto
+# does not expose FF1, so this matches the existing OpenMLS provider boundary.
+aes = { version = "0.8", features = ["zeroize"], optional = true }
+fpe = { version = "0.6", optional = true }
+
+[features]
+default = ["native"]
+native = [
+    "dep:reallyme-crypto",
+    "dep:reallyme_crypto_sha3",
+    "reallyme-crypto/native",
+]
+wasm = [
+    "dep:reallyme-crypto",
+    "dep:reallyme_crypto_sha3",
+    "reallyme-crypto/wasm",
+]
+test-utils = ["dep:openmls_memory_storage", "openmls_memory_storage/test-utils"]
+extensions-draft = [
+    "openmls_traits/extensions-draft",
+    "openmls_memory_storage?/extensions-draft",
+    "openmls?/extensions-draft",
+    "openmls_libcrux_crypto?/extensions-draft",
+]
+draft-ietf-mls-pq-ciphersuites = [
+    "openmls_traits/draft-ietf-mls-pq-ciphersuites",
+    "openmls_memory_storage?/draft-ietf-mls-pq-ciphersuites",
+    "openmls?/draft-ietf-mls-pq-ciphersuites",
+    "openmls_libcrux_crypto?/draft-ietf-mls-pq-ciphersuites",
+]
+targeted-messages-draft = [
+    "openmls_traits/targeted-messages-draft",
+    "openmls?/targeted-messages-draft",
+    "openmls_libcrux_crypto?/targeted-messages-draft",
+]
+virtual-clients-draft = [
+    "extensions-draft",
+    "openmls_traits/virtual-clients-draft",
+    "openmls_memory_storage?/virtual-clients-draft",
+    "openmls?/virtual-clients-draft",
+    "openmls?/virtual-clients-draft-test-dependencies",
+    "openmls_libcrux_crypto?/virtual-clients-draft",
+    "dep:aes",
+    "dep:fpe",
+]
+interop-tests = [
+    "dep:openmls_libcrux_crypto",
+    "draft-ietf-mls-pq-ciphersuites",
+]
+mls-flow-tests = [
+    "dep:openmls",
+    "openmls/test-utils",
+    "test-utils",
+    "draft-ietf-mls-pq-ciphersuites",
+]
+
+[dev-dependencies]
+hex = "0.4"
+# Deterministic KEM entry points must never be a downstream-selectable provider
+# feature. Feature unification exposes them only while compiling this crate's
+# test targets; normal consumers retain the production ReallyMe API surface.
+reallyme-crypto = { version = "=0.3.9", default-features = false, features = [
+    "ml-kem-1024",
+    "ml-kem-768",
+    "test-vectors",
+] }
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
