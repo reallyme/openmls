@@ -195,22 +195,28 @@ impl OpenMlsCrypto for RustCrypto {
             AeadType::Aes128Gcm => {
                 let aes =
                     Aes128Gcm::new_from_slice(key).map_err(|_| CryptoError::CryptoLibraryError)?;
-                aes.encrypt(nonce.into(), Payload { msg: data, aad })
+                let nonce = <&aes_gcm::Nonce<aes_gcm::aead::consts::U12>>::try_from(nonce)
+                    .map_err(|_| CryptoError::CryptoLibraryError)?;
+                aes.encrypt(nonce, Payload { msg: data, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::CryptoLibraryError)
             }
             AeadType::Aes256Gcm => {
                 let aes =
                     Aes256Gcm::new_from_slice(key).map_err(|_| CryptoError::CryptoLibraryError)?;
-                aes.encrypt(nonce.into(), Payload { msg: data, aad })
+                let nonce = <&aes_gcm::Nonce<aes_gcm::aead::consts::U12>>::try_from(nonce)
+                    .map_err(|_| CryptoError::CryptoLibraryError)?;
+                aes.encrypt(nonce, Payload { msg: data, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::CryptoLibraryError)
             }
             AeadType::ChaCha20Poly1305 => {
                 let chacha_poly = ChaCha20Poly1305::new_from_slice(key)
                     .map_err(|_| CryptoError::CryptoLibraryError)?;
+                let nonce = <&chacha20poly1305::Nonce>::try_from(nonce)
+                    .map_err(|_| CryptoError::CryptoLibraryError)?;
                 chacha_poly
-                    .encrypt(nonce.into(), Payload { msg: data, aad })
+                    .encrypt(nonce, Payload { msg: data, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::CryptoLibraryError)
             }
@@ -229,22 +235,28 @@ impl OpenMlsCrypto for RustCrypto {
             AeadType::Aes128Gcm => {
                 let aes =
                     Aes128Gcm::new_from_slice(key).map_err(|_| CryptoError::CryptoLibraryError)?;
-                aes.decrypt(nonce.into(), Payload { msg: ct_tag, aad })
+                let nonce = <&aes_gcm::Nonce<aes_gcm::aead::consts::U12>>::try_from(nonce)
+                    .map_err(|_| CryptoError::AeadDecryptionError)?;
+                aes.decrypt(nonce, Payload { msg: ct_tag, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::AeadDecryptionError)
             }
             AeadType::Aes256Gcm => {
                 let aes =
                     Aes256Gcm::new_from_slice(key).map_err(|_| CryptoError::CryptoLibraryError)?;
-                aes.decrypt(nonce.into(), Payload { msg: ct_tag, aad })
+                let nonce = <&aes_gcm::Nonce<aes_gcm::aead::consts::U12>>::try_from(nonce)
+                    .map_err(|_| CryptoError::AeadDecryptionError)?;
+                aes.decrypt(nonce, Payload { msg: ct_tag, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::AeadDecryptionError)
             }
             AeadType::ChaCha20Poly1305 => {
                 let chacha_poly = ChaCha20Poly1305::new_from_slice(key)
                     .map_err(|_| CryptoError::CryptoLibraryError)?;
+                let nonce = <&chacha20poly1305::Nonce>::try_from(nonce)
+                    .map_err(|_| CryptoError::AeadDecryptionError)?;
                 chacha_poly
-                    .decrypt(nonce.into(), Payload { msg: ct_tag, aad })
+                    .decrypt(nonce, Payload { msg: ct_tag, aad })
                     .map(|r| r.as_slice().into())
                     .map_err(|_| CryptoError::AeadDecryptionError)
             }

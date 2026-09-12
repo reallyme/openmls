@@ -4,6 +4,11 @@ name = "openmls_compat_tests"
 publish = false
 version = "0.1.0"
 
+[package.metadata.cargo-machete]
+# The current workspace crate is passed as a macro argument in the compatibility
+# tests, which cargo-machete cannot recognize as a dependency use.
+ignored = ["openmls"]
+
 [features]
 compat_0_7_1 = ["dep:openmls_0_7_1"]
 compat_0_7_4 = ["dep:openmls_0_7_4"]
