@@ -3044,6 +3044,8 @@ version = "0.0.0"
 dependencies = [
  "libfuzzer-sys",
  "openmls",
+ "openmls_reallyme_provider",
+ "openmls_traits",
 ]
 
 [[package]]
