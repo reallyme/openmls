@@ -2,7 +2,7 @@
 //!
 //! This module holds a number of types that are needed by the traits.
 
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use serde::{Deserialize, Serialize};
 use tls_codec::{
@@ -289,16 +289,15 @@ pub struct HpkeCiphertext {
 #[serde(transparent)]
 pub struct HpkePrivateKey(SecretVLBytes);
 
-impl std::fmt::Debug for HpkePrivateKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut dt = f.debug_tuple("HpkePrivateKey");
-
-        #[cfg(feature = "crypto-debug")]
-        dt.field(&self.0);
-        #[cfg(not(feature = "crypto-debug"))]
-        dt.field(&"***");
-
-        dt.finish()
+impl fmt::Debug for HpkePrivateKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // tls_codec's SecretVLBytes Debug implementation emits the complete
+        // byte string. Private keys must remain redacted even when an enclosing
+        // type is captured by panic reporting or application telemetry.
+        formatter
+            .debug_tuple("HpkePrivateKey")
+            .field(&"[REDACTED]")
+            .finish()
     }
 }
 
@@ -323,26 +322,32 @@ impl std::ops::Deref for HpkePrivateKey {
 }
 
 /// Helper holding a (private, public) key pair as byte vectors.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct HpkeKeyPair {
     pub private: HpkePrivateKey,
     pub public: Vec<u8>,
+}
+
+impl fmt::Debug for HpkeKeyPair {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("HpkeKeyPair")
+            .field("private", &"[REDACTED]")
+            .field("public_key_length", &self.public.len())
+            .finish()
+    }
 }
 
 pub type KemOutput = Vec<u8>;
 #[derive(Clone)]
 pub struct ExporterSecret(SecretVLBytes);
 
-impl std::fmt::Debug for ExporterSecret {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut dt = f.debug_tuple("ExporterSecret");
-
-        #[cfg(feature = "crypto-debug")]
-        dt.field(&self.0);
-        #[cfg(not(feature = "crypto-debug"))]
-        dt.field(&"***");
-
-        dt.finish()
+impl fmt::Debug for ExporterSecret {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_tuple("ExporterSecret")
+            .field(&"[REDACTED]")
+            .finish()
     }
 }
 
@@ -357,6 +362,44 @@ impl Deref for ExporterSecret {
 impl From<Vec<u8>> for ExporterSecret {
     fn from(secret: Vec<u8>) -> Self {
         Self(secret.into())
+    }
+}
+
+#[cfg(test)]
+mod secret_debug_tests {
+    use super::*;
+
+    const SECRET_MARKER: &str = "PRIVATE_KEY_MARKER";
+
+    #[test]
+    fn hpke_private_key_debug_is_redacted() {
+        let private_key = HpkePrivateKey::from(SECRET_MARKER.as_bytes());
+        let rendered = format!("{private_key:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(!rendered.contains(SECRET_MARKER));
+    }
+
+    #[test]
+    fn hpke_key_pair_debug_omits_key_bytes() {
+        let key_pair = HpkeKeyPair {
+            private: HpkePrivateKey::from(SECRET_MARKER.as_bytes()),
+            public: SECRET_MARKER.as_bytes().to_vec(),
+        };
+        let rendered = format!("{key_pair:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(rendered.contains("public_key_length"));
+        assert!(!rendered.contains(SECRET_MARKER));
+    }
+
+    #[test]
+    fn exporter_secret_debug_is_redacted() {
+        let exporter_secret = ExporterSecret::from(SECRET_MARKER.as_bytes().to_vec());
+        let rendered = format!("{exporter_secret:?}");
+
+        assert!(rendered.contains("[REDACTED]"));
+        assert!(!rendered.contains(SECRET_MARKER));
     }
 }
 
