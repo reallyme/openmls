@@ -62,47 +62,21 @@ impl CryptoProvider {
 
 impl OpenMlsCrypto for CryptoProvider {
     fn supports(&self, ciphersuite: Ciphersuite) -> Result<(), CryptoError> {
-        match ciphersuite.aead_algorithm() {
-            AeadType::ChaCha20Poly1305 | AeadType::Aes128Gcm | AeadType::Aes256Gcm => Ok(()),
-        }?;
-
-        match ciphersuite.signature_algorithm() {
-            SignatureScheme::ED25519 => Ok(()),
+        // Component-by-component checks are insufficient: several draft
+        // suites share supported AEAD, hash, and signature algorithms while
+        // requiring a KEM or KDF this provider cannot execute. Keep this
+        // allowlist identical to `supported_ciphersuites()` so a successful
+        // capability check cannot fail later during HPKE setup.
+        match ciphersuite {
+            Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519
+            | Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519 => Ok(()),
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            SignatureScheme::MLDSA44 | SignatureScheme::MLDSA65 | SignatureScheme::MLDSA87 => {
-                Ok(())
-            }
+            Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519
+            | Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44
+            | Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65
+            | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87 => Ok(()),
             _ => Err(CryptoError::UnsupportedCiphersuite),
-        }?;
-
-        match ciphersuite.hash_algorithm() {
-            HashType::Sha2_256 | HashType::Sha2_384 | HashType::Sha2_512 => Ok(()),
-        }?;
-
-        // The hpke-rs libcrux backend only implements these KEMs (pure ML-KEM
-        // needs its `draft-ietf-hpke-pq` feature, which
-        // `draft-ietf-mls-pq-ciphersuites` enables).
-        match ciphersuite.hpke_kem_algorithm() {
-            HpkeKemType::DhKemP256 | HpkeKemType::DhKem25519 => Ok(()),
-            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            HpkeKemType::XWingKemDraft6 => Ok(()),
-            HpkeKemType::DhKemP384 | HpkeKemType::DhKemP521 | HpkeKemType::DhKem448 => {
-                Err(CryptoError::UnsupportedCiphersuite)
-            }
-            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            HpkeKemType::MlKem768 | HpkeKemType::MlKem1024 => Ok(()),
-            #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-            HpkeKemType::MlKem1024P384 => Err(CryptoError::UnsupportedCiphersuite),
-        }?;
-
-        match ciphersuite.hpke_aead_algorithm() {
-            HpkeAeadType::AesGcm128
-            | HpkeAeadType::AesGcm256
-            | HpkeAeadType::ChaCha20Poly1305
-            | HpkeAeadType::Export => Ok(()),
-        }?;
-
-        Ok(())
+        }
     }
 
     fn supported_ciphersuites(&self) -> Vec<Ciphersuite> {
@@ -626,72 +600,69 @@ mod tests {
     use super::*;
 
     #[test]
-    fn advertised_ciphersuites_are_supported() {
-        let provider = CryptoProvider::new().unwrap();
-        for ciphersuite in provider.supported_ciphersuites() {
-            assert!(
-                provider.supports(ciphersuite).is_ok(),
-                "{ciphersuite:?} is advertised by supported_ciphersuites() \
-                 but rejected by supports()"
-            );
+    fn supports_matches_the_advertised_ciphersuite_set() -> Result<(), CryptoError> {
+        let crypto = CryptoProvider::new()?;
+        for ciphersuite in crypto.supported_ciphersuites() {
+            assert_eq!(crypto.supports(ciphersuite), Ok(()));
         }
+        assert_eq!(
+            crypto.supports(Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256),
+            Err(CryptoError::UnsupportedCiphersuite)
+        );
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        assert_eq!(
+            crypto.supports(Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519),
+            Err(CryptoError::UnsupportedCiphersuite)
+        );
+        Ok(())
     }
 
     #[test]
-    fn advertised_ciphersuites_actually_work() {
-        let provider = CryptoProvider::new().unwrap();
+    fn advertised_ciphersuites_actually_work() -> Result<(), CryptoError> {
+        let provider = CryptoProvider::new()?;
         for ciphersuite in provider.supported_ciphersuites() {
             let key = vec![0u8; ciphersuite.aead_key_length()];
             let nonce = vec![0u8; ciphersuite.aead_nonce_length()];
-            let ciphertext = provider
-                .aead_encrypt(
-                    ciphersuite.aead_algorithm(),
-                    &key,
-                    b"plaintext",
-                    &nonce,
-                    b"aad",
-                )
-                .unwrap_or_else(|e| panic!("{ciphersuite:?}: aead_encrypt failed: {e:?}"));
-            let plaintext = provider
-                .aead_decrypt(
-                    ciphersuite.aead_algorithm(),
-                    &key,
-                    &ciphertext,
-                    &nonce,
-                    b"aad",
-                )
-                .unwrap_or_else(|e| panic!("{ciphersuite:?}: aead_decrypt failed: {e:?}"));
+            let ciphertext = provider.aead_encrypt(
+                ciphersuite.aead_algorithm(),
+                &key,
+                b"plaintext",
+                &nonce,
+                b"aad",
+            )?;
+            let plaintext = provider.aead_decrypt(
+                ciphersuite.aead_algorithm(),
+                &key,
+                &ciphertext,
+                &nonce,
+                b"aad",
+            )?;
             assert_eq!(plaintext, b"plaintext", "{ciphersuite:?}: aead round trip");
 
             let mut ikm = vec![0u8; ciphersuite.hash_length()];
-            provider.fill_random(&mut ikm).unwrap();
-            let key_pair = provider
-                .derive_hpke_keypair(ciphersuite.hpke_config(), &ikm)
-                .unwrap_or_else(|e| panic!("{ciphersuite:?}: derive_hpke_keypair failed: {e:?}"));
-            let sealed = provider
-                .hpke_seal(
-                    ciphersuite.hpke_config(),
-                    &key_pair.public,
-                    b"info",
-                    b"aad",
-                    b"plaintext",
-                )
-                .unwrap_or_else(|e| panic!("{ciphersuite:?}: hpke_seal failed: {e:?}"));
-            let opened = provider
-                .hpke_open(
-                    ciphersuite.hpke_config(),
-                    &sealed,
-                    &key_pair.private,
-                    b"info",
-                    b"aad",
-                )
-                .unwrap_or_else(|e| panic!("{ciphersuite:?}: hpke_open failed: {e:?}"));
+            provider.fill_random(&mut ikm)?;
+            let key_pair = provider.derive_hpke_keypair(ciphersuite.hpke_config(), &ikm)?;
+            let sealed = provider.hpke_seal(
+                ciphersuite.hpke_config(),
+                &key_pair.public,
+                b"info",
+                b"aad",
+                b"plaintext",
+            )?;
+            let opened = provider.hpke_open(
+                ciphersuite.hpke_config(),
+                &sealed,
+                &key_pair.private,
+                b"info",
+                b"aad",
+            )?;
             assert_eq!(
                 opened.as_slice(),
                 b"plaintext",
                 "{ciphersuite:?}: hpke round trip"
             );
         }
+        Ok(())
     }
 }
 
