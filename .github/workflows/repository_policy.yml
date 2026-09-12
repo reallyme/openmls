@@ -1,0 +1,51 @@
+name: Repository policy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Reject SPDX markers in Markdown and text docs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches="${RUNNER_TEMP}/doc-spdx-matches.txt"
+          git ls-files '*.md' '*.txt' |
+            while IFS= read -r file; do
+              awk '/SPDX|SFPX/ { print FILENAME ":" FNR ":" $0 }' "${file}"
+            done >"${matches}"
+          if [ -s "${matches}" ]; then
+            cat "${matches}"
+            echo "::error::Remove SPDX/SFPX markers from Markdown and text documentation."
+            exit 1
+          fi
+      - name: Reject all-rights-reserved wording in SPDX headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches="${RUNNER_TEMP}/spdx-rights-reserved-matches.txt"
+          git ls-files |
+            while IFS= read -r file; do
+              grep -nIHE '(SPDX|SFPX)-FileCopyrightText:.*All [Rr]ights [Rr]eserved' "${file}" || true
+            done >"${matches}"
+          if [ -s "${matches}" ]; then
+            cat "${matches}"
+            echo "::error::Remove all-rights-reserved wording from SPDX/SFPX copyright headers."
+            exit 1
+          fi

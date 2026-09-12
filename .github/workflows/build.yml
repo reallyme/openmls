@@ -88,6 +88,10 @@ jobs:
         run: sudo apt-get -y install protobuf-compiler # Needed to build the interop client
       - uses: actions/checkout@v7
       # keep in sync with rust-version in Cargo.toml
-      - uses: dtolnay/rust-toolchain@1.91.0
+      - uses: dtolnay/rust-toolchain@1.96.0
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check --locked --workspace --all-features --all-targets
+      # ReallyMe Crypto sets the workspace floor. Check every target and
+      # feature together so no package can silently retain a lower, untested
+      # compiler boundary.
+      # The repository-level development pin must not shadow this MSRV check.
+      - run: cargo +1.96.0 check --locked --workspace --all-features --all-targets

@@ -1,0 +1,178 @@
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC
+#
+# SPDX-License-Identifier: MIT
+
+name: ReallyMe provider
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # The full generic OpenMLS corpus is intentionally a deep weekly lane: PQ
+    # signatures make it too expensive for every developer edit.
+    - cron: "23 3 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_PROFILE_TEST_DEBUG: "0"
+
+jobs:
+  provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # Pin actions by immutable commit. The trailing version comments make
+      # intentional upgrades reviewable without restoring mutable tags.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # Use the repository's development toolchain here. The separate workspace
+      # MSRV job verifies the published Rust 1.96 contract.
+      - uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # pinned action revision
+        with:
+          toolchain: 1.98.1
+          components: clippy,rustfmt
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check production feature surface
+        run: cargo check -p openmls_reallyme_provider --features draft-ietf-mls-pq-ciphersuites --locked
+      - name: Reject a missing cryptographic backend with an actionable error
+        shell: bash
+        run: |
+          set -euo pipefail
+          backend_error="${RUNNER_TEMP}/reallyme-provider-backend-error.txt"
+          if cargo check -p openmls_reallyme_provider --no-default-features --locked \
+            2>"${backend_error}"; then
+            echo "::error::backendless provider configuration unexpectedly compiled"
+            exit 1
+          fi
+          grep -F "openmls_reallyme_provider requires a backend" "${backend_error}"
+      - name: Assert production dependency isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          dependency_tree="$(cargo tree -p openmls_reallyme_provider \
+            --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
+            --locked \
+            --edges normal,build,features)"
+          if grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v' \
+            <<<"${dependency_tree}"; then
+            echo "::error::test-only dependency leaked into the production provider graph"
+            exit 1
+          fi
+          if grep -E 'reallyme-crypto-(p256|p521|secp256k1|x448) v|(^|[^[:alnum:]_-])(p256|p521|k256|x448|ed448-goldilocks) v' \
+            <<<"${dependency_tree}"; then
+            echo "::error::an unrelated HPKE algorithm leaked into the production provider graph"
+            exit 1
+          fi
+          if grep -E 'reallyme-crypto feature "hpke"|reallyme-crypto-hpke feature "(native|kdf-shake256|kdf-hkdf-sha512|kem-dh-p256|kem-dh-p521|kem-secp256k1|kem-x448)"' \
+            <<<"${dependency_tree}"; then
+            echo "::error::the full or draft-05 HPKE feature surface leaked into production"
+            exit 1
+          fi
+          for required_feature in \
+            "reallyme-crypto feature \"hpke-openmls\"" \
+            "reallyme-crypto-hpke feature \"kem-ml-kem-1024\"" \
+            "reallyme-crypto-hpke feature \"kem-ml-kem-1024-p384\"" \
+            "reallyme-crypto-hpke feature \"kem-x-wing\"" \
+            "reallyme-crypto-hpke feature \"kdf-hkdf-sha256\"" \
+            "reallyme-crypto-hpke feature \"kdf-hkdf-sha384\"" \
+            "reallyme-crypto-hpke feature \"aead-aes256-gcm\"" \
+            "reallyme-crypto-hpke feature \"aead-chacha20-poly1305\""; do
+            if ! grep -F "${required_feature}" <<<"${dependency_tree}"; then
+              echo "::error::required narrow HPKE feature missing: ${required_feature}"
+              exit 1
+            fi
+          done
+          reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
+            <<<"${dependency_tree}" | sort -u)"
+          if grep -Ev ' v0\.3\.9$' <<<"${reallyme_packages}"; then
+            echo "::error::mixed ReallyMe Crypto publication versions entered production"
+            exit 1
+          fi
+      - name: Check every ReallyMe feature on the native target
+        run: cargo check -p openmls_reallyme_provider --all-targets --all-features --locked
+      - name: Check the production WASM feature surface
+        run: cargo check -p openmls_reallyme_provider --target wasm32-unknown-unknown --no-default-features --features wasm,draft-ietf-mls-pq-ciphersuites --locked
+      - name: Reject unified native and WASM backends on wasm32
+        shell: bash
+        run: |
+          set -euo pipefail
+          feature_error="${RUNNER_TEMP}/reallyme-provider-wasm-features-error.txt"
+          if cargo check -p openmls_reallyme_provider --target wasm32-unknown-unknown \
+            --no-default-features \
+            --features native,wasm,draft-ietf-mls-pq-ciphersuites \
+            --locked 2>"${feature_error}"; then
+            echo "::error::conflicting native and wasm backends unexpectedly compiled"
+            exit 1
+          fi
+          grep -F "cannot enable both \`native\` and \`wasm\` on wasm32" "${feature_error}"
+      - name: Clippy with warnings denied
+        run: cargo clippy -p openmls_reallyme_provider --all-targets --all-features --locked -- -D warnings
+      - name: Provider conformance, interoperability, and MLS flows
+        run: cargo test -p openmls_reallyme_provider --all-features --locked -- --test-threads=1
+      - name: Capability defaults and explicit builder settings
+        run: cargo test -p openmls --test provider_capabilities --features reallyme-provider --locked
+      - name: Virtual-client capabilities and cross-suite derivation
+        run: |
+          cargo test -p openmls --lib --features reallyme-provider,virtual-clients-draft --locked \
+            tests::virtual_clients:: -- --test-threads=1
+      - name: Compile the generic OpenMLS corpus for every reviewed suite
+        run: cargo test -p openmls --lib --features reallyme-provider --locked --no-run
+      - name: Run generic OpenMLS provider smoke coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            test_hpke_seal_open_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            update_path_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            test_remove_operation_variants_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            external_commit_builder_reallyme_ -- --test-threads=1
+          cargo test -p openmls --lib --features reallyme-provider --locked \
+            external_join_with_nested_unmerged_leaves_reallyme_ -- --test-threads=1
+      - name: Run the full generic OpenMLS corpus for every reviewed suite
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: cargo test -p openmls --lib --features reallyme-provider --locked -- --test-threads=1
+
+  advisories:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: taiki-e/install-action@c61310c7f42caf5b425e349b6742d93ca197327c # cargo-audit
+        with:
+          tool: cargo-audit@0.22.2
+      - name: Cargo audit
+        # RUSTSEC-2026-0173 is pulled through the optional libcrux/hax provider
+        # metadata. Keep the ignore exact so any unrelated advisory still fails.
+        run: cargo audit --ignore RUSTSEC-2026-0173
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          manifest-path: openmls_reallyme_provider/Cargo.toml
+          command: check
+          # Audit the maximal deployable graph. `--all-features` would also
+          # activate the deliberately non-deployable test adapters.
+          arguments: >-
+            --features
+            extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft
+            --locked
+            --exclude-dev
+          command-arguments: --deny warnings
+          rust-version: 1.98.1
