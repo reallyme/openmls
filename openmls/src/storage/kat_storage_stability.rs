@@ -335,6 +335,26 @@ fn helper_generate_kat<Provider: OpenMlsProvider + Default>(
     )
 }
 
+#[cfg(feature = "generate-kats")]
+fn append_missing_provider_kats<Provider: OpenMlsProvider + Default>(
+    kat_data: &mut Vec<(Ciphersuite, GroupId, Vec<Vec<u8>>)>,
+) {
+    for ciphersuite in Provider::default().crypto().supported_ciphersuites() {
+        // A suite can be implemented by more than one provider. Storage KATs
+        // exercise the serialized OpenMLS state, so one committed vector per
+        // codepoint is sufficient and keeps the fixture small.
+        if kat_data
+            .iter()
+            .any(|(existing, _, _)| *existing == ciphersuite)
+        {
+            continue;
+        }
+
+        let (group_id, storages) = helper_generate_kat::<Provider>(ciphersuite);
+        kat_data.push((ciphersuite, group_id, storages));
+    }
+}
+
 #[openmls_test]
 fn generate_kats() {
     helper_generate_kat::<Provider>(ciphersuite);
@@ -359,7 +379,7 @@ fn write_kats() {
     let ciphersuites = rustcrypto_provider.crypto().supported_ciphersuites();
 
     // generate the kat data
-    let kat_data = ciphersuites
+    let mut kat_data = ciphersuites
         .into_iter()
         .map(|ciphersuite| {
             let (group_id, storages) =
@@ -367,7 +387,12 @@ fn write_kats() {
 
             (ciphersuite, group_id, storages)
         })
-        .collect();
+        .collect::<Vec<_>>();
+
+    #[cfg(feature = "reallyme-provider")]
+    append_missing_provider_kats::<
+        openmls_reallyme_provider::Provider<openmls_reallyme_provider::MemoryStorage>,
+    >(&mut kat_data);
 
     // encode and write to disk
     helper_write_kats(kat_data);
@@ -396,7 +421,7 @@ fn write_kats() {
     }
 
     // generate the kat data
-    let kat_data = ciphersuites
+    let mut kat_data = ciphersuites
         .into_iter()
         .map(|ciphersuite| {
             let (group_id, storages) = if libcrux_provider.crypto().supports(ciphersuite).is_ok() {
@@ -407,7 +432,12 @@ fn write_kats() {
 
             (ciphersuite, group_id, storages)
         })
-        .collect();
+        .collect::<Vec<_>>();
+
+    #[cfg(feature = "reallyme-provider")]
+    append_missing_provider_kats::<
+        openmls_reallyme_provider::Provider<openmls_reallyme_provider::MemoryStorage>,
+    >(&mut kat_data);
 
     // encode and write to disk
     helper_write_kats(kat_data);
@@ -457,7 +487,9 @@ fn test() {
             .collect()
     };
 
-    let KatData { group_id, storages } = data.remove(&ciphersuite).unwrap();
+    let KatData { group_id, storages } = data.remove(&ciphersuite).unwrap_or_else(|| {
+        panic!("storage stability vector missing for ciphersuite {ciphersuite:?}")
+    });
 
     // parse base64-encoded serialized storage
     let mut storages = storages
