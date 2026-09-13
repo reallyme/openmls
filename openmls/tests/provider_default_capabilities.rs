@@ -6,6 +6,24 @@ use openmls_basic_credential::SignatureKeyPair;
 use openmls_rust_crypto::OpenMlsRustCrypto;
 use openmls_traits::crypto::OpenMlsCrypto;
 
+const PRIVATE_USE_START: u16 = 0xf000;
+
+fn assert_public_provider_suites_are_defaults(crypto: &impl OpenMlsCrypto) {
+    let defaults = Capabilities::default();
+    for ciphersuite in crypto
+        .supported_ciphersuites()
+        .into_iter()
+        .filter(|ciphersuite| u16::from(*ciphersuite) < PRIVATE_USE_START)
+    {
+        assert!(
+            defaults
+                .ciphersuites()
+                .contains(&VerifiableCiphersuite::from(ciphersuite)),
+            "public provider suite {ciphersuite:?} is missing from default capabilities"
+        );
+    }
+}
+
 fn credential(signer: &SignatureKeyPair) -> CredentialWithKey {
     CredentialWithKey {
         credential: BasicCredential::new(b"provider capability test".to_vec()).into(),
@@ -29,6 +47,25 @@ fn first_supported_ciphersuite(provider: &OpenMlsRustCrypto) -> Ciphersuite {
         .into_iter()
         .next()
         .expect("the test provider must support at least one ciphersuite")
+}
+
+#[test]
+fn rustcrypto_public_suites_are_present_in_default_capabilities() {
+    assert_public_provider_suites_are_defaults(OpenMlsRustCrypto::default().crypto());
+}
+
+#[cfg(feature = "libcrux-provider")]
+#[test]
+fn libcrux_public_suites_are_present_in_default_capabilities() {
+    let provider = openmls_libcrux_crypto::Provider::default();
+    assert_public_provider_suites_are_defaults(provider.crypto());
+}
+
+#[cfg(feature = "reallyme-provider")]
+#[test]
+fn reallyme_public_suites_are_present_in_default_capabilities() {
+    let provider = openmls_reallyme_provider::Provider::in_memory();
+    assert_public_provider_suites_are_defaults(provider.crypto());
 }
 
 #[test]

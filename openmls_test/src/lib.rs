@@ -225,7 +225,7 @@ pub fn openmls_test(_attr: TokenStream, item: TokenStream) -> TokenStream {
         // Keep these values explicit. This is a conformance lane for the
         // provider's reviewed suite allowlist, so silently discovering or
         // broadening it would defeat the purpose of the test expansion.
-        let reallyme_ciphersuites = [0x004d_u16, 0x0042, 0x0907, 0xf043];
+        let reallyme_ciphersuites = [0x004d_u16, 0x004e, 0x0051, 0x0042, 0x0907, 0xf043];
         for val in reallyme_ciphersuites {
             let ciphersuite = Ciphersuite::try_from(val).expect("reviewed ciphersuite codepoint");
             let ciphersuite_name = format!("{ciphersuite:?}");

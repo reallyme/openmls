@@ -454,6 +454,12 @@ fn production_default_ciphersuites() -> Vec<Ciphersuite> {
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519,
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44,
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
         Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
     ]
 }
@@ -561,6 +567,9 @@ mod tests {
             Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519,
             Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
             Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87,
+            Ciphersuite::MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519,
+            Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44,
+            Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
             Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
         ];
 
