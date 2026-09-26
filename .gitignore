@@ -17,3 +17,5 @@ fuzz/artifacts
 
 # AI
 .cursor/
+
+AGENTS.md
