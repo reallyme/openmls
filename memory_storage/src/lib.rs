@@ -301,6 +301,7 @@ fn remove_zeroizing(values: &mut HashMap<Vec<u8>, Vec<u8>>, key: &[u8]) {
 
 /// Retain selected rows without allowing rejected keys or values to be
 /// released with their previous bytes intact.
+#[cfg(any(test, feature = "virtual-clients-draft"))]
 fn retain_zeroizing(
     values: &mut HashMap<Vec<u8>, Vec<u8>>,
     mut keep: impl FnMut(&[u8], &[u8]) -> bool,
