@@ -165,7 +165,7 @@ fn hpke_freshness_and_bound_input_tampering_fail_closed_for_current_draft_suites
 
 #[test]
 fn draft_hpke_profiles_match_pinned_upgrade_regression_digests() {
-    const IKM: &[u8] = b"fixed OpenMLS vector IKM";
+    const IKM: &[u8] = b"fixed OpenMLS vector IKM 32 byte";
     const INFO: &[u8] = b"fixed OpenMLS vector info";
     const AAD: &[u8] = b"fixed OpenMLS vector aad";
     const PLAINTEXT: &[u8] = b"fixed OpenMLS vector plaintext";
@@ -178,10 +178,10 @@ fn draft_hpke_profiles_match_pinned_upgrade_regression_digests() {
         AAD,
         PLAINTEXT,
         [
-            "150b2521121e7cea0c60affa21c60253d2f9eaee42a782c5f0c3906a7def4f7a",
-            "59eec055d5e9924168829e75ed1f3afe84e2b4b40efd7a3ac1a3615f7a7af888",
-            "800cf60d0deaae0a67e6c782eef28591fe875c4314f813368502a2197d9e1cde",
-            "944a55bf91e7369dd43d1a5bbe3cc5af2cb2f73d85a53c9992c4bc5815141d9b",
+            "8287b94d850bd91a6fdd2a8dd03bd3895609ebe630f299ef8dd3f2982571b68a",
+            "cd68e139d4d8e8699d7e2512dbe3985b3cc6d9898b4936b2265f80a3d2dd468b",
+            "b218f3225439e549a0f998169d22c2cbaa4af971be4880142a0fd4465a5b5d6b",
+            "db3ff04c7e7ee152a04cfc41242fefdf7f2eeffc1ade25aecfc324edbbc4db0c",
         ],
     );
     assert_pinned_reallyme_vector(
@@ -191,10 +191,10 @@ fn draft_hpke_profiles_match_pinned_upgrade_regression_digests() {
         AAD,
         PLAINTEXT,
         [
-            "b1aa872314ed253842d6ab867bda90e08e327b8fd0d0dd3239b26b242a39a2ec",
-            "8901fc0095e32d6da238f6fdeebedefae49096e960b868218ddd4d772298d663",
-            "c52c10d6bb3a5536a9d1846c57a18ebb8066a7018adbfd90d1553cbb44881a8c",
-            "ff8c9299767334d8efb08e546f8a3033a047adb695c94cccd87e6a5d825cf73d",
+            "62a841c9c229eb7c712e08a05a5fd84697dc7591cfb45837a25a2ac5e8e2b3e3",
+            "78be12731c7fad7f1f381e76f1887b299232d0927fa0409676ea2ba98af909c6",
+            "87b382a15988fa58f905a25c1b62b8a1171723ddcd37595eaae4a487d5f6bd37",
+            "8cb99f1878ed6d28a1f54add083fbb665c1f8218d8eeea2ee96e0b8334925c0f",
         ],
     );
     assert_pinned_reallyme_vector(
@@ -204,10 +204,10 @@ fn draft_hpke_profiles_match_pinned_upgrade_regression_digests() {
         AAD,
         PLAINTEXT,
         [
-            "27e21affa9959388fe4300b95892932d409aa0ed91a77f28c5798a9ec817b3ff",
-            "69b6db36672ca2caab5035ff1e485b50bfcf13d0dab70ce69aa57c7e3c95bd7d",
-            "38c49f420842d1d954b2ba0a98e39f3ae8a9779107a2fc1794ccf68be4ae5664",
-            "0d485b39728b66256a6e1763651a40e4c243a431e39233783e3637ccaca5e180",
+            "42cd016b92a86bf647f36b64c4d8bf21ffbd7946a369305ada781721ba1d926c",
+            "771b3ed5ed7a30203be4a190c867670f45aa71c42ae004a85dc5a841ee7806bd",
+            "6520978ee968f8272e4e3323b437455a0c588d12e0fa45fcc9ce5209388a4fcc",
+            "5b4f2b8dd43e70387918e304bbe840f8cbbeee1a5e8cade6b322440bcf396e4a",
         ],
     );
     assert_pinned_reallyme_vector(
@@ -217,10 +217,10 @@ fn draft_hpke_profiles_match_pinned_upgrade_regression_digests() {
         AAD,
         PLAINTEXT,
         [
-            "7f5e6d8b61d83c3455de618e07421606fcb814fa421a167a4ea6c897ca8b511c",
-            "ccbac6d612ca500e0f5dae67d02055a573ea11a5c813c9fd4a44fdbc2c1be5cb",
-            "388c1c3e7dcf61441d28e69e477affb64531a58a63125aeb650779844ec8f8e9",
-            "d33506d03cc985ab47d521edc71ae7cace2ca63e5a22e68c232519b1a20ca801",
+            "866f1922f737e20c7aba400c45ce346356df926683efd82d20395e7752181465",
+            "6d5419b692a5d4056e677d33fc3ab28761091056f982024c4b16c743bf205101",
+            "396dc60ba04e1b80e67fd20b0cb476fb55bb1cd0de3f29fc8145963e6b489232",
+            "418aeb8d6d8b8bebc454f88eb092759398630938cdd37c21c49dabe96eebea33",
         ],
     );
 }

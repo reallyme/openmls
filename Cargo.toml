@@ -50,3 +50,6 @@ hpke-rs = { git = "https://github.com/celabshq/libcrux" }
 hpke-rs-crypto = { git = "https://github.com/celabshq/libcrux" }
 hpke-rs-libcrux = { git = "https://github.com/celabshq/libcrux" }
 hpke-rs-rust-crypto = { git = "https://github.com/celabshq/libcrux" }
+# P-256 signature support requires the unreleased DER conversion helpers.
+# Pin the reviewed upstream revision so dependency resolution is reproducible.
+libcrux-ecdsa = { git = "https://github.com/celabshq/libcrux", rev = "2456eda0f13f3992bce6174ab7a721f2c4294c7f" }

@@ -6,22 +6,15 @@ use openmls_basic_credential::SignatureKeyPair;
 use openmls_rust_crypto::OpenMlsRustCrypto;
 use openmls_traits::crypto::OpenMlsCrypto;
 
-const PRIVATE_USE_START: u16 = 0xf000;
-
-fn assert_public_provider_suites_are_defaults(crypto: &impl OpenMlsCrypto) {
-    let defaults = Capabilities::default();
-    for ciphersuite in crypto
+fn assert_provider_suites_are_advertised(crypto: &impl OpenMlsCrypto) {
+    let advertised = Capabilities::for_provider(crypto);
+    let expected = crypto
         .supported_ciphersuites()
         .into_iter()
-        .filter(|ciphersuite| u16::from(*ciphersuite) < PRIVATE_USE_START)
-    {
-        assert!(
-            defaults
-                .ciphersuites()
-                .contains(&VerifiableCiphersuite::from(ciphersuite)),
-            "public provider suite {ciphersuite:?} is missing from default capabilities"
-        );
-    }
+        .map(VerifiableCiphersuite::from)
+        .collect::<Vec<_>>();
+
+    assert_eq!(advertised.ciphersuites(), expected);
 }
 
 fn credential(signer: &SignatureKeyPair) -> CredentialWithKey {
@@ -50,22 +43,22 @@ fn first_supported_ciphersuite(provider: &OpenMlsRustCrypto) -> Ciphersuite {
 }
 
 #[test]
-fn rustcrypto_public_suites_are_present_in_default_capabilities() {
-    assert_public_provider_suites_are_defaults(OpenMlsRustCrypto::default().crypto());
+fn rustcrypto_supported_suites_are_advertised_by_provider_capabilities() {
+    assert_provider_suites_are_advertised(OpenMlsRustCrypto::default().crypto());
 }
 
 #[cfg(feature = "libcrux-provider")]
 #[test]
-fn libcrux_public_suites_are_present_in_default_capabilities() {
+fn libcrux_supported_suites_are_advertised_by_provider_capabilities() {
     let provider = openmls_libcrux_crypto::Provider::default();
-    assert_public_provider_suites_are_defaults(provider.crypto());
+    assert_provider_suites_are_advertised(provider.crypto());
 }
 
 #[cfg(feature = "reallyme-provider")]
 #[test]
-fn reallyme_public_suites_are_present_in_default_capabilities() {
+fn reallyme_supported_suites_are_advertised_by_provider_capabilities() {
     let provider = openmls_reallyme_provider::Provider::in_memory();
-    assert_public_provider_suites_are_defaults(provider.crypto());
+    assert_provider_suites_are_advertised(provider.crypto());
 }
 
 #[test]

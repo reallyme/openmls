@@ -62,14 +62,14 @@ impl CryptoProvider {
 
 impl OpenMlsCrypto for CryptoProvider {
     fn supports(&self, ciphersuite: Ciphersuite) -> Result<(), CryptoError> {
-        // Component-by-component checks are insufficient: several draft
-        // suites share supported AEAD, hash, and signature algorithms while
-        // requiring a KEM or KDF this provider cannot execute. Keep this
-        // allowlist identical to `supported_ciphersuites()` so a successful
-        // capability check cannot fail later during HPKE setup.
+        // Component-level checks can accept a combination whose KEM or KDF
+        // backend is unavailable. Keep this exact allowlist aligned with
+        // `supported_ciphersuites` so callers never negotiate a suite that
+        // fails later during HPKE setup.
         match ciphersuite {
             Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519
-            | Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519 => Ok(()),
+            | Ciphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519
+            | Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256 => Ok(()),
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             Ciphersuite::MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519
             | Ciphersuite::MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44
@@ -91,8 +91,7 @@ impl OpenMlsCrypto for CryptoProvider {
             Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
-            // TODO: enable
-            //Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256,
+            Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256,
         ]
     }
 
@@ -264,6 +263,22 @@ impl OpenMlsCrypto for CryptoProvider {
 
                 Ok((sk.to_vec(), pk.to_vec()))
             }
+            SignatureScheme::ECDSA_SECP256R1_SHA256 => {
+                let mut drbg = self
+                    .rng
+                    .lock()
+                    .map_err(|_| CryptoError::CryptoLibraryError)?;
+                let sk = libcrux_ecdsa::p256::PrivateKey::random(&mut *drbg)
+                    .map_err(|_| CryptoError::SigningError)?;
+                // Same wire format as the RustCrypto provider: the private key
+                // is the raw 32-byte scalar, the public key the uncompressed
+                // SEC1 point.
+                let pk = sk.public_key().map_err(|_| CryptoError::SigningError)?;
+                let mut pk_sec1 = Vec::with_capacity(65);
+                pk_sec1.push(0x04);
+                pk_sec1.extend_from_slice(pk.as_ref());
+                Ok((AsRef::<[u8; 32]>::as_ref(&sk).to_vec(), pk_sec1))
+            }
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             SignatureScheme::MLDSA44 | SignatureScheme::MLDSA65 | SignatureScheme::MLDSA87 => {
                 // Same wire format as the RustCrypto provider: the private key
@@ -296,6 +311,19 @@ impl OpenMlsCrypto for CryptoProvider {
                     _ => CryptoError::SigningError,
                 })
             }
+            SignatureScheme::ECDSA_SECP256R1_SHA256 => {
+                let pk = libcrux_ecdsa::p256::uncompressed_to_coordinates(pk)
+                    .map_err(|_| CryptoError::InvalidLength)?;
+                let signature = libcrux_ecdsa::p256::Signature::from_der(signature)
+                    .map_err(|_| CryptoError::InvalidSignature)?;
+                libcrux_ecdsa::p256::verify(
+                    libcrux_ecdsa::DigestAlgorithm::Sha256,
+                    data,
+                    &signature,
+                    &libcrux_ecdsa::p256::PublicKey(pk),
+                )
+                .map_err(|_| CryptoError::InvalidSignature)
+            }
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             SignatureScheme::MLDSA44 | SignatureScheme::MLDSA65 | SignatureScheme::MLDSA87 => {
                 ml_dsa::verify(alg, pk, data, signature)
@@ -311,6 +339,24 @@ impl OpenMlsCrypto for CryptoProvider {
                 libcrux_ed25519::sign(data, key)
                     .map_err(|_| CryptoError::SigningError)
                     .map(|sig| sig.to_vec())
+            }
+            SignatureScheme::ECDSA_SECP256R1_SHA256 => {
+                let sk = libcrux_ecdsa::p256::PrivateKey::try_from(key)
+                    .map_err(|_| CryptoError::InvalidLength)?;
+                // The ECDSA nonce is rejection-sampled inside libcrux through
+                // the provider DRBG; a randomness failure surfaces as an error.
+                let mut drbg = self
+                    .rng
+                    .lock()
+                    .map_err(|_| CryptoError::CryptoLibraryError)?;
+                let signature = libcrux_ecdsa::p256::rand::sign(
+                    libcrux_ecdsa::DigestAlgorithm::Sha256,
+                    data,
+                    &sk,
+                    &mut *drbg,
+                )
+                .map_err(|_| CryptoError::SigningError)?;
+                Ok(signature.to_der().as_bytes().to_vec())
             }
             #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
             SignatureScheme::MLDSA44 | SignatureScheme::MLDSA65 | SignatureScheme::MLDSA87 => {
@@ -600,69 +646,72 @@ mod tests {
     use super::*;
 
     #[test]
-    fn supports_matches_the_advertised_ciphersuite_set() -> Result<(), CryptoError> {
-        let crypto = CryptoProvider::new()?;
-        for ciphersuite in crypto.supported_ciphersuites() {
-            assert_eq!(crypto.supports(ciphersuite), Ok(()));
+    fn advertised_ciphersuites_are_supported() {
+        let provider = CryptoProvider::new().unwrap();
+        for ciphersuite in provider.supported_ciphersuites() {
+            assert!(
+                provider.supports(ciphersuite).is_ok(),
+                "{ciphersuite:?} is advertised by supported_ciphersuites() \
+                 but rejected by supports()"
+            );
         }
-        assert_eq!(
-            crypto.supports(Ciphersuite::MLS_128_DHKEMP256_AES128GCM_SHA256_P256),
-            Err(CryptoError::UnsupportedCiphersuite)
-        );
-        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        assert_eq!(
-            crypto.supports(Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519),
-            Err(CryptoError::UnsupportedCiphersuite)
-        );
-        Ok(())
     }
 
     #[test]
-    fn advertised_ciphersuites_actually_work() -> Result<(), CryptoError> {
-        let provider = CryptoProvider::new()?;
+    fn advertised_ciphersuites_actually_work() {
+        let provider = CryptoProvider::new().unwrap();
         for ciphersuite in provider.supported_ciphersuites() {
             let key = vec![0u8; ciphersuite.aead_key_length()];
             let nonce = vec![0u8; ciphersuite.aead_nonce_length()];
-            let ciphertext = provider.aead_encrypt(
-                ciphersuite.aead_algorithm(),
-                &key,
-                b"plaintext",
-                &nonce,
-                b"aad",
-            )?;
-            let plaintext = provider.aead_decrypt(
-                ciphersuite.aead_algorithm(),
-                &key,
-                &ciphertext,
-                &nonce,
-                b"aad",
-            )?;
+            let ciphertext = provider
+                .aead_encrypt(
+                    ciphersuite.aead_algorithm(),
+                    &key,
+                    b"plaintext",
+                    &nonce,
+                    b"aad",
+                )
+                .unwrap_or_else(|e| panic!("{ciphersuite:?}: aead_encrypt failed: {e:?}"));
+            let plaintext = provider
+                .aead_decrypt(
+                    ciphersuite.aead_algorithm(),
+                    &key,
+                    &ciphertext,
+                    &nonce,
+                    b"aad",
+                )
+                .unwrap_or_else(|e| panic!("{ciphersuite:?}: aead_decrypt failed: {e:?}"));
             assert_eq!(plaintext, b"plaintext", "{ciphersuite:?}: aead round trip");
 
             let mut ikm = vec![0u8; ciphersuite.hash_length()];
-            provider.fill_random(&mut ikm)?;
-            let key_pair = provider.derive_hpke_keypair(ciphersuite.hpke_config(), &ikm)?;
-            let sealed = provider.hpke_seal(
-                ciphersuite.hpke_config(),
-                &key_pair.public,
-                b"info",
-                b"aad",
-                b"plaintext",
-            )?;
-            let opened = provider.hpke_open(
-                ciphersuite.hpke_config(),
-                &sealed,
-                &key_pair.private,
-                b"info",
-                b"aad",
-            )?;
+            provider.fill_random(&mut ikm).unwrap();
+            let key_pair = provider
+                .derive_hpke_keypair(ciphersuite.hpke_config(), &ikm)
+                .unwrap_or_else(|e| panic!("{ciphersuite:?}: derive_hpke_keypair failed: {e:?}"));
+            let sealed = provider
+                .hpke_seal(
+                    ciphersuite.hpke_config(),
+                    &key_pair.public,
+                    b"info",
+                    b"aad",
+                    b"plaintext",
+                )
+                .unwrap_or_else(|e| panic!("{ciphersuite:?}: hpke_seal failed: {e:?}"));
+            let opened = provider
+                .hpke_open(
+                    ciphersuite.hpke_config(),
+                    &sealed,
+                    &key_pair.private,
+                    b"info",
+                    b"aad",
+                )
+                .unwrap_or_else(|e| panic!("{ciphersuite:?}: hpke_open failed: {e:?}"));
             assert_eq!(
                 opened.as_slice(),
                 b"plaintext",
                 "{ciphersuite:?}: hpke round trip"
             );
         }
-        Ok(())
     }
 }
 
