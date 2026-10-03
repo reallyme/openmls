@@ -124,30 +124,30 @@ jobs:
       - name: Provider conformance, interoperability, and MLS flows
         run: cargo test -p openmls_reallyme_provider --all-features --locked -- --test-threads=1
       - name: Capability defaults and explicit builder settings
-        run: cargo test -p openmls --test provider_capabilities --features reallyme-provider --locked
+        run: cargo test -p openmls --test provider_capabilities --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked
       - name: Virtual-client capabilities and cross-suite derivation
         run: |
-          cargo test -p openmls --lib --features reallyme-provider,virtual-clients-draft --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             tests::virtual_clients:: -- --test-threads=1
       - name: Compile the generic OpenMLS corpus for every reviewed suite
-        run: cargo test -p openmls --lib --features reallyme-provider --locked --no-run
+        run: cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked --no-run
       - name: Run generic OpenMLS provider smoke coverage
         shell: bash
         run: |
           set -euo pipefail
-          cargo test -p openmls --lib --features reallyme-provider --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             test_hpke_seal_open_reallyme_ -- --test-threads=1
-          cargo test -p openmls --lib --features reallyme-provider --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             update_path_reallyme_ -- --test-threads=1
-          cargo test -p openmls --lib --features reallyme-provider --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             test_remove_operation_variants_reallyme_ -- --test-threads=1
-          cargo test -p openmls --lib --features reallyme-provider --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             external_commit_builder_reallyme_ -- --test-threads=1
-          cargo test -p openmls --lib --features reallyme-provider --locked \
+          cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \
             external_join_with_nested_unmerged_leaves_reallyme_ -- --test-threads=1
       - name: Run the full generic OpenMLS corpus for every reviewed suite
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        run: cargo test -p openmls --lib --features reallyme-provider --locked -- --test-threads=1
+        run: cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked -- --test-threads=1
 
   advisories:
     runs-on: ubuntu-24.04

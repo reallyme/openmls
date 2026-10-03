@@ -42,4 +42,4 @@ jobs:
       - name: Tests with all providers and ciphersuites
         run: |
           cargo test ${{ matrix.mode.arg }} -p openmls --verbose --no-default-features \
-            -F all-ciphersuites,sqlite-provider,libcrux-provider ${{ matrix.features.arg }}
+            -F all-ciphersuites,sqlite-provider,libcrux-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft ${{ matrix.features.arg }}

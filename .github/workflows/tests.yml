@@ -47,7 +47,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Tests
-        run: cargo test ${{ matrix.mode_arg }} -p openmls --verbose --no-default-features ${{ matrix.features_arg }}
+        run: cargo test ${{ matrix.mode_arg }} -p openmls --verbose --no-default-features -F draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft ${{ matrix.features_arg }}
 
   compat_tests:
     runs-on: "ubuntu-latest"
