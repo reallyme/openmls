@@ -34,8 +34,12 @@ use openmls_rust_crypto::OpenMlsRustCrypto;
 use openmls_test::openmls_test;
 use openmls_traits::storage::StorageProvider as _;
 use openmls_traits::OpenMlsProvider;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::SystemTime;
 use tls_codec::Serialize as _;
+#[cfg(target_arch = "wasm32")]
+use web_time::SystemTime;
 
 mod mls_group;
 
