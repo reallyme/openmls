@@ -44,10 +44,10 @@ jobs:
             . -> target
       - name: Build workspace
         run: |
-          cargo build --workspace --all-targets --exclude openmls-fuzz --locked
+          cargo build --workspace -F draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --all-targets --exclude openmls-fuzz --locked
       - name: Test workspace
         run: |
-          cargo test --workspace --all-targets --exclude=openmls --exclude openmls-fuzz --locked
+          cargo test --workspace -F draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --all-targets --exclude=openmls --exclude openmls-fuzz --locked
       - name: Build workspace with experimental features
         run: |
           cargo build --workspace -F extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --all-targets --exclude openmls-fuzz --locked

@@ -12,6 +12,22 @@ extensions-draft = [
     "openmls/extensions-draft-test-dependencies",
     "openmls_memory_storage/extensions-draft",
 ]
+targeted-messages-draft = [
+    "openmls/targeted-messages-draft",
+    "openmls_rust_crypto/targeted-messages-draft",
+]
+draft-ietf-mls-pq-ciphersuites = [
+    "openmls/draft-ietf-mls-pq-ciphersuites",
+    "openmls_rust_crypto/draft-ietf-mls-pq-ciphersuites",
+    "openmls_memory_storage/draft-ietf-mls-pq-ciphersuites",
+]
+virtual-clients-draft = [
+    "extensions-draft",
+    "openmls/virtual-clients-draft",
+    "openmls/virtual-clients-draft-test-dependencies",
+    "openmls_rust_crypto/virtual-clients-draft",
+    "openmls_memory_storage/virtual-clients-draft",
+]
 
 [dependencies]
 url = "2.5"

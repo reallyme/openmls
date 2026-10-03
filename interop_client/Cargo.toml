@@ -16,6 +16,20 @@ extensions-draft = [
     # `extensions-draft` trait methods with their own feature on.
     "openmls/extensions-draft-test-dependencies",
 ]
+targeted-messages-draft = [
+    "openmls/targeted-messages-draft",
+    "openmls_rust_crypto/targeted-messages-draft",
+]
+draft-ietf-mls-pq-ciphersuites = [
+    "openmls/draft-ietf-mls-pq-ciphersuites",
+    "openmls_rust_crypto/draft-ietf-mls-pq-ciphersuites",
+]
+virtual-clients-draft = [
+    "extensions-draft",
+    "openmls/virtual-clients-draft",
+    "openmls/virtual-clients-draft-test-dependencies",
+    "openmls_rust_crypto/virtual-clients-draft",
+]
 
 [dependencies]
 openmls = { path = "../openmls", features = ["test-utils"] }

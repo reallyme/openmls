@@ -480,7 +480,7 @@ impl User {
             ProcessedMessageContent::OwnPrivateMessage => None,
             #[cfg(feature = "extensions-draft")]
             ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
-                unimplemented!("the cli does not support AppDataUpdate proposals")
+                return Err("the cli does not support AppDataUpdate proposals".to_string());
             }
         };
         Ok((PostUpdateActions::None, None, message_out))

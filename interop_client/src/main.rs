@@ -809,10 +809,14 @@ impl MlsClient for MlsClientImpl {
             ProcessedMessageContent::StagedCommitMessage(_) => unreachable!(),
             ProcessedMessageContent::OwnPendingCommit => unreachable!(),
             ProcessedMessageContent::OwnPrivateMessage => unreachable!(),
-            // The `extensions-draft` feature has no interop scenarios, so an
-            // AppData commit can never reach the client here.
+            // The interop protocol cannot supply the application-defined
+            // dictionary updates required to stage this commit.
             #[cfg(feature = "extensions-draft")]
-            ProcessedMessageContent::UnresolvedAppDataCommit(_) => unreachable!(),
+            ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
+                return Err(Status::failed_precondition(
+                    "AppData commits are not supported by the interop protocol",
+                ));
+            }
         };
 
         let response = UnprotectResponse {
@@ -1101,10 +1105,14 @@ impl MlsClient for MlsClientImpl {
                 ProcessedMessageContent::OwnPrivateMessage => {
                     trace!("Skipping own private message (proposal by reference)");
                 }
-                // The `extensions-draft` feature has no interop scenarios, so an
-                // AppData commit can never reach the client here.
+                // The interop protocol cannot supply the application-defined
+                // dictionary updates required to stage this commit.
                 #[cfg(feature = "extensions-draft")]
-                ProcessedMessageContent::UnresolvedAppDataCommit(_) => unreachable!(),
+                ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
+                    return Err(Status::failed_precondition(
+                        "AppData commits are not supported by the interop protocol",
+                    ));
+                }
             }
         }
 
@@ -1318,10 +1326,14 @@ impl MlsClient for MlsClientImpl {
                 ProcessedMessageContent::OwnPrivateMessage => {
                     trace!("Skipping own private message (proposal by reference)");
                 }
-                // The `extensions-draft` feature has no interop scenarios, so an
-                // AppData commit can never reach the client here.
+                // The interop protocol cannot supply the application-defined
+                // dictionary updates required to stage this commit.
                 #[cfg(feature = "extensions-draft")]
-                ProcessedMessageContent::UnresolvedAppDataCommit(_) => unreachable!(),
+                ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
+                    return Err(Status::failed_precondition(
+                        "AppData commits are not supported by the interop protocol",
+                    ));
+                }
             }
         }
 
@@ -1357,10 +1369,14 @@ impl MlsClient for MlsClientImpl {
             }
             ProcessedMessageContent::OwnPendingCommit => unreachable!(),
             ProcessedMessageContent::OwnPrivateMessage => unreachable!(),
-            // The `extensions-draft` feature has no interop scenarios, so an
-            // AppData commit can never reach the client here.
+            // The interop protocol cannot supply the application-defined
+            // dictionary updates required to stage this commit.
             #[cfg(feature = "extensions-draft")]
-            ProcessedMessageContent::UnresolvedAppDataCommit(_) => unreachable!(),
+            ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
+                return Err(Status::failed_precondition(
+                    "AppData commits are not supported by the interop protocol",
+                ));
+            }
         }
 
         trace!(epoch=?group.epoch(), "New group state.");

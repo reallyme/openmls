@@ -269,9 +269,9 @@ impl Group {
             // them.
             openmls::framing::ProcessedMessageContent::OwnPrivateMessage => Ok(vec![]),
             #[cfg(feature = "extensions-draft")]
-            openmls::framing::ProcessedMessageContent::UnresolvedAppDataCommit(_) => {
-                unimplemented!("openmls-wasm does not support AppDataUpdate proposals")
-            }
+            openmls::framing::ProcessedMessageContent::UnresolvedAppDataCommit(_) => Err(
+                JsError::new("openmls-wasm does not support AppDataUpdate proposals"),
+            ),
         }
     }
 
