@@ -23,7 +23,8 @@ jobs:
       - name: Run profiling tests
         run: |
           mkdir -p target/debug/coverage
-          cargo test --no-fail-fast -p openmls
+          cargo test --no-fail-fast -p openmls \
+            --features draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft
         env:
           # Coverage relies on unstable compiler flags; override the repository's
           # stable development pin for this nightly-only step.
