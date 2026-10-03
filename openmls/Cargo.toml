@@ -74,7 +74,12 @@ sqlite-provider = [
 all-ciphersuites = ["openmls_test?/all-ciphersuites"]
 # Enable the fork-specific provider conformance tests. This also propagates the
 # test-only selection to the shared OpenMLS test harness.
-reallyme-provider = ["openmls_test?/reallyme-provider"]
+reallyme-provider = [
+    "openmls_test?/reallyme-provider",
+    # The shared test macro expands the reviewed provider suite list. Those
+    # ciphersuite discriminants are defined only in the PQ draft feature.
+    "draft-ietf-mls-pq-ciphersuites",
+]
 # Compile the KAT regenerators. Opt in when refreshing the bundled JSON test
 # vectors.
 generate-kats = []
