@@ -2882,16 +2882,22 @@ mod tests {
 
     #[test]
     fn log_entry_layout_is_frozen() {
+        const REGISTERED_AT_SECS: u64 = 1_700_000_000;
+        // Windows represents SystemTime in 100-nanosecond intervals. Keep the
+        // fixture aligned so every supported platform serializes it identically.
+        const REGISTERED_AT_NANOS: u32 = 42_000;
+
         let entry = VcDerivationEpochLogEntry {
             sequence: 2,
             group_epoch: GroupEpoch::from(7),
             epoch_id: EpochId::new(vec![1, 2, 3]),
-            registered_at: SystemTime::UNIX_EPOCH + std::time::Duration::new(1_700_000_000, 42),
+            registered_at: SystemTime::UNIX_EPOCH
+                + std::time::Duration::new(REGISTERED_AT_SECS, REGISTERED_AT_NANOS),
         };
         let json = serde_json::to_string(&entry).expect("serialize log entry");
         assert_eq!(
             json,
-            r#"{"sequence":2,"group_epoch":7,"epoch_id":[1,2,3],"registered_at":{"secs_since_epoch":1700000000,"nanos_since_epoch":42}}"#
+            r#"{"sequence":2,"group_epoch":7,"epoch_id":[1,2,3],"registered_at":{"secs_since_epoch":1700000000,"nanos_since_epoch":42000}}"#
         );
         let decoded: VcDerivationEpochLogEntry =
             serde_json::from_str(&json).expect("deserialize log entry");
