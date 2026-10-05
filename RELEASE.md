@@ -46,17 +46,16 @@ Do not use `--all-features` for the `cargo deny` release gate: that would enable
 `interop-tests`, `mls-flow-tests`, and `test-utils`, which are test adapters,
 not production inputs.
 
-ReallyMe Crypto 0.3.9 exposes only the HPKE components this provider needs:
+ReallyMe Crypto 0.3.13 exposes only the HPKE components this provider needs:
 ML-KEM-768, ML-KEM-1024, ML-KEM-1024/P-384, X-Wing, HKDF-SHA256,
 HKDF-SHA384, AES-256-GCM, and ChaCha20-Poly1305 where required. Release checks
 must show that the production graph contains only those HPKE components, does
 not expose deterministic test-vector APIs, and uses a single `reallyme-crypto`
 patch version.
 
-The 0.3.9 upgrade retains the HPKE input validation from 0.3.8 and adds the
-ML-KEM-768/HKDF-SHA384 and X-Wing/HKDF-SHA384 suite compositions used by the
-newer provider suites. Large-context and generic external-join regressions must
-pass against the registry dependency.
+Version 0.3.13 is the reviewed dependency baseline for this release. Focused
+interoperability, large-context, and generic external-join regressions must pass
+against the registry dependency before changing that baseline.
 
 ## Draft Suites
 
