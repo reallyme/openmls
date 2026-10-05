@@ -427,19 +427,30 @@ pub(super) fn default_versions() -> Vec<ProtocolVersion> {
 }
 
 pub(super) fn default_ciphersuites() -> Vec<Ciphersuite> {
-    // The hybrid profile uses a fork-private provisional codepoint and must
-    // never enter production defaults. Generic provider conformance tests
-    // still contain legacy helpers that construct custom capabilities from
-    // these defaults and therefore need the suite while testing this provider.
-    #[cfg(all(test, feature = "reallyme-provider"))]
-    {
-        let mut ciphersuites = production_default_ciphersuites();
-        ciphersuites.push(Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384);
-        ciphersuites
-    }
+    let ciphersuites = production_default_ciphersuites();
 
-    #[cfg(not(all(test, feature = "reallyme-provider")))]
-    production_default_ciphersuites()
+    // Private-use profiles must never enter production defaults. Exhaustive
+    // provider tests still construct capabilities from these defaults, so
+    // include each enabled provider's private suites only in those test builds.
+    #[cfg(all(
+        test,
+        feature = "all-ciphersuites",
+        feature = "draft-ietf-mls-pq-ciphersuites"
+    ))]
+    let ciphersuites = {
+        let mut test_ciphersuites = ciphersuites;
+        test_ciphersuites.push(Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519);
+        test_ciphersuites
+    };
+
+    #[cfg(all(test, feature = "reallyme-provider"))]
+    let ciphersuites = {
+        let mut test_ciphersuites = ciphersuites;
+        test_ciphersuites.push(Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384);
+        test_ciphersuites
+    };
+
+    ciphersuites
 }
 
 fn production_default_ciphersuites() -> Vec<Ciphersuite> {
