@@ -2882,153 +2882,159 @@
 <a href=#2882 id=2882 data-nosnippet>2882</a>
 <a href=#2883 id=2883 data-nosnippet>2883</a>    <span class="attr">#[test]
 <a href=#2884 id=2884 data-nosnippet>2884</a>    </span><span class="kw">fn </span>log_entry_layout_is_frozen() {
-<a href=#2885 id=2885 data-nosnippet>2885</a>        <span class="kw">let </span>entry = VcDerivationEpochLogEntry {
-<a href=#2886 id=2886 data-nosnippet>2886</a>            sequence: <span class="number">2</span>,
-<a href=#2887 id=2887 data-nosnippet>2887</a>            group_epoch: GroupEpoch::from(<span class="number">7</span>),
-<a href=#2888 id=2888 data-nosnippet>2888</a>            epoch_id: EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]),
-<a href=#2889 id=2889 data-nosnippet>2889</a>            registered_at: SystemTime::UNIX_EPOCH + std::time::Duration::new(<span class="number">1_700_000_000</span>, <span class="number">42</span>),
-<a href=#2890 id=2890 data-nosnippet>2890</a>        };
-<a href=#2891 id=2891 data-nosnippet>2891</a>        <span class="kw">let </span>json = serde_json::to_string(<span class="kw-2">&amp;</span>entry).expect(<span class="string">"serialize log entry"</span>);
-<a href=#2892 id=2892 data-nosnippet>2892</a>        <span class="macro">assert_eq!</span>(
-<a href=#2893 id=2893 data-nosnippet>2893</a>            json,
-<a href=#2894 id=2894 data-nosnippet>2894</a>            <span class="string">r#"{"sequence":2,"group_epoch":7,"epoch_id":[1,2,3],"registered_at":{"secs_since_epoch":1700000000,"nanos_since_epoch":42}}"#
-<a href=#2895 id=2895 data-nosnippet>2895</a>        </span>);
-<a href=#2896 id=2896 data-nosnippet>2896</a>        <span class="kw">let </span>decoded: VcDerivationEpochLogEntry =
-<a href=#2897 id=2897 data-nosnippet>2897</a>            serde_json::from_str(<span class="kw-2">&amp;</span>json).expect(<span class="string">"deserialize log entry"</span>);
-<a href=#2898 id=2898 data-nosnippet>2898</a>        <span class="macro">assert_eq!</span>(decoded, entry);
-<a href=#2899 id=2899 data-nosnippet>2899</a>    }
-<a href=#2900 id=2900 data-nosnippet>2900</a>
-<a href=#2901 id=2901 data-nosnippet>2901</a>    <span class="attr">#[test]
-<a href=#2902 id=2902 data-nosnippet>2902</a>    </span><span class="kw">fn </span>binding_layout_is_frozen() {
-<a href=#2903 id=2903 data-nosnippet>2903</a>        <span class="kw">let </span>binding = VcEmulationBinding {
-<a href=#2904 id=2904 data-nosnippet>2904</a>            group_epoch: GroupEpoch::from(<span class="number">7</span>),
-<a href=#2905 id=2905 data-nosnippet>2905</a>            epoch_id: EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]),
-<a href=#2906 id=2906 data-nosnippet>2906</a>        };
-<a href=#2907 id=2907 data-nosnippet>2907</a>        <span class="kw">let </span>json = serde_json::to_string(<span class="kw-2">&amp;</span>binding).expect(<span class="string">"serialize binding"</span>);
-<a href=#2908 id=2908 data-nosnippet>2908</a>        <span class="macro">assert_eq!</span>(json, <span class="string">r#"{"group_epoch":7,"epoch_id":[1,2,3]}"#</span>);
-<a href=#2909 id=2909 data-nosnippet>2909</a>        <span class="kw">let </span>decoded: VcEmulationBinding = serde_json::from_str(<span class="kw-2">&amp;</span>json).expect(<span class="string">"deserialize binding"</span>);
-<a href=#2910 id=2910 data-nosnippet>2910</a>        <span class="macro">assert_eq!</span>(decoded, binding);
-<a href=#2911 id=2911 data-nosnippet>2911</a>    }
-<a href=#2912 id=2912 data-nosnippet>2912</a>
-<a href=#2913 id=2913 data-nosnippet>2913</a>    <span class="attr">#[test]
-<a href=#2914 id=2914 data-nosnippet>2914</a>    </span><span class="kw">fn </span>binding_from_legacy_record() {
-<a href=#2915 id=2915 data-nosnippet>2915</a>        <span class="kw">let </span>epoch_id = EpochId::new(<span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
-<a href=#2916 id=2916 data-nosnippet>2916</a>        <span class="kw">let </span>binding = VcEmulationBinding::from_legacy_record(GroupEpoch::from(<span class="number">3</span>), epoch_id.clone());
-<a href=#2917 id=2917 data-nosnippet>2917</a>        <span class="macro">assert_eq!</span>(binding.group_epoch, GroupEpoch::from(<span class="number">3</span>));
-<a href=#2918 id=2918 data-nosnippet>2918</a>        <span class="macro">assert_eq!</span>(binding.epoch_id(), <span class="kw-2">&amp;</span>epoch_id);
-<a href=#2919 id=2919 data-nosnippet>2919</a>    }
-<a href=#2920 id=2920 data-nosnippet>2920</a>
-<a href=#2921 id=2921 data-nosnippet>2921</a>    <span class="attr">#[test]
-<a href=#2922 id=2922 data-nosnippet>2922</a>    </span><span class="kw">fn </span>log_entry_from_legacy_record() {
-<a href=#2923 id=2923 data-nosnippet>2923</a>        <span class="kw">let </span>epoch_id = EpochId::new(<span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
-<a href=#2924 id=2924 data-nosnippet>2924</a>        <span class="kw">let </span>registered_at = SystemTime::UNIX_EPOCH;
-<a href=#2925 id=2925 data-nosnippet>2925</a>        <span class="kw">let </span>entry = VcDerivationEpochLogEntry::from_legacy_record(
-<a href=#2926 id=2926 data-nosnippet>2926</a>            GroupEpoch::from(<span class="number">3</span>),
-<a href=#2927 id=2927 data-nosnippet>2927</a>            epoch_id.clone(),
-<a href=#2928 id=2928 data-nosnippet>2928</a>            registered_at,
-<a href=#2929 id=2929 data-nosnippet>2929</a>        );
-<a href=#2930 id=2930 data-nosnippet>2930</a>
-<a href=#2931 id=2931 data-nosnippet>2931</a>        <span class="macro">assert_eq!</span>(entry.sequence, <span class="number">0</span>);
-<a href=#2932 id=2932 data-nosnippet>2932</a>        <span class="macro">assert_eq!</span>(entry.group_epoch, GroupEpoch::from(<span class="number">3</span>));
-<a href=#2933 id=2933 data-nosnippet>2933</a>        <span class="macro">assert_eq!</span>(entry.epoch_id(), <span class="kw-2">&amp;</span>epoch_id);
-<a href=#2934 id=2934 data-nosnippet>2934</a>        <span class="macro">assert_eq!</span>(entry.registered_at, registered_at);
-<a href=#2935 id=2935 data-nosnippet>2935</a>
-<a href=#2936 id=2936 data-nosnippet>2936</a>        <span class="comment">// A log holding only the converted entry treats it as the newest one,
-<a href=#2937 id=2937 data-nosnippet>2937</a>        // so neither pruning path drops it.
-<a href=#2938 id=2938 data-nosnippet>2938</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = VcDerivationEpochLog {
-<a href=#2939 id=2939 data-nosnippet>2939</a>            entries: VecDeque::from([entry]),
-<a href=#2940 id=2940 data-nosnippet>2940</a>        };
-<a href=#2941 id=2941 data-nosnippet>2941</a>        <span class="macro">assert!</span>(log.shrink_to(<span class="number">1</span>).is_empty());
-<a href=#2942 id=2942 data-nosnippet>2942</a>        <span class="macro">assert!</span>(log.drop_superseded_before(SystemTime::now()).is_empty());
-<a href=#2943 id=2943 data-nosnippet>2943</a>        <span class="macro">assert_eq!</span>(
-<a href=#2944 id=2944 data-nosnippet>2944</a>            log.newest().map(|entry| entry.epoch_id.clone()),
-<a href=#2945 id=2945 data-nosnippet>2945</a>            <span class="prelude-val">Some</span>(epoch_id)
-<a href=#2946 id=2946 data-nosnippet>2946</a>        );
-<a href=#2947 id=2947 data-nosnippet>2947</a>    }
-<a href=#2948 id=2948 data-nosnippet>2948</a>
-<a href=#2949 id=2949 data-nosnippet>2949</a>    <span class="kw">fn </span>log_entry(
-<a href=#2950 id=2950 data-nosnippet>2950</a>        group_epoch: u64,
-<a href=#2951 id=2951 data-nosnippet>2951</a>        epoch_id: <span class="kw-2">&amp;</span>EpochId,
-<a href=#2952 id=2952 data-nosnippet>2952</a>        registered_at: SystemTime,
-<a href=#2953 id=2953 data-nosnippet>2953</a>    ) -&gt; VcDerivationEpochLogEntry {
-<a href=#2954 id=2954 data-nosnippet>2954</a>        VcDerivationEpochLogEntry {
-<a href=#2955 id=2955 data-nosnippet>2955</a>            sequence: group_epoch,
-<a href=#2956 id=2956 data-nosnippet>2956</a>            group_epoch: GroupEpoch::from(group_epoch),
-<a href=#2957 id=2957 data-nosnippet>2957</a>            epoch_id: epoch_id.clone(),
-<a href=#2958 id=2958 data-nosnippet>2958</a>            registered_at,
-<a href=#2959 id=2959 data-nosnippet>2959</a>        }
-<a href=#2960 id=2960 data-nosnippet>2960</a>    }
-<a href=#2961 id=2961 data-nosnippet>2961</a>
-<a href=#2962 id=2962 data-nosnippet>2962</a>    <span class="attr">#[test]
-<a href=#2963 id=2963 data-nosnippet>2963</a>    </span><span class="kw">fn </span>log_reconstruction_orders_by_sequence() {
-<a href=#2964 id=2964 data-nosnippet>2964</a>        <span class="kw">let </span>provider = OpenMlsRustCrypto::default();
-<a href=#2965 id=2965 data-nosnippet>2965</a>        <span class="kw">let </span>group_id = GroupId::from_slice(<span class="string">b"emulation-group"</span>);
-<a href=#2966 id=2966 data-nosnippet>2966</a>        <span class="kw">let </span>first = log_entry(<span class="number">0</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>]), SystemTime::UNIX_EPOCH);
-<a href=#2967 id=2967 data-nosnippet>2967</a>        <span class="kw">let </span>second = log_entry(<span class="number">1</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">2</span>]), SystemTime::UNIX_EPOCH);
-<a href=#2968 id=2968 data-nosnippet>2968</a>        <span class="kw">let </span>third = log_entry(<span class="number">2</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">3</span>]), SystemTime::UNIX_EPOCH);
-<a href=#2969 id=2969 data-nosnippet>2969</a>        <span class="comment">// Written out of order. The provider returns entries unordered anyway,
-<a href=#2970 id=2970 data-nosnippet>2970</a>        // so the sort must come from the sequence numbers alone.
-<a href=#2971 id=2971 data-nosnippet>2971</a>        </span><span class="kw">for </span>entry <span class="kw">in </span>[<span class="kw-2">&amp;</span>second, <span class="kw-2">&amp;</span>third, <span class="kw-2">&amp;</span>first] {
-<a href=#2972 id=2972 data-nosnippet>2972</a>            &lt;MemoryStorage <span class="kw">as </span>StorageProvider&lt;CURRENT_VERSION&gt;&gt;::write_vc_derivation_epoch_log_entry(
-<a href=#2973 id=2973 data-nosnippet>2973</a>                provider.storage(),
-<a href=#2974 id=2974 data-nosnippet>2974</a>                <span class="kw-2">&amp;</span>group_id,
-<a href=#2975 id=2975 data-nosnippet>2975</a>                <span class="kw-2">&amp;</span>entry.epoch_id,
-<a href=#2976 id=2976 data-nosnippet>2976</a>                entry,
-<a href=#2977 id=2977 data-nosnippet>2977</a>            )
-<a href=#2978 id=2978 data-nosnippet>2978</a>            .expect(<span class="string">"write log entry"</span>);
-<a href=#2979 id=2979 data-nosnippet>2979</a>        }
-<a href=#2980 id=2980 data-nosnippet>2980</a>
-<a href=#2981 id=2981 data-nosnippet>2981</a>        <span class="kw">let </span>log = VcDerivationEpochLog::load(provider.storage(), <span class="kw-2">&amp;</span>group_id).expect(<span class="string">"load the log"</span>);
-<a href=#2982 id=2982 data-nosnippet>2982</a>        <span class="macro">assert_eq!</span>(
-<a href=#2983 id=2983 data-nosnippet>2983</a>            log.newest().map(|entry| entry.epoch_id.clone()),
-<a href=#2984 id=2984 data-nosnippet>2984</a>            <span class="prelude-val">Some</span>(third.epoch_id.clone())
-<a href=#2985 id=2985 data-nosnippet>2985</a>        );
-<a href=#2986 id=2986 data-nosnippet>2986</a>        <span class="macro">assert_eq!</span>(
-<a href=#2987 id=2987 data-nosnippet>2987</a>            newest_vc_derivation_epoch(provider.storage(), <span class="kw-2">&amp;</span>group_id).expect(<span class="string">"newest epoch"</span>),
-<a href=#2988 id=2988 data-nosnippet>2988</a>            <span class="prelude-val">Some</span>(third.epoch_id.clone())
-<a href=#2989 id=2989 data-nosnippet>2989</a>        );
-<a href=#2990 id=2990 data-nosnippet>2990</a>
-<a href=#2991 id=2991 data-nosnippet>2991</a>        <span class="comment">// Pruning drops the entries with the lowest sequences first.
-<a href=#2992 id=2992 data-nosnippet>2992</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = log;
-<a href=#2993 id=2993 data-nosnippet>2993</a>        <span class="macro">assert_eq!</span>(log.shrink_to(<span class="number">2</span>), <span class="macro">vec!</span>[first.epoch_id.clone()]);
-<a href=#2994 id=2994 data-nosnippet>2994</a>        <span class="macro">assert_eq!</span>(
-<a href=#2995 id=2995 data-nosnippet>2995</a>            log.newest().map(|entry| entry.epoch_id.clone()),
-<a href=#2996 id=2996 data-nosnippet>2996</a>            <span class="prelude-val">Some</span>(third.epoch_id)
-<a href=#2997 id=2997 data-nosnippet>2997</a>        );
-<a href=#2998 id=2998 data-nosnippet>2998</a>    }
-<a href=#2999 id=2999 data-nosnippet>2999</a>
-<a href=#3000 id=3000 data-nosnippet>3000</a>    <span class="attr">#[test]
-<a href=#3001 id=3001 data-nosnippet>3001</a>    </span><span class="kw">fn </span>wall_clock_sweep_measures_from_supersession() {
-<a href=#3002 id=3002 data-nosnippet>3002</a>        <span class="kw">let </span>old = EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>]);
-<a href=#3003 id=3003 data-nosnippet>3003</a>        <span class="kw">let </span>mid = EpochId::new(<span class="macro">vec!</span>[<span class="number">2</span>]);
-<a href=#3004 id=3004 data-nosnippet>3004</a>        <span class="kw">let </span>new = EpochId::new(<span class="macro">vec!</span>[<span class="number">3</span>]);
-<a href=#3005 id=3005 data-nosnippet>3005</a>        <span class="kw">let </span>start = SystemTime::UNIX_EPOCH;
-<a href=#3006 id=3006 data-nosnippet>3006</a>        <span class="kw">let </span>minutes = |m: u64| std::time::Duration::from_secs(m * <span class="number">60</span>);
-<a href=#3007 id=3007 data-nosnippet>3007</a>        <span class="comment">// `old` lives from `start` until `mid` supersedes it 10 minutes before
-<a href=#3008 id=3008 data-nosnippet>3008</a>        // the 24 h mark, where `new` in turn supersedes `mid`.
-<a href=#3009 id=3009 data-nosnippet>3009</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = VcDerivationEpochLog {
-<a href=#3010 id=3010 data-nosnippet>3010</a>            entries: VecDeque::from([
-<a href=#3011 id=3011 data-nosnippet>3011</a>                log_entry(<span class="number">0</span>, <span class="kw-2">&amp;</span>old, start),
-<a href=#3012 id=3012 data-nosnippet>3012</a>                log_entry(<span class="number">1</span>, <span class="kw-2">&amp;</span>mid, start + minutes(<span class="number">23 </span>* <span class="number">60 </span>+ <span class="number">50</span>)),
-<a href=#3013 id=3013 data-nosnippet>3013</a>                log_entry(<span class="number">2</span>, <span class="kw-2">&amp;</span>new, start + minutes(<span class="number">24 </span>* <span class="number">60</span>)),
-<a href=#3014 id=3014 data-nosnippet>3014</a>            ]),
-<a href=#3015 id=3015 data-nosnippet>3015</a>        };
-<a href=#3016 id=3016 data-nosnippet>3016</a>
-<a href=#3017 id=3017 data-nosnippet>3017</a>        <span class="comment">// A 24 h sweep 5 minutes past the day puts the cutoff well after
-<a href=#3018 id=3018 data-nosnippet>3018</a>        // `old`'s registration, but `old` was only just superseded and stays.
-<a href=#3019 id=3019 data-nosnippet>3019</a>        </span><span class="macro">assert!</span>(log.drop_superseded_before(start + minutes(<span class="number">5</span>)).is_empty());
-<a href=#3020 id=3020 data-nosnippet>3020</a>        <span class="comment">// Once the cutoff passes `old`'s supersession, `old` goes. `mid` was
-<a href=#3021 id=3021 data-nosnippet>3021</a>        // superseded later and stays.
-<a href=#3022 id=3022 data-nosnippet>3022</a>        </span><span class="macro">assert_eq!</span>(
-<a href=#3023 id=3023 data-nosnippet>3023</a>            log.drop_superseded_before(start + minutes(<span class="number">23 </span>* <span class="number">60 </span>+ <span class="number">55</span>)),
-<a href=#3024 id=3024 data-nosnippet>3024</a>            <span class="macro">vec!</span>[old]
-<a href=#3025 id=3025 data-nosnippet>3025</a>        );
-<a href=#3026 id=3026 data-nosnippet>3026</a>        <span class="comment">// The newest entry has no successor and survives any cutoff.
-<a href=#3027 id=3027 data-nosnippet>3027</a>        </span><span class="macro">assert_eq!</span>(
-<a href=#3028 id=3028 data-nosnippet>3028</a>            log.drop_superseded_before(start + minutes(<span class="number">48 </span>* <span class="number">60</span>)),
-<a href=#3029 id=3029 data-nosnippet>3029</a>            <span class="macro">vec!</span>[mid]
-<a href=#3030 id=3030 data-nosnippet>3030</a>        );
-<a href=#3031 id=3031 data-nosnippet>3031</a>        <span class="macro">assert_eq!</span>(log.newest().map(|entry| entry.epoch_id.clone()), <span class="prelude-val">Some</span>(new));
-<a href=#3032 id=3032 data-nosnippet>3032</a>    }
-<a href=#3033 id=3033 data-nosnippet>3033</a>}
+<a href=#2885 id=2885 data-nosnippet>2885</a>        <span class="kw">const </span>REGISTERED_AT_SECS: u64 = <span class="number">1_700_000_000</span>;
+<a href=#2886 id=2886 data-nosnippet>2886</a>        <span class="comment">// Windows represents SystemTime in 100-nanosecond intervals. Keep the
+<a href=#2887 id=2887 data-nosnippet>2887</a>        // fixture aligned so every supported platform serializes it identically.
+<a href=#2888 id=2888 data-nosnippet>2888</a>        </span><span class="kw">const </span>REGISTERED_AT_NANOS: u32 = <span class="number">42_000</span>;
+<a href=#2889 id=2889 data-nosnippet>2889</a>
+<a href=#2890 id=2890 data-nosnippet>2890</a>        <span class="kw">let </span>entry = VcDerivationEpochLogEntry {
+<a href=#2891 id=2891 data-nosnippet>2891</a>            sequence: <span class="number">2</span>,
+<a href=#2892 id=2892 data-nosnippet>2892</a>            group_epoch: GroupEpoch::from(<span class="number">7</span>),
+<a href=#2893 id=2893 data-nosnippet>2893</a>            epoch_id: EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]),
+<a href=#2894 id=2894 data-nosnippet>2894</a>            registered_at: SystemTime::UNIX_EPOCH
+<a href=#2895 id=2895 data-nosnippet>2895</a>                + std::time::Duration::new(REGISTERED_AT_SECS, REGISTERED_AT_NANOS),
+<a href=#2896 id=2896 data-nosnippet>2896</a>        };
+<a href=#2897 id=2897 data-nosnippet>2897</a>        <span class="kw">let </span>json = serde_json::to_string(<span class="kw-2">&amp;</span>entry).expect(<span class="string">"serialize log entry"</span>);
+<a href=#2898 id=2898 data-nosnippet>2898</a>        <span class="macro">assert_eq!</span>(
+<a href=#2899 id=2899 data-nosnippet>2899</a>            json,
+<a href=#2900 id=2900 data-nosnippet>2900</a>            <span class="string">r#"{"sequence":2,"group_epoch":7,"epoch_id":[1,2,3],"registered_at":{"secs_since_epoch":1700000000,"nanos_since_epoch":42000}}"#
+<a href=#2901 id=2901 data-nosnippet>2901</a>        </span>);
+<a href=#2902 id=2902 data-nosnippet>2902</a>        <span class="kw">let </span>decoded: VcDerivationEpochLogEntry =
+<a href=#2903 id=2903 data-nosnippet>2903</a>            serde_json::from_str(<span class="kw-2">&amp;</span>json).expect(<span class="string">"deserialize log entry"</span>);
+<a href=#2904 id=2904 data-nosnippet>2904</a>        <span class="macro">assert_eq!</span>(decoded, entry);
+<a href=#2905 id=2905 data-nosnippet>2905</a>    }
+<a href=#2906 id=2906 data-nosnippet>2906</a>
+<a href=#2907 id=2907 data-nosnippet>2907</a>    <span class="attr">#[test]
+<a href=#2908 id=2908 data-nosnippet>2908</a>    </span><span class="kw">fn </span>binding_layout_is_frozen() {
+<a href=#2909 id=2909 data-nosnippet>2909</a>        <span class="kw">let </span>binding = VcEmulationBinding {
+<a href=#2910 id=2910 data-nosnippet>2910</a>            group_epoch: GroupEpoch::from(<span class="number">7</span>),
+<a href=#2911 id=2911 data-nosnippet>2911</a>            epoch_id: EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]),
+<a href=#2912 id=2912 data-nosnippet>2912</a>        };
+<a href=#2913 id=2913 data-nosnippet>2913</a>        <span class="kw">let </span>json = serde_json::to_string(<span class="kw-2">&amp;</span>binding).expect(<span class="string">"serialize binding"</span>);
+<a href=#2914 id=2914 data-nosnippet>2914</a>        <span class="macro">assert_eq!</span>(json, <span class="string">r#"{"group_epoch":7,"epoch_id":[1,2,3]}"#</span>);
+<a href=#2915 id=2915 data-nosnippet>2915</a>        <span class="kw">let </span>decoded: VcEmulationBinding = serde_json::from_str(<span class="kw-2">&amp;</span>json).expect(<span class="string">"deserialize binding"</span>);
+<a href=#2916 id=2916 data-nosnippet>2916</a>        <span class="macro">assert_eq!</span>(decoded, binding);
+<a href=#2917 id=2917 data-nosnippet>2917</a>    }
+<a href=#2918 id=2918 data-nosnippet>2918</a>
+<a href=#2919 id=2919 data-nosnippet>2919</a>    <span class="attr">#[test]
+<a href=#2920 id=2920 data-nosnippet>2920</a>    </span><span class="kw">fn </span>binding_from_legacy_record() {
+<a href=#2921 id=2921 data-nosnippet>2921</a>        <span class="kw">let </span>epoch_id = EpochId::new(<span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
+<a href=#2922 id=2922 data-nosnippet>2922</a>        <span class="kw">let </span>binding = VcEmulationBinding::from_legacy_record(GroupEpoch::from(<span class="number">3</span>), epoch_id.clone());
+<a href=#2923 id=2923 data-nosnippet>2923</a>        <span class="macro">assert_eq!</span>(binding.group_epoch, GroupEpoch::from(<span class="number">3</span>));
+<a href=#2924 id=2924 data-nosnippet>2924</a>        <span class="macro">assert_eq!</span>(binding.epoch_id(), <span class="kw-2">&amp;</span>epoch_id);
+<a href=#2925 id=2925 data-nosnippet>2925</a>    }
+<a href=#2926 id=2926 data-nosnippet>2926</a>
+<a href=#2927 id=2927 data-nosnippet>2927</a>    <span class="attr">#[test]
+<a href=#2928 id=2928 data-nosnippet>2928</a>    </span><span class="kw">fn </span>log_entry_from_legacy_record() {
+<a href=#2929 id=2929 data-nosnippet>2929</a>        <span class="kw">let </span>epoch_id = EpochId::new(<span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
+<a href=#2930 id=2930 data-nosnippet>2930</a>        <span class="kw">let </span>registered_at = SystemTime::UNIX_EPOCH;
+<a href=#2931 id=2931 data-nosnippet>2931</a>        <span class="kw">let </span>entry = VcDerivationEpochLogEntry::from_legacy_record(
+<a href=#2932 id=2932 data-nosnippet>2932</a>            GroupEpoch::from(<span class="number">3</span>),
+<a href=#2933 id=2933 data-nosnippet>2933</a>            epoch_id.clone(),
+<a href=#2934 id=2934 data-nosnippet>2934</a>            registered_at,
+<a href=#2935 id=2935 data-nosnippet>2935</a>        );
+<a href=#2936 id=2936 data-nosnippet>2936</a>
+<a href=#2937 id=2937 data-nosnippet>2937</a>        <span class="macro">assert_eq!</span>(entry.sequence, <span class="number">0</span>);
+<a href=#2938 id=2938 data-nosnippet>2938</a>        <span class="macro">assert_eq!</span>(entry.group_epoch, GroupEpoch::from(<span class="number">3</span>));
+<a href=#2939 id=2939 data-nosnippet>2939</a>        <span class="macro">assert_eq!</span>(entry.epoch_id(), <span class="kw-2">&amp;</span>epoch_id);
+<a href=#2940 id=2940 data-nosnippet>2940</a>        <span class="macro">assert_eq!</span>(entry.registered_at, registered_at);
+<a href=#2941 id=2941 data-nosnippet>2941</a>
+<a href=#2942 id=2942 data-nosnippet>2942</a>        <span class="comment">// A log holding only the converted entry treats it as the newest one,
+<a href=#2943 id=2943 data-nosnippet>2943</a>        // so neither pruning path drops it.
+<a href=#2944 id=2944 data-nosnippet>2944</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = VcDerivationEpochLog {
+<a href=#2945 id=2945 data-nosnippet>2945</a>            entries: VecDeque::from([entry]),
+<a href=#2946 id=2946 data-nosnippet>2946</a>        };
+<a href=#2947 id=2947 data-nosnippet>2947</a>        <span class="macro">assert!</span>(log.shrink_to(<span class="number">1</span>).is_empty());
+<a href=#2948 id=2948 data-nosnippet>2948</a>        <span class="macro">assert!</span>(log.drop_superseded_before(SystemTime::now()).is_empty());
+<a href=#2949 id=2949 data-nosnippet>2949</a>        <span class="macro">assert_eq!</span>(
+<a href=#2950 id=2950 data-nosnippet>2950</a>            log.newest().map(|entry| entry.epoch_id.clone()),
+<a href=#2951 id=2951 data-nosnippet>2951</a>            <span class="prelude-val">Some</span>(epoch_id)
+<a href=#2952 id=2952 data-nosnippet>2952</a>        );
+<a href=#2953 id=2953 data-nosnippet>2953</a>    }
+<a href=#2954 id=2954 data-nosnippet>2954</a>
+<a href=#2955 id=2955 data-nosnippet>2955</a>    <span class="kw">fn </span>log_entry(
+<a href=#2956 id=2956 data-nosnippet>2956</a>        group_epoch: u64,
+<a href=#2957 id=2957 data-nosnippet>2957</a>        epoch_id: <span class="kw-2">&amp;</span>EpochId,
+<a href=#2958 id=2958 data-nosnippet>2958</a>        registered_at: SystemTime,
+<a href=#2959 id=2959 data-nosnippet>2959</a>    ) -&gt; VcDerivationEpochLogEntry {
+<a href=#2960 id=2960 data-nosnippet>2960</a>        VcDerivationEpochLogEntry {
+<a href=#2961 id=2961 data-nosnippet>2961</a>            sequence: group_epoch,
+<a href=#2962 id=2962 data-nosnippet>2962</a>            group_epoch: GroupEpoch::from(group_epoch),
+<a href=#2963 id=2963 data-nosnippet>2963</a>            epoch_id: epoch_id.clone(),
+<a href=#2964 id=2964 data-nosnippet>2964</a>            registered_at,
+<a href=#2965 id=2965 data-nosnippet>2965</a>        }
+<a href=#2966 id=2966 data-nosnippet>2966</a>    }
+<a href=#2967 id=2967 data-nosnippet>2967</a>
+<a href=#2968 id=2968 data-nosnippet>2968</a>    <span class="attr">#[test]
+<a href=#2969 id=2969 data-nosnippet>2969</a>    </span><span class="kw">fn </span>log_reconstruction_orders_by_sequence() {
+<a href=#2970 id=2970 data-nosnippet>2970</a>        <span class="kw">let </span>provider = OpenMlsRustCrypto::default();
+<a href=#2971 id=2971 data-nosnippet>2971</a>        <span class="kw">let </span>group_id = GroupId::from_slice(<span class="string">b"emulation-group"</span>);
+<a href=#2972 id=2972 data-nosnippet>2972</a>        <span class="kw">let </span>first = log_entry(<span class="number">0</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>]), SystemTime::UNIX_EPOCH);
+<a href=#2973 id=2973 data-nosnippet>2973</a>        <span class="kw">let </span>second = log_entry(<span class="number">1</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">2</span>]), SystemTime::UNIX_EPOCH);
+<a href=#2974 id=2974 data-nosnippet>2974</a>        <span class="kw">let </span>third = log_entry(<span class="number">2</span>, <span class="kw-2">&amp;</span>EpochId::new(<span class="macro">vec!</span>[<span class="number">3</span>]), SystemTime::UNIX_EPOCH);
+<a href=#2975 id=2975 data-nosnippet>2975</a>        <span class="comment">// Written out of order. The provider returns entries unordered anyway,
+<a href=#2976 id=2976 data-nosnippet>2976</a>        // so the sort must come from the sequence numbers alone.
+<a href=#2977 id=2977 data-nosnippet>2977</a>        </span><span class="kw">for </span>entry <span class="kw">in </span>[<span class="kw-2">&amp;</span>second, <span class="kw-2">&amp;</span>third, <span class="kw-2">&amp;</span>first] {
+<a href=#2978 id=2978 data-nosnippet>2978</a>            &lt;MemoryStorage <span class="kw">as </span>StorageProvider&lt;CURRENT_VERSION&gt;&gt;::write_vc_derivation_epoch_log_entry(
+<a href=#2979 id=2979 data-nosnippet>2979</a>                provider.storage(),
+<a href=#2980 id=2980 data-nosnippet>2980</a>                <span class="kw-2">&amp;</span>group_id,
+<a href=#2981 id=2981 data-nosnippet>2981</a>                <span class="kw-2">&amp;</span>entry.epoch_id,
+<a href=#2982 id=2982 data-nosnippet>2982</a>                entry,
+<a href=#2983 id=2983 data-nosnippet>2983</a>            )
+<a href=#2984 id=2984 data-nosnippet>2984</a>            .expect(<span class="string">"write log entry"</span>);
+<a href=#2985 id=2985 data-nosnippet>2985</a>        }
+<a href=#2986 id=2986 data-nosnippet>2986</a>
+<a href=#2987 id=2987 data-nosnippet>2987</a>        <span class="kw">let </span>log = VcDerivationEpochLog::load(provider.storage(), <span class="kw-2">&amp;</span>group_id).expect(<span class="string">"load the log"</span>);
+<a href=#2988 id=2988 data-nosnippet>2988</a>        <span class="macro">assert_eq!</span>(
+<a href=#2989 id=2989 data-nosnippet>2989</a>            log.newest().map(|entry| entry.epoch_id.clone()),
+<a href=#2990 id=2990 data-nosnippet>2990</a>            <span class="prelude-val">Some</span>(third.epoch_id.clone())
+<a href=#2991 id=2991 data-nosnippet>2991</a>        );
+<a href=#2992 id=2992 data-nosnippet>2992</a>        <span class="macro">assert_eq!</span>(
+<a href=#2993 id=2993 data-nosnippet>2993</a>            newest_vc_derivation_epoch(provider.storage(), <span class="kw-2">&amp;</span>group_id).expect(<span class="string">"newest epoch"</span>),
+<a href=#2994 id=2994 data-nosnippet>2994</a>            <span class="prelude-val">Some</span>(third.epoch_id.clone())
+<a href=#2995 id=2995 data-nosnippet>2995</a>        );
+<a href=#2996 id=2996 data-nosnippet>2996</a>
+<a href=#2997 id=2997 data-nosnippet>2997</a>        <span class="comment">// Pruning drops the entries with the lowest sequences first.
+<a href=#2998 id=2998 data-nosnippet>2998</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = log;
+<a href=#2999 id=2999 data-nosnippet>2999</a>        <span class="macro">assert_eq!</span>(log.shrink_to(<span class="number">2</span>), <span class="macro">vec!</span>[first.epoch_id.clone()]);
+<a href=#3000 id=3000 data-nosnippet>3000</a>        <span class="macro">assert_eq!</span>(
+<a href=#3001 id=3001 data-nosnippet>3001</a>            log.newest().map(|entry| entry.epoch_id.clone()),
+<a href=#3002 id=3002 data-nosnippet>3002</a>            <span class="prelude-val">Some</span>(third.epoch_id)
+<a href=#3003 id=3003 data-nosnippet>3003</a>        );
+<a href=#3004 id=3004 data-nosnippet>3004</a>    }
+<a href=#3005 id=3005 data-nosnippet>3005</a>
+<a href=#3006 id=3006 data-nosnippet>3006</a>    <span class="attr">#[test]
+<a href=#3007 id=3007 data-nosnippet>3007</a>    </span><span class="kw">fn </span>wall_clock_sweep_measures_from_supersession() {
+<a href=#3008 id=3008 data-nosnippet>3008</a>        <span class="kw">let </span>old = EpochId::new(<span class="macro">vec!</span>[<span class="number">1</span>]);
+<a href=#3009 id=3009 data-nosnippet>3009</a>        <span class="kw">let </span>mid = EpochId::new(<span class="macro">vec!</span>[<span class="number">2</span>]);
+<a href=#3010 id=3010 data-nosnippet>3010</a>        <span class="kw">let </span>new = EpochId::new(<span class="macro">vec!</span>[<span class="number">3</span>]);
+<a href=#3011 id=3011 data-nosnippet>3011</a>        <span class="kw">let </span>start = SystemTime::UNIX_EPOCH;
+<a href=#3012 id=3012 data-nosnippet>3012</a>        <span class="kw">let </span>minutes = |m: u64| std::time::Duration::from_secs(m * <span class="number">60</span>);
+<a href=#3013 id=3013 data-nosnippet>3013</a>        <span class="comment">// `old` lives from `start` until `mid` supersedes it 10 minutes before
+<a href=#3014 id=3014 data-nosnippet>3014</a>        // the 24 h mark, where `new` in turn supersedes `mid`.
+<a href=#3015 id=3015 data-nosnippet>3015</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>log = VcDerivationEpochLog {
+<a href=#3016 id=3016 data-nosnippet>3016</a>            entries: VecDeque::from([
+<a href=#3017 id=3017 data-nosnippet>3017</a>                log_entry(<span class="number">0</span>, <span class="kw-2">&amp;</span>old, start),
+<a href=#3018 id=3018 data-nosnippet>3018</a>                log_entry(<span class="number">1</span>, <span class="kw-2">&amp;</span>mid, start + minutes(<span class="number">23 </span>* <span class="number">60 </span>+ <span class="number">50</span>)),
+<a href=#3019 id=3019 data-nosnippet>3019</a>                log_entry(<span class="number">2</span>, <span class="kw-2">&amp;</span>new, start + minutes(<span class="number">24 </span>* <span class="number">60</span>)),
+<a href=#3020 id=3020 data-nosnippet>3020</a>            ]),
+<a href=#3021 id=3021 data-nosnippet>3021</a>        };
+<a href=#3022 id=3022 data-nosnippet>3022</a>
+<a href=#3023 id=3023 data-nosnippet>3023</a>        <span class="comment">// A 24 h sweep 5 minutes past the day puts the cutoff well after
+<a href=#3024 id=3024 data-nosnippet>3024</a>        // `old`'s registration, but `old` was only just superseded and stays.
+<a href=#3025 id=3025 data-nosnippet>3025</a>        </span><span class="macro">assert!</span>(log.drop_superseded_before(start + minutes(<span class="number">5</span>)).is_empty());
+<a href=#3026 id=3026 data-nosnippet>3026</a>        <span class="comment">// Once the cutoff passes `old`'s supersession, `old` goes. `mid` was
+<a href=#3027 id=3027 data-nosnippet>3027</a>        // superseded later and stays.
+<a href=#3028 id=3028 data-nosnippet>3028</a>        </span><span class="macro">assert_eq!</span>(
+<a href=#3029 id=3029 data-nosnippet>3029</a>            log.drop_superseded_before(start + minutes(<span class="number">23 </span>* <span class="number">60 </span>+ <span class="number">55</span>)),
+<a href=#3030 id=3030 data-nosnippet>3030</a>            <span class="macro">vec!</span>[old]
+<a href=#3031 id=3031 data-nosnippet>3031</a>        );
+<a href=#3032 id=3032 data-nosnippet>3032</a>        <span class="comment">// The newest entry has no successor and survives any cutoff.
+<a href=#3033 id=3033 data-nosnippet>3033</a>        </span><span class="macro">assert_eq!</span>(
+<a href=#3034 id=3034 data-nosnippet>3034</a>            log.drop_superseded_before(start + minutes(<span class="number">48 </span>* <span class="number">60</span>)),
+<a href=#3035 id=3035 data-nosnippet>3035</a>            <span class="macro">vec!</span>[mid]
+<a href=#3036 id=3036 data-nosnippet>3036</a>        );
+<a href=#3037 id=3037 data-nosnippet>3037</a>        <span class="macro">assert_eq!</span>(log.newest().map(|entry| entry.epoch_id.clone()), <span class="prelude-val">Some</span>(new));
+<a href=#3038 id=3038 data-nosnippet>3038</a>    }
+<a href=#3039 id=3039 data-nosnippet>3039</a>}
 </code></pre></div></section></main></body></html>
