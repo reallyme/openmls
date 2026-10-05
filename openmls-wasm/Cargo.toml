@@ -34,7 +34,7 @@ virtual-clients-draft = [
 ]
 
 [dependencies]
-wasm-bindgen = "0.2.84"
+wasm-bindgen = "0.2.129"
 openmls = { path = "../openmls", features = ["js"] }
 openmls_traits = { path = "../traits" }
 openmls_rust_crypto = { path = "../openmls_rust_crypto" }
@@ -47,7 +47,7 @@ tls_codec = { workspace = true }
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
-js-sys = "0.3.68"
+js-sys = "0.3.106"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.34"
+wasm-bindgen-test = "0.3.79"
