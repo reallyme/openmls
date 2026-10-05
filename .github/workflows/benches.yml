@@ -39,5 +39,5 @@ jobs:
 
       - name: Large groups
         run: |
-          cargo run -p openmls --example large-groups --release --features=draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft -- --write -g 2 3
-          cargo run -p openmls --example large-groups --release --features=draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft -- -g 3
+          cargo run -p openmls --example large-groups --release -- --write -g 2 3
+          cargo run -p openmls --example large-groups --release -- -g 3
