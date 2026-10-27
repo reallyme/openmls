@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ad408ce5.js";
+            window.path_to_searchindex_js = "../searchindex-fc6e6bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-81492934.js"></script>
+        <script src="../toc-5c7e1a74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -292,14 +292,14 @@ fn setup_group_with_app_data_support&lt;'a, Provider: OpenMlsProvider&gt;(
     ciphersuite: Ciphersuite,
 ) -&gt; GroupState&lt;'a, Provider&gt; {
     // Define capabilities that include AppDataDictionary extension
-    // and AppDataUpdate proposal support
-    let capabilities = Capabilities::new(
-        None,                 // protocol versions (default)
-        Some(&amp;[ciphersuite]), // Ciphersuite used by this group
-        Some(&amp;[ExtensionType::AppDataDictionary]),
-        Some(&amp;[ProposalType::AppDataUpdate]),
-        None, // credentials (default)
-    );
+    // and AppDataUpdate proposal support. Capabilities set explicitly must also
+    // cover what the leaf itself uses: its ciphersuite and credential type.
+    let capabilities = Capabilities::builder()
+        .ciphersuites(vec![ciphersuite])
+        .credentials(vec![CredentialType::Basic])
+        .extensions(vec![ExtensionType::AppDataDictionary])
+        .proposals(vec![ProposalType::AppDataUpdate])
+        .build();
 
     // The group context must require these capabilities so that
     // all members are guaranteed to support them

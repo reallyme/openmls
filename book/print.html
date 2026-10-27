@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ad408ce5.js";
+            window.path_to_searchindex_js = "searchindex-fc6e6bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-81492934.js"></script>
+        <script src="toc-5c7e1a74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -195,23 +195,24 @@ upstream OpenMLS.</p>
 pinned to an exact release, and changes to cryptographic dependencies or
 provisional ciphersuite mappings go through the fork’s release review.</p>
 <h2 id="post-quantum-ciphersuites"><a class="header" href="#post-quantum-ciphersuites">Post-Quantum Ciphersuites</a></h2>
-<p>Enable <code>draft-ietf-mls-pq-ciphersuites</code> to make the six PQ ciphersuites
+<p>Enable <code>draft-ietf-mls-pq-ciphersuites</code> to make the seven PQ ciphersuites
 available.</p>
 <p>Five suites track
 <a href="https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/">Post-Quantum and Post-Quantum/Traditional Hybrid Ciphersuites for MLS</a>.
-They use AES-256-GCM with SHA-384. The X-Wing compatibility suite uses
-ChaCha20-Poly1305 with SHA-256.</p>
+They use AES-256-GCM with SHA-384. The remaining two preserve the X-Wing and
+ReallyMe private-use mappings used by existing deployments.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Ciphersuite</th><th>Key establishment</th><th>Signature</th><th style="text-align: right">Wire</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>X-Wing compatibility</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004D</code></td></tr>
+<tr><td><strong>X-Wing compatibility</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004d</code></td></tr>
 <tr><td><strong>ML-KEM-768 PQ</strong></td><td>ML-KEM-768</td><td>ML-DSA-65</td><td style="text-align: right"><code>0x0051</code></td></tr>
 <tr><td><strong>ML-KEM-1024 PQ</strong></td><td>ML-KEM-1024</td><td>ML-DSA-87</td><td style="text-align: right"><code>0x0907</code></td></tr>
-<tr><td><strong>ML-KEM-768/X25519 hybrid</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004E</code></td></tr>
-<tr><td><strong>ML-KEM-1024/P-384 hybrid</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xF043</code></td></tr>
+<tr><td><strong>ML-KEM-768/X25519 hybrid</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004e</code></td></tr>
+<tr><td><strong>ML-KEM-1024/P-384 draft hybrid</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xf052</code></td></tr>
+<tr><td><strong>ML-KEM-1024/P-384 ReallyMe compatibility</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xf043</code></td></tr>
 <tr><td><strong>ML-KEM-1024 + P-384 signature</strong></td><td>ML-KEM-1024</td><td>P-384</td><td style="text-align: right"><code>0x0042</code></td></tr>
 </tbody>
 </table>
@@ -228,15 +229,17 @@ ChaCha20-Poly1305 with SHA-256.</p>
 <tr><td>ML-KEM-768 PQ</td><td><code>MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65</code></td></tr>
 <tr><td>ML-KEM-1024 PQ</td><td><code>MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87</code></td></tr>
 <tr><td>ML-KEM-1024 + P-384 signature</td><td><code>MLS_192_MLKEM1024_AES256GCM_SHA384_P384</code></td></tr>
-<tr><td>ML-KEM-1024/P-384 hybrid</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384</code></td></tr>
+<tr><td>ML-KEM-1024/P-384 draft hybrid</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT</code></td></tr>
+<tr><td>ML-KEM-1024/P-384 ReallyMe compatibility</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384</code></td></tr>
 <tr><td>ML-KEM-768/X25519 hybrid</td><td><code>MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519</code></td></tr>
 </tbody>
 </table>
 </div>
 </details>
-<p>These identifiers do not yet have final IANA MLS assignments. Five currently
-use unassigned registry values; the ML-KEM-1024/P-384 hybrid uses a private-use
-value.</p>
+<p>These identifiers do not yet have final IANA MLS assignments. The
+ML-KEM-1024/P-384 draft suite uses upstream’s provisional <code>0xf052</code> assignment;
+the ReallyMe compatibility variant retains private-use <code>0xf043</code> so existing
+groups are not silently remapped.</p>
 <p>Until final assignments are available, communicating implementations must agree
 on the ciphersuite identifiers they use. Pinning the same fork revision ensures
 the mappings remain consistent.</p>
@@ -368,6 +371,17 @@ OpenMLS provides a <a href="https://github.com/openmls/openmls/tree/main/basic_c
 <li><code>extensions: Vec&lt;Extensions&gt;</code>: A list of extensions supported by the client.</li>
 </ul>
 <p>The client must specify at least one ciphersuite per KeyPackage and it must not advertise ciphersuites it does not support.</p>
+<p>If no capabilities are set, OpenMLS derives them from the key package itself:
+the ciphersuite it is built with, its credential type, and the extension types
+present in its leaf node.
+That is the minimum a leaf node has to advertise.</p>
+<p>Setting capabilities explicitly, via <code>KeyPackage::builder().leaf_node_capabilities(..)</code>,
+is how a client advertises support for ciphersuites, extensions, proposal types
+and credential types beyond that.
+If the list does not cover the extensions the key package itself uses, building
+it fails rather than producing a key package other clients would reject.
+Pass <code>CapabilitiesPolicy::Widen</code> to <code>KeyPackage::builder().capabilities_policy(..)</code>
+to have the missing capabilities added instead.</p>
 <p>The client should advertise all extensions it supports. See the documentation of extensions for more details.</p>
 <p>A <code>KeyPackageBundle</code> can be generated through the <code>KeyPackage::builder()</code>:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -443,12 +457,28 @@ provider.storage().delete_key_package(
 </thead>
 <tbody>
 <tr><td><code>group_context_extensions</code></td><td><code>Extensions</code></td><td>Optional group-level extensions, e.g. <code>RequiredCapabilitiesExtension</code>.</td></tr>
-<tr><td><code>capabilities</code> .</td><td><code>Capabilities</code></td><td>Lists the capabilities of the group’s creator.</td></tr>
+<tr><td><code>capabilities</code> .</td><td><code>Capabilities</code></td><td>Lists the capabilities of the group’s creator. Optional; see below.</td></tr>
 <tr><td><code>leaf_extensions</code> .</td><td><code>Extensions</code></td><td>Extensions to be included in the group creator’s leaf</td></tr>
 </tbody>
 </table>
 </div>
 <p>Both ways of group configurations can be specified by using the struct’s builder pattern, or choosing their default values. The default value contains safe values for all parameters and is suitable for scenarios without particular requirements.</p>
+<p>If <code>capabilities</code> is left unset, the creator’s leaf node advertises what it
+actually uses: the group’s ciphersuite, the creator’s credential type, and the
+extension types in <code>leaf_extensions</code>.
+Set it to advertise more than that, for example further ciphersuites or the
+proposal types the client implements.
+Explicit capabilities are taken as provided, so group creation fails if they do
+not cover what the creator’s own leaf uses, what the group’s
+<code>RequiredCapabilitiesExtension</code> demands, or the group’s non-default
+<code>group_context_extensions</code>.
+The latter two apply even if <code>capabilities</code> is left unset: the creator is a
+member of the group and must support them.
+<code>MlsGroupCreateConfigBuilder::capabilities_policy</code> overrides this:
+<code>CapabilitiesPolicy::Widen</code> adds the capabilities the leaf itself needs instead
+of rejecting.
+Note that widening never claims support for the group’s required extension,
+proposal or credential types.</p>
 <p>Example join configuration:</p>
 <pre><code class="language-rust no_run noplayground">    let mls_group_config = MlsGroupJoinConfig::builder()
         .padding_size(100)
@@ -691,7 +721,14 @@ If the RatchetTree extension is not included in the <code>GroupInfo</code> as a 
         .into_verifiable_group_info()
         .expect("Could not get group info");</code></pre>
 <p>External commits can be created using a builder pattern via <code>MlsGroup::external_commit_builder()</code>. The <code>ExternalCommitBuilder</code> provides more options than <code>join_by_external</code> in that it allows the inclusion of SelfRemove or PSK proposals. After its first stage, the <code>ExternalCommitBuilder</code> turns into a regular <code>CommitBuilder</code>. As external commits come with a few restrictions relative to regular commits, not all <code>CommitBuilder</code> capabilities are exposed for external commits. Also, instead of <code>stage_commit</code> this <code>CommitBuilder</code> requires a call to <code>finalize</code> before it returns the new <code>MlsGroup</code>, as well as a <code>CommitMessageBundle</code> containing the external commit, as well as a potential <code>GroupInfo</code>.</p>
-<pre><code class="language-rust no_run noplayground">    let (mut bob_group, commit_message_bundle) = MlsGroup::external_commit_builder()
+<pre><code class="language-rust no_run noplayground">    // The joining member's leaf node capabilities. These are optional: left
+    // unset, the leaf advertises the group's ciphersuite, the member's own
+    // credential type and its leaf extensions. Set them to advertise more.
+    let leaf_node_parameters = LeafNodeParameters::builder()
+        .with_capabilities(capabilities.clone())
+        .build();
+
+    let (mut bob_group, commit_message_bundle) = MlsGroup::external_commit_builder()
         .with_ratchet_tree(tree_option.into())
         .with_config(join_group_config.clone())
         .with_aad(AAD.to_vec())
@@ -1024,21 +1061,258 @@ Even though the member updates its own leaf node only in this operation, the Com
 </ul>
 <p>For details on creating Remove Proposals, see <a href="#removing-members-from-a-group">Removing members from a group</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="reinitializing-a-group"><a class="header" href="#reinitializing-a-group">Reinitializing a group</a></h1>
+<p>Reinitialization (ReInit) replaces a group with a new <em>successor</em> group
+that carries over the same members but may use different parameters — a new
+group id, protocol version, ciphersuite, or group context extensions. This is
+the mechanism to use when, for example, a group needs to migrate to a stronger
+ciphersuite. See <a href="https://www.rfc-editor.org/rfc/rfc9420.html#name-reinitialization">RFC 9420 §11.2</a>.</p>
+<p>Reinitialization happens in two phases:</p>
+<ol>
+<li>A member proposes a ReInit and someone commits it. A commit that references a
+ReInit proposal must contain no other proposals. Once the commit is merged,
+the old group is <strong>suspended</strong>: it becomes inactive and can no longer be used
+for regular operations. Its only remaining purpose is to seed the successor
+group exactly once.</li>
+<li>One member creates the successor group with the parameters from the ReInit
+proposal, adds all the other members, and mixes in a resumption PSK from the
+old group’s final epoch. The other members join the successor group from the
+resulting Welcome.</li>
+</ol>
+<h2 id="committing-a-reinit"><a class="header" href="#committing-a-reinit">Committing a ReInit</a></h2>
+<p>A commit containing a ReInit proposal cannot contain other proposals, and merging
+it suspends the old group. After this, <code>MlsGroup::is_active</code> returns <code>false</code> and
+further operations on the old group fail — the only remaining use of the old group
+is to seed the successor.</p>
+<p>Since the ReInit proposal must be committed alone, it is advisable to commit it
+directly by value:</p>
+<pre><code class="language-rust no_run noplayground">    // Alice commits a ReInit proposal by value to reinitialize the group as
+    // a new group with a fresh group id (and, optionally, a new protocol version,
+    // ciphersuite or extensions).
+    let new_group_id = GroupId::random(alice_provider.rand());
+    let reinit_proposal = ReInitProposal::new(
+        new_group_id.clone(),
+        ProtocolVersion::Mls10,
+        ciphersuite,
+        Extensions::empty(),
+    );
+
+    // Alice commits the ReInit proposal. Merging it suspends the old group: it
+    // becomes inactive and can only be used to seed the successor group.
+    let bundle = alice_group
+        .commit_builder()
+        .add_proposal(Proposal::ReInit(Box::new(reinit_proposal.clone())))
+        .load_psks(alice_provider.storage())
+        .unwrap()
+        .build(
+            alice_provider.rand(),
+            alice_provider.crypto(),
+            &amp;alice_signer,
+            |_| true,
+        )
+        .unwrap()
+        .stage_commit(alice_provider)
+        .unwrap();
+    let commit_message = bundle.into_commit();
+    alice_group.merge_pending_commit(alice_provider).unwrap();
+    assert!(!alice_group.is_active());
+
+    // Alice exports the ReInitInfo. It holds everything needed for the reinit, alice_group can be discarded.
+    let alice_reinit_info = alice_group.reinit_info(reinit_proposal.clone()).unwrap();
+    drop(alice_group);</code></pre>
+<p>Alternatively to commit-by-value, the ReInit can be proposed and committed separately:</p>
+<pre><code class="language-rust no_run noplayground">    // Alice proposes to reinitialize the group as a new group with a fresh
+    // group id (and, optionally, a new protocol version, ciphersuite or
+    // extensions).
+    let new_group_id = GroupId::random(alice_provider.rand());
+    let reinit_proposal = ReInitProposal::new(
+        new_group_id.clone(),
+        ProtocolVersion::Mls10,
+        ciphersuite,
+        Extensions::empty(),
+    );
+    let (proposal_message, _proposal_ref) = alice_group
+        .propose_reinit(alice_provider, reinit_proposal.clone(), &amp;alice_signer)
+        .unwrap();</code></pre>
+<p>Commit the proposal:</p>
+<pre><code class="language-rust no_run noplayground">    // Alice commits the ReInit proposal. Merging it suspends the old group: it
+    // becomes inactive and can only be used to seed the successor group.
+    let bundle = alice_group
+        .commit_builder()
+        .consume_proposal_store(true)
+        .load_psks(alice_provider.storage())
+        .unwrap()
+        .build(
+            alice_provider.rand(),
+            alice_provider.crypto(),
+            &amp;alice_signer,
+            |_| true,
+        )
+        .unwrap()
+        .stage_commit(alice_provider)
+        .unwrap();
+    let commit_message = bundle.into_commit();
+    alice_group.merge_pending_commit(alice_provider).unwrap();
+    assert!(!alice_group.is_active());
+
+    let alice_reinit_info = alice_group.reinit_info(reinit_proposal.clone()).unwrap();
+    drop(alice_group);</code></pre>
+<p>When committing from the proposal queue, the application itself must make sure
+that the ReInit proposal is the only one in the commit. If it accepts other
+proposals, building the commit will throw an error. <a href="https://www.rfc-editor.org/rfc/rfc9420.html#section-12.2-3.9">RFC 9420 §12.2</a> states that
+other proposals SHOULD be preferred over ReInit. Applications that follow this
+advice must reject the ReInit proposal in <code>f</code> of <code>CommitBuilder::build</code> if there
+are other proposals.</p>
+<p>Every other member processes and merges the commit, which suspends their view of
+the group as well:</p>
+<pre><code class="language-rust no_run noplayground">
+    // Bob processes and merges the ReInit commit, suspending his group too.
+    let processed = bob_group
+        .process_message(
+            bob_provider,
+            commit_message.into_protocol_message().unwrap(),
+        )
+        .unwrap();
+
+    let ProcessedMessageContent::StagedCommitMessage(staged) = processed.into_content() else {
+        panic!("expected a staged commit message")
+    };
+    // Bob extracts the reinit proposal
+    let bob_reinit_proposal = staged
+        .reinit_proposal()
+        .expect("staged commit contains no reinit proposal")
+        .clone();
+
+    bob_group
+        .merge_staged_commit(bob_provider, *staged)
+        .unwrap();
+    assert!(!bob_group.is_active());
+
+    // Bob extracts ReInitInfo. It holds everything needed for the reinit, bob_group can be discarded.
+    let bob_reinit_info = bob_group.reinit_info(bob_reinit_proposal).unwrap();
+    drop(bob_group);</code></pre>
+<h2 id="creating-the-successor-group"><a class="header" href="#creating-the-successor-group">Creating the successor group</a></h2>
+<p>All members export a <code>ReInitInfo</code> from their suspended old group
+with <a href="https://docs.rs/openmls/latest/openmls/group/struct.MlsGroup.html"><code>MlsGroup::reinit_info</code></a>,
+passing the ReInit proposal the suspending commit covered. <code>reinit_info</code> returns
+<code>None</code> if the group is still active. The <code>ReInitInfo</code> contains all details needed to complete the
+reinit, so the old group can be discarded. The info carries the old group’s
+resumption PSK secret and must be handled as sensitive key material.</p>
+<p>The committer or any other member uses <a href="https://docs.rs/openmls/latest/openmls/group/struct.MlsGroupBuilder.html"><code>MlsGroupBuilder::reinit</code></a>
+to seed the new group. The application is responsible for
+seeding only a single successor from a suspended group:</p>
+<pre><code class="language-rust no_run noplayground">    // Alice creates the successor group with the ReInit parameters and welcomes
+    // Bob, mixing in the old group's resumption PSK via `reinit`.
+    // This also sets protocol version, ciphersuite, group_id, and group_context.extensions
+    // to the values of the ReInit proposal.
+    let bob_new_key_package = generate_key_package(
+        ciphersuite,
+        bob_credential_with_key,
+        Extensions::empty(),
+        bob_provider,
+        &amp;bob_signer,
+    );
+
+    let (mut alice_successor, bundle) = MlsGroup::builder()
+        .use_ratchet_tree_extension(true)
+        .number_of_resumption_psks(5)
+        .reinit(alice_reinit_info)
+        .build_reinit(
+            alice_provider,
+            &amp;alice_signer,
+            alice_credential_with_key,
+            [bob_new_key_package.key_package().clone()],
+        )
+        .unwrap();
+
+    let successor_welcome = bundle.into_welcome().unwrap();
+    alice_successor
+        .merge_pending_commit(alice_provider)
+        .unwrap();</code></pre>
+<h2 id="joining-the-successor-group"><a class="header" href="#joining-the-successor-group">Joining the successor group</a></h2>
+<p>The other members then join the successor group from the Welcome with
+<a href="https://docs.rs/openmls/latest/openmls/group/struct.StagedWelcome.html"><code>StagedWelcome::build_from_reinit</code></a>.
+This injects the old group’s resumption PSK and verifies that the reinit PSK in
+the Welcome references the old group and its final epoch; otherwise it fails with
+<code>WelcomeError::ReInitPredecessorMismatch</code>. The remaining checks run when <code>build</code>
+is called on the returned <code>JoinBuilder</code>: the successor’s protocol version,
+ciphersuite, group id and extensions must match the ReInit proposal, and the
+successor must be at epoch 1.</p>
+<p>New group’s members must be identical to the old group’s. A simple membership check by
+equal credential is on by default and can be disabled with
+<code>JoinBuilder::check_members(false)</code>. In that case, the application <strong>must</strong> ensure that the new
+member credentials in <code>StagedWelcome::members()</code> match the old ones captured in
+<code>ReInitInfo::member_credentials()</code>. Use this path when the application uses credentials
+that don’t allow checking equivalence of members by checking exact equality of credentials.</p>
+<pre><code class="language-rust no_run noplayground">    // Bob joins the successor group from the reinit welcome, validating it
+    // against his suspended old group.
+    let join_config = MlsGroupJoinConfig::builder()
+        .use_ratchet_tree_extension(true)
+        .number_of_resumption_psks(5)
+        .build();
+    let bob_staged_welcome = StagedWelcome::build_from_reinit(
+        bob_provider,
+        &amp;join_config,
+        successor_welcome,
+        bob_reinit_info,
+    )
+    .unwrap()
+    .with_ratchet_tree(alice_successor.export_ratchet_tree().into())
+    // .check_members(false) // optional; the membership check is on by default
+    .build()
+    .unwrap();
+    // when setting .check_members(false): check that `bob_staged_welcome.members()`
+    // represents the same members as `bob_reinit_info.member_credentials()`.
+    let bob_successor = bob_staged_welcome.into_group(bob_provider).unwrap();</code></pre>
+<p>If the receiver does not yet know which old group a Welcome belongs to or whether it
+is a reinit at all, it can decrypt the Welcome once with <code>StagedWelcome::process_resuming_welcome</code>,
+read the reinit PSK’s old group id and epoch with <code>required_resumption_secret()</code>, select the
+matching <code>ReInitInfo</code>, and finish with <code>PendingResumingWelcome::build_from_reinit</code>.
+If it turns out not to be a reinit welcome, continue with <code>PendingResumingWelcome::build</code>.</p>
+<pre><code class="language-rust no_run noplayground">    // Bob joins the successor group from the reinit welcome, validating it
+    // against his suspended old group.
+    let join_config = MlsGroupJoinConfig::builder()
+        .use_ratchet_tree_extension(true)
+        .number_of_resumption_psks(5)
+        .build();
+
+    let pending_welcome =
+        StagedWelcome::process_resuming_welcome(bob_provider, &amp;join_config, successor_welcome)
+            .unwrap();
+
+    // Bob finds the matching predecessor info, e.g. in a database
+    let required_info = pending_welcome
+        .required_resumption_secret()
+        .expect("not a reinit welcome");
+    assert_eq!(required_info.psk_group_id(), bob_reinit_info.old_group_id());
+    assert_eq!(required_info.psk_epoch(), bob_reinit_info.old_group_epoch());
+    assert_eq!(required_info.usage(), ResumptionPskUsage::Reinit);
+
+    // Bob finishes the Welcome
+    let bob_successor = pending_welcome
+        .build_from_reinit(bob_provider, bob_reinit_info)
+        .unwrap()
+        .with_ratchet_tree(alice_successor.export_ratchet_tree().into())
+        .build()
+        .unwrap()
+        .into_group(bob_provider)
+        .unwrap();</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="custom-proposals"><a class="header" href="#custom-proposals">Custom proposals</a></h1>
-<p>OpenMLS allows the creation and use of application-defined proposals. To create such a proposal, the application needs to define a Proposal Type in such a way that its value doesn’t collide with any Proposal Types defined in Section 17.4. of RFC 9420. If the proposal is meant to be used only inside of a particular application, the value of the Proposal Type is recommended to be in the range between <code>0xF000</code> and <code>0xFFFF</code>, as that range is reserved for private use.</p>
+<p>OpenMLS allows the creation and use of application-defined proposals. To create such a proposal, the application needs to define a Proposal Type in such a way that its value doesn’t collide with any Proposal Types defined in Section 17.4. of RFC 9420, with GREASE values, or with other Proposal Types supported by OpenMLS. Custom proposals with a colliding Proposal Type fail to encode. If the proposal is meant to be used only inside of a particular application, the value of the Proposal Type is recommended to be in the range between <code>0xF000</code> and <code>0xFFFF</code>, as that range is reserved for private use.</p>
 <p>Custom proposals can contain arbitrary octet-strings as defined by the application. Any policy decisions based on custom proposals will have to be made by the application, such as the decision to include a given custom proposal in a commit, or whether to accept a commit that includes one or more custom proposals. To decide the latter, applications can inspect the queued proposals in a <code>ProcessedMessageContent::StagedCommitMessage(staged_commit)</code>.</p>
 <p>Example on how to use custom proposals:</p>
 <pre><code class="language-rust no_run noplayground">    // Define a custom proposal type
     let custom_proposal_type = 0xFFFF;
 
-    // Define capabilities supporting the custom proposal type
-    let capabilities = Capabilities::new(
-        None,
-        Some(&amp;[ciphersuite]),
-        None,
-        Some(&amp;[ProposalType::Custom(custom_proposal_type)]),
-        None,
-    );
+    // Define capabilities supporting the custom proposal type.
+    // Note that setting capabilities explicitly means they must also cover what
+    // the leaf itself uses: its ciphersuite and its credential type.
+    let capabilities = Capabilities::builder()
+        .ciphersuites(vec![ciphersuite])
+        .credentials(vec![CredentialType::Basic])
+        .proposals(vec![ProposalType::Custom(custom_proposal_type)])
+        .build();
 
     // Generate KeyPackage that signals support for the custom proposal type
     let bob_key_package = KeyPackageBuilder::new()
@@ -1892,14 +2166,14 @@ fn setup_group_with_app_data_support&lt;'a, Provider: OpenMlsProvider&gt;(
     ciphersuite: Ciphersuite,
 ) -&gt; GroupState&lt;'a, Provider&gt; {
     // Define capabilities that include AppDataDictionary extension
-    // and AppDataUpdate proposal support
-    let capabilities = Capabilities::new(
-        None,                 // protocol versions (default)
-        Some(&amp;[ciphersuite]), // Ciphersuite used by this group
-        Some(&amp;[ExtensionType::AppDataDictionary]),
-        Some(&amp;[ProposalType::AppDataUpdate]),
-        None, // credentials (default)
-    );
+    // and AppDataUpdate proposal support. Capabilities set explicitly must also
+    // cover what the leaf itself uses: its ciphersuite and credential type.
+    let capabilities = Capabilities::builder()
+        .ciphersuites(vec![ciphersuite])
+        .credentials(vec![CredentialType::Basic])
+        .extensions(vec![ExtensionType::AppDataDictionary])
+        .proposals(vec![ProposalType::AppDataUpdate])
+        .build();
 
     // The group context must require these capabilities so that
     // all members are guaranteed to support them
@@ -2186,7 +2460,10 @@ the new state and resumes staging with <code>stage_app_data_commit</code>:</p>
 </span><span class="boring">fn main() {
 </span>use openmls::prelude::*;
 
+// Setting capabilities explicitly means they must also cover what the leaf
+// itself uses: its ciphersuite and its credential type.
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![ciphersuite])
     .proposals(vec![
         ProposalType::Add,
         ProposalType::Update,
@@ -2239,14 +2516,20 @@ let provider = OpenMlsRustCrypto::default();
 
 // Using CapabilitiesBuilder
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![ciphersuite])
+    .credentials(vec![CredentialType::Basic])
     .with_grease(provider.rand())
     .build();
 
 // Or on an existing Capabilities instance
-let capabilities = Capabilities::default()
-    .with_grease(provider.rand());
+let capabilities = some_capabilities.with_grease(provider.rand());
 <span class="boring">}</span></code></pre>
-<p>This will add one random GREASE value to each capability list (ciphersuites, extensions, proposals, and credentials) if no GREASE value is already present.</p>
+<p>This will add one random GREASE value to each capability list
+(ciphersuites, extensions, proposals, and credentials)
+if no GREASE value is already present.</p>
+<p>Note that <code>with_grease()</code> only adds GREASE values.
+It does not fill in the ciphersuite and credential type the leaf itself uses,
+so capabilities built this way still have to state them.</p>
 <h3 id="generating-individual-random-grease-values"><a class="header" href="#generating-individual-random-grease-values">Generating Individual Random GREASE Values</a></h3>
 <p>OpenMLS also provides a helper function to generate individual random GREASE values:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2332,8 +2615,12 @@ let signature_keys = SignatureKeyPair::new(
     Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519.signature_algorithm()
 ).unwrap();
 
-// Create capabilities with automatic random GREASE values
+// Create capabilities with automatic random GREASE values.
+// The ciphersuite and credential type the key package itself uses have to be
+// listed too, because explicit capabilities are taken at face value.
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519])
+    .credentials(vec![CredentialType::Basic])
     .with_grease(provider.rand())
     .build();
 
@@ -2372,6 +2659,7 @@ let signature_keys = SignatureKeyPair::new(
 
 // Create capabilities with specific GREASE values
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![Ciphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519])
     .proposals(vec![
         ProposalType::Add,
         ProposalType::Update,
@@ -2812,7 +3100,7 @@ strategy can be used to resolve possible forks.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="sub-group-branching"><a class="header" href="#sub-group-branching">Sub-group branching</a></h1>
 <p>Sometimes a subset of the members in a group want to continue in a separate, smaller
-group without setting up an new group from scratch. MLS supports this with
+group without setting up a new group from scratch. MLS supports this with
 <em>sub-group branching</em> (<a href="https://www.rfc-editor.org/rfc/rfc9420.html#name-subgroup-branching">RFC 9420 §11.3</a>): a new group is created with the same
 parameters as an existing (parent) group, and its key schedule is seeded with a
 resumption PSK derived from the parent. This cryptographically ties the new
@@ -2884,26 +3172,34 @@ was taken and when its <code>Welcome</code> arrives, so the receiver first needs
 <code>BranchInfo</code>. The branch PSK that carries the parent group and epoch lives inside
 the <code>Welcome</code>’s encrypted <code>GroupSecrets</code>, so reading it requires decrypting the
 <code>Welcome</code>.</p>
-<p><code>StagedWelcome::process_branch_welcome</code> does exactly one decryption and returns a
-<code>PendingBranchWelcome</code>. Call <code>parent()</code> on it to read the parent <code>(group_id, epoch)</code> the branch was taken from (see <a href="https://www.rfc-editor.org/rfc/rfc9420.html#name-pre-shared-keys">RFC 9420 §8.4</a>), select the <code>BranchInfo</code> for
-that parent epoch (e.g. from the sliding window above), then finish the join with
-<code>build_from_branch</code>, which reuses the already-decrypted state.</p>
+<p><code>StagedWelcome::process_resuming_welcome</code> does one decryption and returns a
+<code>PendingResumingWelcome</code>. Call <code>required_resumption_secret()</code> on it to get the branch
+resumption PSK, which holds the parent <code>(group_id, epoch)</code> the branch was taken
+from (see <a href="https://www.rfc-editor.org/rfc/rfc9420.html#name-pre-shared-keys">RFC 9420 §8.4</a>). Its <code>usage()</code> is <code>ResumptionPskUsage::Branch</code> for a
+branch welcome (a reinit welcome returns <code>ResumptionPskUsage::Reinit</code>, and a
+regular welcome returns <code>None</code>). Select the <code>BranchInfo</code> for that parent epoch
+(e.g. from the sliding window above), then finish the join with
+<code>build_from_branch</code>, which reuses the already-decrypted state.
+If it turns out not to be a sub-group branch welcome, continue with <code>PendingResumingWelcome::build</code>.</p>
 <p>In addition to the regular join processing, this injects the parent’s resumption
 PSK secret and enforces the <a href="https://www.rfc-editor.org/rfc/rfc9420.html#name-subgroup-branching">RFC 9420 §11.3</a> receiver checks. <code>build_from_branch</code>
 verifies that the branch PSK in the <code>Welcome</code> references the same parent group and
 epoch as the <code>BranchInfo</code> you selected (before that secret is mixed into the key
 schedule); a <code>BranchInfo</code> from the wrong parent epoch fails with
 <code>WelcomeError::SubgroupParentMismatch</code>. The remaining checks run when <code>build</code> is
-called: the protocol version and ciphersuite must match the parent, the sub-group
-must be at epoch 1, and every sub-group member must also be a member of the parent
-group. The membership check is on by default and can be disabled with
-<code>.check_members(false)</code>.</p>
-<pre><code class="language-rust no_run noplayground">    // Bob decrypts the branch welcome once with `process_branch_welcome`, then
+called: the protocol version and ciphersuite must match the parent, and the sub-group
+must be at epoch 1.</p>
+<p>Every sub-group member must also be a member of the parent group.
+A simple membership check by equal credential is on by default and can be disabled with
+<code>JoinBuilder::check_members(false)</code>. In that case, the application <strong>must</strong> ensure that the new
+member credentials in <code>StagedWelcome::members()</code> match old ones captured in
+<code>BranchInfo::member_credentials()</code>. Use this path when the application uses credentials
+that don’t allow checking equivalence of members by checking exact equality of credentials.</p>
+<pre><code class="language-rust no_run noplayground">    // Bob decrypts the branch welcome once with `process_resuming_welcome`, then
     // reads which parent group and epoch it derives from. This lets him pick the
     // matching `BranchInfo` from his window even if his view of the parent group
-    // has advanced (see the sliding-window note above), without decrypting the
-    // welcome twice.
-    let pending = StagedWelcome::process_branch_welcome(
+    // has advanced (see the sliding-window note above).
+    let pending = StagedWelcome::process_resuming_welcome(
         bob_provider,
         mls_group_create_config.join_config(),
         welcome,
@@ -2911,9 +3207,11 @@ group. The membership check is on by default and can be disabled with
     .expect("Error processing the branch welcome.");
 
     // The parent group and epoch the branch was taken from.
-    let (_parent_group_id, parent_epoch) = pending
-        .parent()
+    let required_secret = pending
+        .required_resumption_secret()
         .expect("This is a sub-group branch welcome.");
+    assert_eq!(required_secret.usage(), ResumptionPskUsage::Branch);
+    let parent_epoch = required_secret.psk_epoch();
 
     // Select the `BranchInfo` exported from that parent epoch.
     let bob_branch_info = bob_branch_window
@@ -2921,18 +3219,20 @@ group. The membership check is on by default and can be disabled with
         .find_map(|(epoch, info)| (epoch == parent_epoch).then_some(info))
         .expect("No BranchInfo for the branch's parent epoch.");
 
-    // Finish the join from the same carrier, reusing the already-decrypted state.
+    // Finish the join.
     // `build_from_branch` checks that the branch PSK references the same parent
-    // group/epoch as the `BranchInfo`; the remaining receiver checks (matching
-    // version, ciphersuite, sub-group epoch, and membership) run when `build` is
-    // called.
-    let bob_sub_group = pending
+    // group/epoch as the `BranchInfo`. `build` checks that version, ciphersuite, sub-group
+    // epoch match.
+    let bob_staged_welcome = pending
         .build_from_branch(bob_provider, bob_branch_info)
         .expect("Error joining the branch.")
         .with_ratchet_tree(sub_group_ratchet_tree.into())
         // .check_members(false) // optional; the membership check is on by default
         .build()
-        .expect("Error joining the sub-group.")
+        .expect("Error joining the sub-group.");
+    // when setting .check_members(false): check that `bob_staged_welcome.members()`
+    // represents a subset of `bob_branch_info.member_credentials()`.
+    let bob_sub_group = bob_staged_welcome
         .into_group(bob_provider)
         .expect("Error creating the sub-group.");</code></pre>
 <p>If you already know the parent epoch (so no peek is needed), the one-shot
@@ -3025,7 +3325,38 @@ A crypto provider backed by the high-assurance cryptography library [libcrux].</
 <ul>
 <li>MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519</li>
 <li>MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519</li>
-<li>MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519</li>
+<li>MLS_128_DHKEMP256_AES128GCM_SHA256_P256</li>
+</ul>
+<p><strong>Post-quantum ciphersuites</strong>
+With the <code>draft-ietf-mls-pq-ciphersuites</code> feature, both providers additionally
+support ciphersuites from <a href="https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites">draft-ietf-mls-pq-ciphersuites</a>. The draft has no
+IANA code points yet, so OpenMLS uses provisional ones that may change.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Draft</th><th>Ciphersuite</th><th>Code point</th><th>Rust Crypto</th><th>Libcrux</th></tr>
+</thead>
+<tbody>
+<tr><td>TBD1</td><td>MLS_128_MLKEM768X25519_AES128GCM_SHA256_Ed25519</td><td>0x004F</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD2</td><td>MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519</td><td>0x004E</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD3</td><td>MLS_128_MLKEM768P256_AES128GCM_SHA256_P256</td><td>0xF050</td><td>✗ (1)</td><td>✓</td></tr>
+<tr><td>TBD4</td><td>MLS_128_MLKEM768P256_AES256GCM_SHA384_P256</td><td>0xF051</td><td>✗ (1)</td><td>✓</td></tr>
+<tr><td>TBD5</td><td>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT</td><td>0xF052</td><td>✗ (1)</td><td>✗ (2)</td></tr>
+<tr><td>TBD6</td><td>MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519</td><td>0xF042</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD7</td><td>MLS_128_MLKEM768_AES256GCM_SHA384_P256</td><td>0x0050</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD8</td><td>MLS_192_MLKEM1024_AES256GCM_SHA384_P384</td><td>0x0042</td><td>✓</td><td>✗ (2)</td></tr>
+<tr><td>TBD9</td><td>MLS_128_MLKEM768X25519_CHACHA20POLY1305_SHA384_MLDSA44</td><td>0x0052</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD10</td><td>MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65</td><td>0x0051</td><td>✓</td><td>✓</td></tr>
+<tr><td>TBD11</td><td>MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87</td><td>0x0907</td><td>✓</td><td>✓</td></tr>
+<tr><td>–</td><td>MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87</td><td>0x0906</td><td>✓</td><td>✓</td></tr>
+<tr><td>–</td><td>MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519 (legacy)</td><td>0x004D</td><td>✗</td><td>✓</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>(1) The RustCrypto HPKE backend does not implement the MLKEM768-P256 and
+MLKEM1024-P384 hybrid KEMs.</li>
+<li>(2) libcrux has no ECDSA P-384 implementation yet.</li>
 </ul>
 <h2 id="the-traits"><a class="header" href="#the-traits">The Traits</a></h2>
 <p>There are 4 different traits defined in the <a href="https://crates.io/crates/openmls_traits">OpenMLS traits crate</a>.</p>
@@ -3120,9 +3451,20 @@ value (in which case they are an <code>Entity</code>).</p>
 <pre><code class="language-rust no_run noplayground">/// Key is a trait implemented by all types that serve as a key (in the database sense) to in the
 /// storage. For example, a GroupId is a key to the stored entities for the group with that id.
 /// The point of a key is not to be stored, it's to address something that is stored.
-pub trait Key&lt;const VERSION: u16&gt;: Serialize {}</code></pre>
+pub trait Key&lt;const VERSION: u16&gt;: Serialize + MaybeSync {}</code></pre>
 <pre><code class="language-rust no_run noplayground">/// Entity is a trait implemented by the values being stored.
-pub trait Entity&lt;const VERSION: u16&gt;: Serialize + DeserializeOwned {}</code></pre>
+pub trait Entity&lt;const VERSION: u16&gt;: Serialize + DeserializeOwned + MaybeSync {}</code></pre>
+<h4 id="sync-and-async-mode"><a class="header" href="#sync-and-async-mode">Sync and async mode</a></h4>
+<p>The storage traits come in a sync and an async flavor. The source shown on this
+page uses the async signatures, which return <code>impl Future&lt;Output = ...&gt; + Send</code>.
+In the default sync mode the same methods return the output type directly, and
+<code>MaybeSync</code> and <code>MaybeSend</code> place no bounds on the types.</p>
+<p>The async mode is enabled with the <code>async</code> feature of <code>openmls</code> or
+<code>openmls_traits</code>. It applies to the whole build as soon as one crate enables it.
+In async mode the provider and the keys and entities must be <code>Sync</code>, and the
+error type must be <code>Send</code>. An implementation that supports both modes writes the
+methods as <code>async fn</code> and marks the <code>impl</code> block with
+<code>#[openmls_traits::maybe_async(AFIT)]</code>.</p>
 <p>An implementation of the storage trait should ensure that it can address and
 efficiently handle values.</p>
 <h4 id="example-key-packages"><a class="header" href="#example-key-packages">Example: Key packages</a></h4>
@@ -3138,7 +3480,7 @@ The application needs to implement some logic to manage last resort key packages
         &amp;self,
         hash_ref: &amp;HashReference,
         key_package: &amp;KeyPackage,
-    ) -&gt; Result&lt;(), Self::Error&gt;;</code></pre>
+    ) -&gt; impl Future&lt;Output = Result&lt;(), Self::Error&gt;&gt; + Send;</code></pre>
 <p>The application may store the hash references in a separate list with a validity
 period.</p>
 <pre><code class="language-rust ro_run noplayground">fn write_key_package&lt;
@@ -3273,17 +3615,17 @@ pub enum HpkeKemType {
     #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
     MlKem1024 = 0x0042,
 
-    /// MLKEM1024-P384 hybrid KEM
-    #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]</code></pre>
+    /// ML-KEM-768 + P-256 hybrid KEM
+    ///</code></pre>
 <p>In addition, helper structs for <code>HpkeCiphertext</code> and <code>HpkeKeyPair</code> are defined.</p>
-<pre><code class="language-rust no_run noplayground">/// KDF Types for HPKE
-#[derive(PartialEq, Eq, Copy, Clone, Debug, Serialize, Deserialize)]
-#[repr(u16)]
-pub enum HpkeKdfType {</code></pre>
-<pre><code class="language-rust no_run noplayground">    /// HKDF SHA 384
-    HkdfSha384 = 0x0002,
-
-    /// HKDF SHA 512</code></pre>
+<pre><code class="language-rust no_run noplayground">    ///
+    /// [draft-ietf-hpke-pq]: https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq
+    /// [draft-irtf-cfrg-concrete-hybrid-kems]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-concrete-hybrid-kems
+    #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]</code></pre>
+<pre><code class="language-rust no_run noplayground">    ///
+    /// Code point from [draft-ietf-hpke-pq], which registers it as
+    /// `MLKEM768-X25519`.
+    ///</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="message-validation"><a class="header" href="#message-validation">Message Validation</a></h1>
 <p>OpenMLS implements a variety of syntactical and semantical checks, both when parsing and processing incoming commits and when creating own commits.</p>
@@ -3773,10 +4115,15 @@ use openmls::components::vc_derivation_info::VC_COMPONENT_ID;
 use openmls::extensions::{
     AppDataDictionary, AppDataDictionaryExtension, Extension, ExtensionType, Extensions,
 };
-use openmls::prelude::Capabilities;
+use openmls::prelude::{Capabilities, CredentialType};
 use tls_codec::Serialize as _;
 
+// Capabilities set explicitly are taken at face value, so the ciphersuite and
+// credential type the leaf itself uses have to be listed alongside the
+// extension type this feature needs.
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![ciphersuite])
+    .credentials(vec![CredentialType::Basic])
     .extensions(vec![ExtensionType::AppDataDictionary])
     .build();
 
@@ -3792,6 +4139,9 @@ let leaf_extensions = Extensions::from_vec(vec![Extension::AppDataDictionary(
 through <code>.capabilities(...)</code> and <code>.with_leaf_node_extensions(...)</code>, and to the
 <code>KeyPackage::builder()</code> through <code>.leaf_node_capabilities(...)</code> and
 <code>.leaf_node_extensions(...)</code>.</p>
+<p>Capabilities have to be set explicitly here: virtual clients need
+<code>AppDataDictionary</code> advertised, and leaving capabilities unset would only
+advertise what the leaf itself uses.</p>
 <h2 id="derivation-epochs"><a class="header" href="#derivation-epochs">Derivation epochs</a></h2>
 <p>An emulation group is an ordinary <code>MlsGroup</code>. Each emulator client maintains its
 own copy. What makes it an emulation group is a flag every emulator client has to
@@ -4022,6 +4372,15 @@ picks a value congruent to its emulation leaf index modulo the emulation group
 size, and encrypts it with a small-space PRP keyed from <code>reuse_guard_secret</code>.</p>
 <p>Once the Delivery Service accepts the message, drop the retained key:</p>
 <pre><code class="language-rust no_run noplayground">main_group.confirm_application_message(provider.storage(), unconfirmed.epoch, unconfirmed.generation)?;</code></pre>
+<p>When the Delivery Service fans the confirmed message back, <code>process_message</code>
+returns <code>ProcessedMessageContent::OwnPrivateMessage</code>, so it can be skipped. Only
+a confirmed generation is reported this way. A second delivery of an own-leaf
+message whose generation was already used for a decryption attempt fails with
+<code>SecretTreeError::SecretReuseError</code>, like a duplicate from any other member,
+because that attempt may not have succeeded. An own-leaf message older than the
+oldest generation pruned from the receive window fails with
+<code>SecretTreeError::TooDistantInThePast</code>, because it may be a sibling’s message
+that was never processed.</p>
 <p>If the Delivery Service reports a collision, the sibling won that generation.
 Process the winning message through <code>process_message</code>, which has a carve-out for
 messages arriving from the receiver’s own leaf. Decrypting the winner consumes

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ad408ce5.js";
+            window.path_to_searchindex_js = "searchindex-fc6e6bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-81492934.js"></script>
+        <script src="toc-5c7e1a74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -235,10 +235,15 @@ use openmls::components::vc_derivation_info::VC_COMPONENT_ID;
 use openmls::extensions::{
     AppDataDictionary, AppDataDictionaryExtension, Extension, ExtensionType, Extensions,
 };
-use openmls::prelude::Capabilities;
+use openmls::prelude::{Capabilities, CredentialType};
 use tls_codec::Serialize as _;
 
+// Capabilities set explicitly are taken at face value, so the ciphersuite and
+// credential type the leaf itself uses have to be listed alongside the
+// extension type this feature needs.
 let capabilities = Capabilities::builder()
+    .ciphersuites(vec![ciphersuite])
+    .credentials(vec![CredentialType::Basic])
     .extensions(vec![ExtensionType::AppDataDictionary])
     .build();
 
@@ -254,6 +259,9 @@ let leaf_extensions = Extensions::from_vec(vec![Extension::AppDataDictionary(
 through <code>.capabilities(...)</code> and <code>.with_leaf_node_extensions(...)</code>, and to the
 <code>KeyPackage::builder()</code> through <code>.leaf_node_capabilities(...)</code> and
 <code>.leaf_node_extensions(...)</code>.</p>
+<p>Capabilities have to be set explicitly here: virtual clients need
+<code>AppDataDictionary</code> advertised, and leaving capabilities unset would only
+advertise what the leaf itself uses.</p>
 <h2 id="derivation-epochs"><a class="header" href="#derivation-epochs">Derivation epochs</a></h2>
 <p>An emulation group is an ordinary <code>MlsGroup</code>. Each emulator client maintains its
 own copy. What makes it an emulation group is a flag every emulator client has to
@@ -484,6 +492,15 @@ picks a value congruent to its emulation leaf index modulo the emulation group
 size, and encrypts it with a small-space PRP keyed from <code>reuse_guard_secret</code>.</p>
 <p>Once the Delivery Service accepts the message, drop the retained key:</p>
 <pre><code class="language-rust no_run noplayground">main_group.confirm_application_message(provider.storage(), unconfirmed.epoch, unconfirmed.generation)?;</code></pre>
+<p>When the Delivery Service fans the confirmed message back, <code>process_message</code>
+returns <code>ProcessedMessageContent::OwnPrivateMessage</code>, so it can be skipped. Only
+a confirmed generation is reported this way. A second delivery of an own-leaf
+message whose generation was already used for a decryption attempt fails with
+<code>SecretTreeError::SecretReuseError</code>, like a duplicate from any other member,
+because that attempt may not have succeeded. An own-leaf message older than the
+oldest generation pruned from the receive window fails with
+<code>SecretTreeError::TooDistantInThePast</code>, because it may be a sibling’s message
+that was never processed.</p>
 <p>If the Delivery Service reports a collision, the sibling won that generation.
 Process the winning message through <code>process_message</code>, which has a carve-out for
 messages arriving from the receiver’s own leaf. Decrypting the winner consumes

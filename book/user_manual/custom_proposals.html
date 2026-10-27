@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ad408ce5.js";
+            window.path_to_searchindex_js = "../searchindex-fc6e6bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-81492934.js"></script>
+        <script src="../toc-5c7e1a74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -175,20 +175,20 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="custom-proposals"><a class="header" href="#custom-proposals">Custom proposals</a></h1>
-<p>OpenMLS allows the creation and use of application-defined proposals. To create such a proposal, the application needs to define a Proposal Type in such a way that its value doesn’t collide with any Proposal Types defined in Section 17.4. of RFC 9420. If the proposal is meant to be used only inside of a particular application, the value of the Proposal Type is recommended to be in the range between <code>0xF000</code> and <code>0xFFFF</code>, as that range is reserved for private use.</p>
+<p>OpenMLS allows the creation and use of application-defined proposals. To create such a proposal, the application needs to define a Proposal Type in such a way that its value doesn’t collide with any Proposal Types defined in Section 17.4. of RFC 9420, with GREASE values, or with other Proposal Types supported by OpenMLS. Custom proposals with a colliding Proposal Type fail to encode. If the proposal is meant to be used only inside of a particular application, the value of the Proposal Type is recommended to be in the range between <code>0xF000</code> and <code>0xFFFF</code>, as that range is reserved for private use.</p>
 <p>Custom proposals can contain arbitrary octet-strings as defined by the application. Any policy decisions based on custom proposals will have to be made by the application, such as the decision to include a given custom proposal in a commit, or whether to accept a commit that includes one or more custom proposals. To decide the latter, applications can inspect the queued proposals in a <code>ProcessedMessageContent::StagedCommitMessage(staged_commit)</code>.</p>
 <p>Example on how to use custom proposals:</p>
 <pre><code class="language-rust no_run noplayground">    // Define a custom proposal type
     let custom_proposal_type = 0xFFFF;
 
-    // Define capabilities supporting the custom proposal type
-    let capabilities = Capabilities::new(
-        None,
-        Some(&amp;[ciphersuite]),
-        None,
-        Some(&amp;[ProposalType::Custom(custom_proposal_type)]),
-        None,
-    );
+    // Define capabilities supporting the custom proposal type.
+    // Note that setting capabilities explicitly means they must also cover what
+    // the leaf itself uses: its ciphersuite and its credential type.
+    let capabilities = Capabilities::builder()
+        .ciphersuites(vec![ciphersuite])
+        .credentials(vec![CredentialType::Basic])
+        .proposals(vec![ProposalType::Custom(custom_proposal_type)])
+        .build();
 
     // Generate KeyPackage that signals support for the custom proposal type
     let bob_key_package = KeyPackageBuilder::new()
@@ -266,7 +266,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../user_manual/leaving.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../user_manual/reinit.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -280,7 +280,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../user_manual/leaving.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../user_manual/reinit.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

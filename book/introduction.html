@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ad408ce5.js";
+            window.path_to_searchindex_js = "searchindex-fc6e6bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-81492934.js"></script>
+        <script src="toc-5c7e1a74.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,23 +194,24 @@ upstream OpenMLS.</p>
 pinned to an exact release, and changes to cryptographic dependencies or
 provisional ciphersuite mappings go through the fork’s release review.</p>
 <h2 id="post-quantum-ciphersuites"><a class="header" href="#post-quantum-ciphersuites">Post-Quantum Ciphersuites</a></h2>
-<p>Enable <code>draft-ietf-mls-pq-ciphersuites</code> to make the six PQ ciphersuites
+<p>Enable <code>draft-ietf-mls-pq-ciphersuites</code> to make the seven PQ ciphersuites
 available.</p>
 <p>Five suites track
 <a href="https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/">Post-Quantum and Post-Quantum/Traditional Hybrid Ciphersuites for MLS</a>.
-They use AES-256-GCM with SHA-384. The X-Wing compatibility suite uses
-ChaCha20-Poly1305 with SHA-256.</p>
+They use AES-256-GCM with SHA-384. The remaining two preserve the X-Wing and
+ReallyMe private-use mappings used by existing deployments.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Ciphersuite</th><th>Key establishment</th><th>Signature</th><th style="text-align: right">Wire</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>X-Wing compatibility</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004D</code></td></tr>
+<tr><td><strong>X-Wing compatibility</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004d</code></td></tr>
 <tr><td><strong>ML-KEM-768 PQ</strong></td><td>ML-KEM-768</td><td>ML-DSA-65</td><td style="text-align: right"><code>0x0051</code></td></tr>
 <tr><td><strong>ML-KEM-1024 PQ</strong></td><td>ML-KEM-1024</td><td>ML-DSA-87</td><td style="text-align: right"><code>0x0907</code></td></tr>
-<tr><td><strong>ML-KEM-768/X25519 hybrid</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004E</code></td></tr>
-<tr><td><strong>ML-KEM-1024/P-384 hybrid</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xF043</code></td></tr>
+<tr><td><strong>ML-KEM-768/X25519 hybrid</strong></td><td>ML-KEM-768 + X25519</td><td>Ed25519</td><td style="text-align: right"><code>0x004e</code></td></tr>
+<tr><td><strong>ML-KEM-1024/P-384 draft hybrid</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xf052</code></td></tr>
+<tr><td><strong>ML-KEM-1024/P-384 ReallyMe compatibility</strong></td><td>ML-KEM-1024 + P-384</td><td>P-384</td><td style="text-align: right"><code>0xf043</code></td></tr>
 <tr><td><strong>ML-KEM-1024 + P-384 signature</strong></td><td>ML-KEM-1024</td><td>P-384</td><td style="text-align: right"><code>0x0042</code></td></tr>
 </tbody>
 </table>
@@ -227,15 +228,17 @@ ChaCha20-Poly1305 with SHA-256.</p>
 <tr><td>ML-KEM-768 PQ</td><td><code>MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65</code></td></tr>
 <tr><td>ML-KEM-1024 PQ</td><td><code>MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87</code></td></tr>
 <tr><td>ML-KEM-1024 + P-384 signature</td><td><code>MLS_192_MLKEM1024_AES256GCM_SHA384_P384</code></td></tr>
-<tr><td>ML-KEM-1024/P-384 hybrid</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384</code></td></tr>
+<tr><td>ML-KEM-1024/P-384 draft hybrid</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT</code></td></tr>
+<tr><td>ML-KEM-1024/P-384 ReallyMe compatibility</td><td><code>MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384</code></td></tr>
 <tr><td>ML-KEM-768/X25519 hybrid</td><td><code>MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519</code></td></tr>
 </tbody>
 </table>
 </div>
 </details>
-<p>These identifiers do not yet have final IANA MLS assignments. Five currently
-use unassigned registry values; the ML-KEM-1024/P-384 hybrid uses a private-use
-value.</p>
+<p>These identifiers do not yet have final IANA MLS assignments. The
+ML-KEM-1024/P-384 draft suite uses upstream’s provisional <code>0xf052</code> assignment;
+the ReallyMe compatibility variant retains private-use <code>0xf043</code> so existing
+groups are not silently remapped.</p>
 <p>Until final assignments are available, communicating implementations must agree
 on the ciphersuite identifiers they use. Pinning the same fork revision ensures
 the mappings remain consistent.</p>
