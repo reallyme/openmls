@@ -90,6 +90,11 @@ fn ratchet_tree_extension() {
     let (bob_credential_with_key, bob_signature_keys) =
         test_utils::new_credential(bob_provider, b"Bob", ciphersuite.signature_algorithm());
 
+    let capabilities = Capabilities::builder()
+        .ciphersuites(vec![ciphersuite])
+        .credentials(vec![CredentialType::Basic])
+        .build();
+
     // Generate KeyPackages
     let bob_key_package_bundle = KeyPackageBundle::generate(
         bob_provider,
@@ -102,6 +107,7 @@ fn ratchet_tree_extension() {
     // === Alice creates a group with the ratchet tree extension ===
     let mut alice_group = MlsGroup::builder()
         .ciphersuite(ciphersuite)
+        .with_capabilities(capabilities.clone())
         .use_ratchet_tree_extension(true)
         .build(
             alice_provider,
@@ -158,6 +164,7 @@ fn ratchet_tree_extension() {
 
     let mut alice_group = MlsGroup::builder()
         .ciphersuite(ciphersuite)
+        .with_capabilities(capabilities)
         .use_ratchet_tree_extension(false)
         .build(
             alice_provider,
@@ -248,9 +255,17 @@ fn with_group_context_extensions() {
     let alice_credential_with_key_and_signer =
         generate_credential_with_key("Alice".into(), ciphersuite.signature_algorithm(), provider);
 
+    // The must support every GroupContext extension.
     let mls_group_create_config = MlsGroupCreateConfig::builder()
         .with_group_context_extensions(extensions)
         .ciphersuite(ciphersuite)
+        .capabilities(
+            Capabilities::builder()
+                .ciphersuites(vec![ciphersuite])
+                .extensions(vec![ExtensionType::Unknown(0xf023)])
+                .credentials(vec![CredentialType::Basic])
+                .build(),
+        )
         .build();
 
     // === Alice creates a group ===
@@ -337,15 +352,15 @@ fn last_resort_extension() {
         Extensions::single(last_resort).expect("failed to create single-element extensions list");
     let capabilities = Capabilities::new(
         None,
-        None,
+        Some(&[ciphersuite]),
         // Add last resort extension as supported extension
         Some(&[ExtensionType::LastResort]),
         None,
-        None,
+        Some(&[CredentialType::Basic]),
     );
     let kp = KeyPackage::builder()
         .key_package_extensions(extensions)
-        .leaf_node_capabilities(capabilities)
+        .leaf_node_capabilities(capabilities.clone())
         .build(
             ciphersuite,
             bob_provider,
@@ -378,6 +393,7 @@ fn last_resort_extension() {
 
     let mls_group_create_config = MlsGroupCreateConfig::builder()
         .ciphersuite(ciphersuite)
+        .capabilities(capabilities)
         .build();
 
     // === Alice creates a group ===
@@ -506,6 +522,25 @@ fn unknown_extensions(n: usize) -> Vec<Extension> {
         .take(n)
         .map(|extension_type| Extension::Unknown(extension_type, UnknownExtension(vec![])))
         .collect()
+}
+
+#[test]
+fn non_canonical_extension_types_are_not_serialized() {
+    for extension_type in [
+        ExtensionType::Unknown(1),
+        ExtensionType::Unknown(10),
+        ExtensionType::Unknown(0x0A0A),
+        ExtensionType::Grease(1),
+        ExtensionType::Grease(0x1234),
+    ] {
+        assert!(
+            extension_type.tls_serialize_detached().is_err(),
+            "{extension_type:?} must not be serialized"
+        );
+    }
+
+    assert!(ExtensionType::Grease(0x0A0A).is_grease());
+    assert!(!ExtensionType::Grease(0x1234).is_grease());
 }
 
 // A single unauthenticated message can carry tens of thousands of distinct

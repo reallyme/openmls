@@ -27,21 +27,22 @@ provisional ciphersuite mappings go through the fork's release review.
 
 ## Post-Quantum Ciphersuites
 
-Enable `draft-ietf-mls-pq-ciphersuites` to make the six PQ ciphersuites
+Enable `draft-ietf-mls-pq-ciphersuites` to make the seven PQ ciphersuites
 available.
 
 Five suites track
 [Post-Quantum and Post-Quantum/Traditional Hybrid Ciphersuites for MLS](https://datatracker.ietf.org/doc/draft-ietf-mls-pq-ciphersuites/).
-They use AES-256-GCM with SHA-384. The X-Wing compatibility suite uses
-ChaCha20-Poly1305 with SHA-256.
+They use AES-256-GCM with SHA-384. The remaining two preserve the X-Wing and
+ReallyMe private-use mappings used by existing deployments.
 
 | Ciphersuite | Key establishment | Signature | Wire |
 |---|---|---|---:|
-| **X-Wing compatibility** | ML-KEM-768 + X25519 | Ed25519 | `0x004D` |
+| **X-Wing compatibility** | ML-KEM-768 + X25519 | Ed25519 | `0x004d` |
 | **ML-KEM-768 PQ** | ML-KEM-768 | ML-DSA-65 | `0x0051` |
 | **ML-KEM-1024 PQ** | ML-KEM-1024 | ML-DSA-87 | `0x0907` |
-| **ML-KEM-768/X25519 hybrid** | ML-KEM-768 + X25519 | Ed25519 | `0x004E` |
-| **ML-KEM-1024/P-384 hybrid** | ML-KEM-1024 + P-384 | P-384 | `0xF043` |
+| **ML-KEM-768/X25519 hybrid** | ML-KEM-768 + X25519 | Ed25519 | `0x004e` |
+| **ML-KEM-1024/P-384 draft hybrid** | ML-KEM-1024 + P-384 | P-384 | `0xf052` |
+| **ML-KEM-1024/P-384 ReallyMe compatibility** | ML-KEM-1024 + P-384 | P-384 | `0xf043` |
 | **ML-KEM-1024 + P-384 signature** | ML-KEM-1024 | P-384 | `0x0042` |
 
 <details>
@@ -53,14 +54,16 @@ ChaCha20-Poly1305 with SHA-256.
 | ML-KEM-768 PQ | `MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65` |
 | ML-KEM-1024 PQ | `MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87` |
 | ML-KEM-1024 + P-384 signature | `MLS_192_MLKEM1024_AES256GCM_SHA384_P384` |
-| ML-KEM-1024/P-384 hybrid | `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384` |
+| ML-KEM-1024/P-384 draft hybrid | `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT` |
+| ML-KEM-1024/P-384 ReallyMe compatibility | `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384` |
 | ML-KEM-768/X25519 hybrid | `MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519` |
 
 </details>
 
-These identifiers do not yet have final IANA MLS assignments. Five currently
-use unassigned registry values; the ML-KEM-1024/P-384 hybrid uses a private-use
-value.
+These identifiers do not yet have final IANA MLS assignments. The
+ML-KEM-1024/P-384 draft suite uses upstream's provisional `0xf052` assignment;
+the ReallyMe compatibility variant retains private-use `0xf043` so existing
+groups are not silently remapped.
 
 Until final assignments are available, communicating implementations must agree
 on the ciphersuite identifiers they use. Pinning the same fork revision ensures

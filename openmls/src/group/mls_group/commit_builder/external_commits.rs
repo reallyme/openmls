@@ -122,7 +122,8 @@ impl ExternalCommitBuilder {
     }
 
     /// Specifies additional authenticated data (AAD) to be included in the
-    /// external commit.
+    /// external commit. It applies to the external commit only and is not
+    /// retained as the AAD of the group that is being joined.
     pub fn with_aad(mut self, aad: Vec<u8>) -> Self {
         self.aad = aad;
         self
@@ -150,6 +151,14 @@ impl ExternalCommitBuilder {
     /// By default they are validated.
     pub fn skip_lifetime_validation(mut self) -> Self {
         self.validate_lifetimes = LeafNodeLifetimePolicy::Skip;
+        self
+    }
+
+    /// Sets how the lifetimes of leaf nodes in the ratchet tree are checked.
+    /// [`Self::skip_lifetime_validation`] is the same as passing
+    /// [`LeafNodeLifetimePolicy::Skip`].
+    pub fn leaf_node_lifetime_policy(mut self, lifetime_policy: LeafNodeLifetimePolicy) -> Self {
+        self.validate_lifetimes = lifetime_policy;
         self
     }
 
@@ -265,6 +274,8 @@ impl ExternalCommitBuilder {
                 ciphersuite,
                 provider.crypto(),
                 ProtocolVersion::default(),
+                // The policy of the builder applies to the ratchet tree only.
+                LeafNodeLifetimePolicy::Verify,
             )?;
             let queued_proposal = QueuedProposal::from_authenticated_content(
                 ciphersuite,
@@ -344,10 +355,10 @@ impl ExternalCommitBuilder {
         let mut commit_builder = CommitBuilder::<'_, Initial, MlsGroup>::new(mls_group);
 
         commit_builder.stage.force_self_update = true;
+        commit_builder.stage.bare_aad = Some(aad);
         commit_builder.stage.external_commit_info = Some(ExternalCommitInfo {
             wire_format_policy: original_wire_format_policy,
             credential: credential_with_key,
-            aad,
         });
 
         Ok(commit_builder)
@@ -417,7 +428,8 @@ impl CommitBuilder<'_, super::Complete, MlsGroup> {
     ///
     /// In contrast to the deprecated [`MlsGroup::join_by_external_commit`]
     /// there is no need to merge the pending commit.
-    pub fn finalize<Provider: OpenMlsProvider>(
+    #[openmls_traits::maybe_async]
+    pub async fn finalize<Provider: OpenMlsProvider>(
         self,
         provider: &Provider,
     ) -> Result<
@@ -438,7 +450,8 @@ impl CommitBuilder<'_, super::Complete, MlsGroup> {
         // commit is always framed as a PublicMessage, so it carries no
         // handshake confirmation data.
         let mls_message = group
-            .content_to_mls_message(create_commit_result.commit, provider)?
+            .content_to_mls_message(create_commit_result.commit, provider)
+            .await?
             .message;
 
         group.reset_aad();
@@ -451,6 +464,7 @@ impl CommitBuilder<'_, super::Complete, MlsGroup> {
         // Store the group in storage.
         group
             .store(provider.storage())
+            .await
             .map_err(ExternalCommitBuilderFinalizeError::StorageError)?;
 
         // Set the current group state to [`MlsGroupState::PendingCommit`],
@@ -459,7 +473,7 @@ impl CommitBuilder<'_, super::Complete, MlsGroup> {
             create_commit_result.staged_commit,
         )));
 
-        group.merge_pending_commit(provider)?;
+        group.merge_pending_commit(provider).await?;
 
         let bundle = super::CommitMessageBundle {
             version: group.version(),

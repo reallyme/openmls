@@ -2,18 +2,20 @@
 
 This fork implements five ciphersuites from
 [draft-ietf-mls-pq-ciphersuites-06](https://datatracker.ietf.org/doc/html/draft-ietf-mls-pq-ciphersuites-06)
-and retains one X-Wing ciphersuite for compatibility with existing deployments.
+and retains both an X-Wing ciphersuite and the ReallyMe private-use
+ML-KEM-1024/P-384 assignment for compatibility with existing deployments.
 
 ## Ciphersuites
 
 | Suite | MLS wire | KEM | KDF | AEAD / Hash | Signature |
 |---|---:|---|---|---|---|
-| `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519` | `0x004D` | X-Wing (ML-KEM-768 + X25519) | HKDF-SHA256 | ChaCha20-Poly1305 / SHA-256 | Ed25519 |
-| `MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519` | `0x004E` | ML-KEM-768 + X25519 | HKDF-SHA384 | AES-256-GCM / SHA-384 | Ed25519 |
+| `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519` | `0x004d` | X-Wing (ML-KEM-768 + X25519) | HKDF-SHA256 | ChaCha20-Poly1305 / SHA-256 | Ed25519 |
+| `MLS_128_MLKEM768X25519_AES256GCM_SHA384_Ed25519` | `0x004e` | ML-KEM-768 + X25519 | HKDF-SHA384 | AES-256-GCM / SHA-384 | Ed25519 |
 | `MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65` | `0x0051` | ML-KEM-768 | HKDF-SHA384 | AES-256-GCM / SHA-384 | ML-DSA-65 |
 | `MLS_192_MLKEM1024_AES256GCM_SHA384_P384` | `0x0042` | ML-KEM-1024 | HKDF-SHA384 | AES-256-GCM / SHA-384 | P-384 ECDSA |
 | `MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87` | `0x0907` | ML-KEM-1024 | HKDF-SHA384 | AES-256-GCM / SHA-384 | ML-DSA-87 |
-| `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384` | `0xF043` | ML-KEM-1024 + P-384 | HKDF-SHA384 | AES-256-GCM / SHA-384 | P-384 ECDSA |
+| `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT` | `0xf052` | ML-KEM-1024 + P-384 | HKDF-SHA384 | AES-256-GCM / SHA-384 | P-384 ECDSA |
+| `MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384` | `0xf043` | ML-KEM-1024 + P-384 | HKDF-SHA384 | AES-256-GCM / SHA-384 | P-384 ECDSA |
 
 ## Draft Mapping
 
@@ -26,7 +28,7 @@ The relevant HPKE assignments are:
 | ML-KEM-768 | `0x0041` |
 | ML-KEM-1024 | `0x0042` |
 | ML-KEM-1024 + P-384 | `0x0051` |
-| ML-KEM-768 + X25519 | `0x647A` |
+| ML-KEM-768 + X25519 | `0x647a` |
 | HKDF-SHA384 | `0x0002` |
 | AES-256-GCM | `0x0002` |
 
@@ -43,12 +45,13 @@ None of these ciphersuites has a final IANA MLS assignment.
 
 | Suite | Current value | Status |
 |---|---:|---|
-| X-Wing compatibility | `0x004D` | unassigned |
-| ML-KEM-768/X25519 | `0x004E` | unassigned |
+| X-Wing compatibility | `0x004d` | unassigned |
+| ML-KEM-768/X25519 | `0x004e` | unassigned |
 | ML-KEM-768/ML-DSA-65 | `0x0051` | unassigned |
 | ML-KEM-1024/P-384 signature | `0x0042` | unassigned |
 | ML-KEM-1024/ML-DSA-87 | `0x0907` | unassigned |
-| ML-KEM-1024/P-384 hybrid | `0xF043` | private use |
+| ML-KEM-1024/P-384 draft hybrid | `0xf052` | provisional |
+| ML-KEM-1024/P-384 ReallyMe compatibility | `0xf043` | private use |
 
 Until final assignments are available, communicating implementations must use
 the same ciphersuite mappings. Do not silently remap an existing identifier
@@ -71,7 +74,7 @@ Required HPKE support:
 - base-mode seal/open
 - deterministic key derivation from IKM
 - sender and receiver exporter APIs
-- split PSK sender/receiver setup
+- PSK-mode seal/open
 
 Required MLS primitives:
 
@@ -83,9 +86,9 @@ Required MLS primitives:
 - ML-DSA-65
 - ML-DSA-87
 
-OpenMLS constructs targeted-message authenticated data using the encapsulated
-key. The provider therefore uses the split PSK sender API: produce the KEM
-output first, construct the AAD, then seal using the returned context.
+OpenMLS passes targeted-message authenticated data through the HPKE PSK-mode
+seal/open boundary. The provider binds those bytes without transforming or
+truncating them.
 
 ## Nonces and Test Vectors
 

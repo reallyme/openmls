@@ -23,4 +23,9 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install protoc-gen-go # Needed to build the interop client
           echo "$(go env GOPATH)/bin" >> "${GITHUB_PATH}"
-          cargo clippy -p openmls --tests --benches --examples -p openmls_basic_credential -p cli -p interop_client -p mls-ds -p ds-lib -p openmls_libcrux_crypto -p openmls_memory_storage -p openmls_rust_crypto -p openmls_test -p openmls-wasm -p openmls_traits --all-features --locked -- -D warnings
+          # Async mode has a dedicated Clippy workflow and cannot be unified
+          # with the sync-only SQLite provider. Exercise every other feature
+          # here so this job retains its original maximal sync coverage.
+          features=$(cargo metadata --locked --no-deps --format-version 1 | jq -r \
+            '.packages[] | .name as $p | .features | del(.async) | keys[] | "\($p)/\(.)"')
+          cargo clippy -p openmls --tests --benches --examples -p openmls_basic_credential -p cli -p interop_client -p mls-ds -p ds-lib -p openmls_libcrux_crypto -p openmls_memory_storage -p openmls_rust_crypto -p openmls_test -p openmls-wasm -p openmls_traits -F "${features}" --locked -- -D warnings

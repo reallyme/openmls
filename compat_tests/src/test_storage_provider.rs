@@ -1282,7 +1282,11 @@ macro_rules! impl_storage_provider_virtual_clients_draft {
             epoch_ids: &[EpochId],
         ) -> Result<(), $error> {
             let mut data = self.0 .0.lock().unwrap();
-            delete_keyed_entries(group_id, epoch_ids, &mut data.vc_derivation_epoch_log_entries)
+            delete_keyed_entries(
+                group_id,
+                epoch_ids,
+                &mut data.vc_derivation_epoch_log_entries,
+            )
         }
 
         #[cfg(feature = "virtual-clients-draft")]
@@ -1569,7 +1573,11 @@ macro_rules! storage_helpers {
 
         /// Reads the entry stored under `(outer_key, entry_key)`, if any.
         #[cfg(feature = "virtual-clients-draft")]
-        fn read_keyed_entry<OuterKey: Key<$version>, EntryKey: Key<$version>, E: Entity<$version>>(
+        fn read_keyed_entry<
+            OuterKey: Key<$version>,
+            EntryKey: Key<$version>,
+            E: Entity<$version>,
+        >(
             outer_key: &OuterKey,
             entry_key: &EntryKey,
             table: &Table,
@@ -1628,10 +1636,7 @@ macro_rules! storage_helpers {
         /// Whether any entry in any of `table`'s per-group lists names the
         /// derivation epoch with the given serialized id.
         #[cfg(feature = "virtual-clients-draft")]
-        fn epoch_in_keyed_entries(
-            serialized_epoch_id: &[u8],
-            table: &Table,
-        ) -> Result<bool, $err> {
+        fn epoch_in_keyed_entries(serialized_epoch_id: &[u8], table: &Table) -> Result<bool, $err> {
             for value in table.values() {
                 let entries: Vec<(Vec<u8>, Vec<u8>, Vec<u8>)> = $de(value)?;
                 if entries

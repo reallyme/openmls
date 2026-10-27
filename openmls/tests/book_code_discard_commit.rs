@@ -1,6 +1,5 @@
 use openmls::{
     prelude::*,
-    schedule::psk::*,
     test_utils::{single_group_test_framework::*, storage_state::GroupStorageState},
 };
 use openmls_basic_credential::SignatureKeyPair;
@@ -394,6 +393,7 @@ fn discard_commit_external_join() {
         .with_aad(aad)
         .build_group(bob_provider, verifiable_group_info, bob_credential)
         .unwrap()
+        .leaf_node_parameters(LeafNodeParameters::builder().build())
         .load_psks(bob_provider.storage())
         .unwrap()
         .build(
@@ -421,7 +421,7 @@ fn discard_commit_external_join() {
 
 #[openmls_test]
 fn discard_commit_group_context_extensions() {
-    let unknown_extension_type = 1;
+    let unknown_extension_type = 0xff00;
 
     // Define the MlsGroup configuration
     let mls_group_create_config = MlsGroupCreateConfig::builder()
@@ -433,7 +433,7 @@ fn discard_commit_group_context_extensions() {
             Some(&[ciphersuite]),
             Some(&[ExtensionType::Unknown(unknown_extension_type)]),
             None,
-            None,
+            Some(&[CredentialType::Basic]),
         ))
         .build();
     // set up group with one member
@@ -488,7 +488,7 @@ fn discard_commit_custom_proposal() {
         Some(&[ciphersuite]),
         None,
         Some(&[ProposalType::Custom(custom_proposal_type)]),
-        None,
+        Some(&[CredentialType::Basic]),
     );
 
     // === Alice creates a group ===

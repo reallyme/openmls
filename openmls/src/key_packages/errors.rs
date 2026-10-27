@@ -6,8 +6,11 @@ use openmls_traits::types::Ciphersuite;
 use thiserror::Error;
 
 use crate::{
-    ciphersuite::signable::SignatureError, error::LibraryError,
-    prelude::ExtensionTypeNotValidInKeyPackageError, treesync::errors::LifetimeError,
+    ciphersuite::signable::SignatureError,
+    error::LibraryError,
+    extensions::ExtensionType,
+    prelude::ExtensionTypeNotValidInKeyPackageError,
+    treesync::{errors::LifetimeError, node::leaf_node::LeafNodeBuildError},
 };
 
 /// KeyPackage verify error
@@ -46,6 +49,10 @@ pub enum KeyPackageVerifyError {
     /// The provided extension is not allowed in key packages
     #[error(transparent)]
     ExtensionTypeNotValidInKeyPackage(#[from] ExtensionTypeNotValidInKeyPackageError),
+    /// The last_resort_key_package component contains data.
+    #[cfg(feature = "extensions-draft")]
+    #[error("The last_resort_key_package component data must be empty.")]
+    MalformedLastResortComponent,
 }
 
 /// KeyPackage extension support error
@@ -71,9 +78,18 @@ pub enum KeyPackageNewError {
     /// Accessing storage failed.
     #[error("Accessing storage failed.")]
     StorageError,
+    /// The LeafNode capabilities do not advertise the extension used for a
+    /// last-resort marker.
+    #[error(
+        "The LeafNode capabilities do not advertise the {0:?} extension required by a last-resort KeyPackage."
+    )]
+    MissingLastResortCapability(ExtensionType),
     /// See [`SignatureError`] for more details.
     #[error(transparent)]
     SignatureError(#[from] SignatureError),
+    /// The leaf node's capabilities don't cover what the leaf itself uses.
+    #[error(transparent)]
+    LeafNodeBuild(#[from] LeafNodeBuildError),
     /// A virtual-clients operation failed while building the key package.
     #[cfg(feature = "virtual-clients-draft")]
     #[error(transparent)]

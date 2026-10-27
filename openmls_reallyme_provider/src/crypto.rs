@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-#[cfg(feature = "targeted-messages-draft")]
-use openmls_traits::crypto::HpkeSealPskResolvedAadError;
 use openmls_traits::{
     crypto::OpenMlsCrypto,
     types::{
@@ -168,6 +166,7 @@ impl OpenMlsCrypto for CryptoProvider {
                 | Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65
                 | Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384
                 | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87
+                | Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT
                 | Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384 => return Ok(()),
                 _ => {}
             }
@@ -185,6 +184,7 @@ impl OpenMlsCrypto for CryptoProvider {
                 Ciphersuite::MLS_192_MLKEM768_AES256GCM_SHA384_MLDSA65,
                 Ciphersuite::MLS_192_MLKEM1024_AES256GCM_SHA384_P384,
                 Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87,
+                Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT,
                 Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384,
             ]
         }
@@ -461,25 +461,20 @@ impl OpenMlsCrypto for CryptoProvider {
     }
 
     #[cfg(feature = "targeted-messages-draft")]
-    fn hpke_seal_psk_resolved_aad<F, E>(
+    fn hpke_seal_psk(
         &self,
         config: HpkeConfig,
         pk_r: &[u8],
         info: &[u8],
+        aad: &[u8],
         ptxt: &[u8],
         psk: &[u8],
         psk_id: &[u8],
-        aad_builder: F,
-    ) -> Result<HpkeCiphertext, HpkeSealPskResolvedAadError<E>>
-    where
-        F: FnOnce(&[u8]) -> Result<Vec<u8>, E>,
-    {
-        let (kem_output, mut context) = hpke::setup_sender_psk(config, pk_r, info, psk, psk_id)
-            .map_err(HpkeSealPskResolvedAadError::CryptoError)?;
-        let aad = aad_builder(&kem_output).map_err(HpkeSealPskResolvedAadError::AadBuildError)?;
-        let ciphertext = context.seal(&aad, ptxt).map_err(|_| {
-            HpkeSealPskResolvedAadError::CryptoError(CryptoError::HpkeEncryptionError)
-        })?;
+    ) -> Result<HpkeCiphertext, CryptoError> {
+        let (kem_output, mut context) = hpke::setup_sender_psk(config, pk_r, info, psk, psk_id)?;
+        let ciphertext = context
+            .seal(aad, ptxt)
+            .map_err(|_| CryptoError::HpkeEncryptionError)?;
         Ok(HpkeCiphertext {
             kem_output: kem_output.into(),
             ciphertext: ciphertext.into(),

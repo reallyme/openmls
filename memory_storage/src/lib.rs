@@ -487,10 +487,11 @@ const EPOCH_SECRETS_LABEL: &[u8] = b"EpochSecrets";
 const RESUMPTION_PSK_STORE_LABEL: &[u8] = b"ResumptionPsk";
 const MESSAGE_SECRETS_LABEL: &[u8] = b"MessageSecrets";
 
+#[openmls_traits::maybe_async(AFIT)]
 impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     type Error = MemoryStorageError;
 
-    fn queue_proposal<
+    async fn queue_proposal<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ProposalRef: traits::ProposalRef<CURRENT_VERSION>,
         QueuedProposal: traits::QueuedProposal<CURRENT_VERSION>,
@@ -513,7 +514,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn write_tree<
+    async fn write_tree<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         TreeSync: traits::TreeSync<CURRENT_VERSION>,
     >(
@@ -528,7 +529,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn write_interim_transcript_hash<
+    async fn write_interim_transcript_hash<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         InterimTranscriptHash: traits::InterimTranscriptHash<CURRENT_VERSION>,
     >(
@@ -544,7 +545,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn write_context<
+    async fn write_context<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         GroupContext: traits::GroupContext<CURRENT_VERSION>,
     >(
@@ -560,7 +561,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn write_confirmation_tag<
+    async fn write_confirmation_tag<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ConfirmationTag: traits::ConfirmationTag<CURRENT_VERSION>,
     >(
@@ -576,7 +577,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn write_signature_key_pair<
+    async fn write_signature_key_pair<
         SignaturePublicKey: traits::SignaturePublicKey<CURRENT_VERSION>,
         SignatureKeyPair: traits::SignatureKeyPair<CURRENT_VERSION>,
     >(
@@ -593,7 +594,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn queued_proposal_refs<
+    async fn queued_proposal_refs<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ProposalRef: traits::ProposalRef<CURRENT_VERSION>,
     >(
@@ -603,7 +604,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read_list(PROPOSAL_QUEUE_REFS_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn queued_proposals<
+    async fn queued_proposals<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ProposalRef: traits::ProposalRef<CURRENT_VERSION>,
         QueuedProposal: traits::QueuedProposal<CURRENT_VERSION>,
@@ -625,7 +626,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
             .collect::<Result<Vec<_>, _>>()
     }
 
-    fn tree<
+    async fn tree<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         TreeSync: traits::TreeSync<CURRENT_VERSION>,
     >(
@@ -643,7 +644,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(value)
     }
 
-    fn group_context<
+    async fn group_context<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         GroupContext: traits::GroupContext<CURRENT_VERSION>,
     >(
@@ -661,7 +662,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(value)
     }
 
-    fn interim_transcript_hash<
+    async fn interim_transcript_hash<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         InterimTranscriptHash: traits::InterimTranscriptHash<CURRENT_VERSION>,
     >(
@@ -679,7 +680,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(value)
     }
 
-    fn confirmation_tag<
+    async fn confirmation_tag<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ConfirmationTag: traits::ConfirmationTag<CURRENT_VERSION>,
     >(
@@ -697,7 +698,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(value)
     }
 
-    fn signature_key_pair<
+    async fn signature_key_pair<
         SignaturePublicKey: traits::SignaturePublicKey<CURRENT_VERSION>,
         SignatureKeyPair: traits::SignatureKeyPair<CURRENT_VERSION>,
     >(
@@ -717,7 +718,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(value)
     }
 
-    fn write_key_package<
+    async fn write_key_package<
         HashReference: traits::HashReference<CURRENT_VERSION>,
         KeyPackage: traits::KeyPackage<CURRENT_VERSION>,
     >(
@@ -734,7 +735,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn write_psk<
+    async fn write_psk<
         PskId: traits::PskId<CURRENT_VERSION>,
         PskBundle: traits::PskBundle<CURRENT_VERSION>,
     >(
@@ -749,7 +750,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn write_encryption_key_pair<
+    async fn write_encryption_key_pair<
         EncryptionKey: traits::EncryptionKey<CURRENT_VERSION>,
         HpkeKeyPair: traits::HpkeKeyPair<CURRENT_VERSION>,
     >(
@@ -764,7 +765,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn key_package<
+    async fn key_package<
         KeyPackageRef: traits::HashReference<CURRENT_VERSION>,
         KeyPackage: traits::KeyPackage<CURRENT_VERSION>,
     >(
@@ -775,14 +776,17 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(KEY_PACKAGE_LABEL, &key)
     }
 
-    fn psk<PskBundle: traits::PskBundle<CURRENT_VERSION>, PskId: traits::PskId<CURRENT_VERSION>>(
+    async fn psk<
+        PskBundle: traits::PskBundle<CURRENT_VERSION>,
+        PskId: traits::PskId<CURRENT_VERSION>,
+    >(
         &self,
         psk_id: &PskId,
     ) -> Result<Option<PskBundle>, Self::Error> {
         self.read(PSK_LABEL, &serde_json::to_vec(&psk_id).unwrap())
     }
 
-    fn encryption_key_pair<
+    async fn encryption_key_pair<
         HpkeKeyPair: traits::HpkeKeyPair<CURRENT_VERSION>,
         EncryptionKey: traits::EncryptionKey<CURRENT_VERSION>,
     >(
@@ -795,7 +799,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_signature_key_pair<
+    async fn delete_signature_key_pair<
         SignaturePublicKeuy: traits::SignaturePublicKey<CURRENT_VERSION>,
     >(
         &self,
@@ -807,7 +811,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_encryption_key_pair<EncryptionKey: traits::EncryptionKey<CURRENT_VERSION>>(
+    async fn delete_encryption_key_pair<EncryptionKey: traits::EncryptionKey<CURRENT_VERSION>>(
         &self,
         public_key: &EncryptionKey,
     ) -> Result<(), Self::Error> {
@@ -817,7 +821,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_key_package<KeyPackageRef: traits::HashReference<CURRENT_VERSION>>(
+    async fn delete_key_package<KeyPackageRef: traits::HashReference<CURRENT_VERSION>>(
         &self,
         hash_ref: &KeyPackageRef,
     ) -> Result<(), Self::Error> {
@@ -830,14 +834,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.delete::<CURRENT_VERSION>(KEY_PACKAGE_LABEL, &serde_json::to_vec(&hash_ref)?)
     }
 
-    fn delete_psk<PskKey: traits::PskId<CURRENT_VERSION>>(
+    async fn delete_psk<PskKey: traits::PskId<CURRENT_VERSION>>(
         &self,
         psk_id: &PskKey,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(PSK_LABEL, &serde_json::to_vec(&psk_id)?)
     }
 
-    fn group_state<
+    async fn group_state<
         GroupState: traits::GroupState<CURRENT_VERSION>,
         GroupId: traits::GroupId<CURRENT_VERSION>,
     >(
@@ -847,7 +851,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(GROUP_STATE_LABEL, &serde_json::to_vec(&group_id)?)
     }
 
-    fn write_group_state<
+    async fn write_group_state<
         GroupState: traits::GroupState<CURRENT_VERSION>,
         GroupId: traits::GroupId<CURRENT_VERSION>,
     >(
@@ -862,14 +866,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_group_state<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_group_state<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(GROUP_STATE_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn message_secrets<
+    async fn message_secrets<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         MessageSecrets: traits::MessageSecrets<CURRENT_VERSION>,
     >(
@@ -879,7 +883,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(MESSAGE_SECRETS_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn write_message_secrets<
+    async fn write_message_secrets<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         MessageSecrets: traits::MessageSecrets<CURRENT_VERSION>,
     >(
@@ -894,14 +898,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_message_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_message_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(MESSAGE_SECRETS_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn resumption_psk_store<
+    async fn resumption_psk_store<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ResumptionPskStore: traits::ResumptionPskStore<CURRENT_VERSION>,
     >(
@@ -911,7 +915,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(RESUMPTION_PSK_STORE_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn write_resumption_psk_store<
+    async fn write_resumption_psk_store<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ResumptionPskStore: traits::ResumptionPskStore<CURRENT_VERSION>,
     >(
@@ -926,14 +930,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_all_resumption_psk_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_all_resumption_psk_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(RESUMPTION_PSK_STORE_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn own_leaf_index<
+    async fn own_leaf_index<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         LeafNodeIndex: traits::LeafNodeIndex<CURRENT_VERSION>,
     >(
@@ -943,7 +947,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(OWN_LEAF_NODE_INDEX_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn write_own_leaf_index<
+    async fn write_own_leaf_index<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         LeafNodeIndex: traits::LeafNodeIndex<CURRENT_VERSION>,
     >(
@@ -958,14 +962,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_own_leaf_index<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_own_leaf_index<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(OWN_LEAF_NODE_INDEX_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn group_epoch_secrets<
+    async fn group_epoch_secrets<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         GroupEpochSecrets: traits::GroupEpochSecrets<CURRENT_VERSION>,
     >(
@@ -975,7 +979,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(EPOCH_SECRETS_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn write_group_epoch_secrets<
+    async fn write_group_epoch_secrets<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         GroupEpochSecrets: traits::GroupEpochSecrets<CURRENT_VERSION>,
     >(
@@ -990,14 +994,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_group_epoch_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_group_epoch_secrets<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(EPOCH_SECRETS_LABEL, &serde_json::to_vec(group_id)?)
     }
 
-    fn write_encryption_epoch_key_pairs<
+    async fn write_encryption_epoch_key_pairs<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
         HpkeKeyPair: traits::HpkeKeyPair<CURRENT_VERSION>,
@@ -1020,7 +1024,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.write::<CURRENT_VERSION>(EPOCH_KEY_PAIRS_LABEL, &key, value)
     }
 
-    fn encryption_epoch_key_pairs<
+    async fn encryption_epoch_key_pairs<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
         HpkeKeyPair: traits::HpkeKeyPair<CURRENT_VERSION>,
@@ -1049,7 +1053,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(vec![])
     }
 
-    fn delete_encryption_epoch_key_pairs<
+    async fn delete_encryption_epoch_key_pairs<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
     >(
@@ -1062,7 +1066,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.delete::<CURRENT_VERSION>(EPOCH_KEY_PAIRS_LABEL, &key)
     }
 
-    fn clear_proposal_queue<
+    async fn clear_proposal_queue<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ProposalRef: traits::ProposalRef<CURRENT_VERSION>,
     >(
@@ -1087,7 +1091,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         Ok(())
     }
 
-    fn mls_group_join_config<
+    async fn mls_group_join_config<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         MlsGroupJoinConfig: traits::MlsGroupJoinConfig<CURRENT_VERSION>,
     >(
@@ -1097,7 +1101,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read(JOIN_CONFIG_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn write_mls_join_config<
+    async fn write_mls_join_config<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         MlsGroupJoinConfig: traits::MlsGroupJoinConfig<CURRENT_VERSION>,
     >(
@@ -1111,7 +1115,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.write::<CURRENT_VERSION>(JOIN_CONFIG_LABEL, &key, value)
     }
 
-    fn own_leaf_nodes<
+    async fn own_leaf_nodes<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         LeafNode: traits::LeafNode<CURRENT_VERSION>,
     >(
@@ -1121,7 +1125,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.read_list(OWN_LEAF_NODES_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn append_own_leaf_node<
+    async fn append_own_leaf_node<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         LeafNode: traits::LeafNode<CURRENT_VERSION>,
     >(
@@ -1134,28 +1138,28 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         self.append::<CURRENT_VERSION>(OWN_LEAF_NODES_LABEL, &key, value)
     }
 
-    fn delete_own_leaf_nodes<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_own_leaf_nodes<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(OWN_LEAF_NODES_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn delete_group_config<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_group_config<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(JOIN_CONFIG_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn delete_tree<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_tree<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(TREE_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn delete_confirmation_tag<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_confirmation_tag<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
@@ -1165,14 +1169,14 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn delete_context<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_context<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
         self.delete::<CURRENT_VERSION>(GROUP_CONTEXT_LABEL, &serde_json::to_vec(group_id).unwrap())
     }
 
-    fn delete_interim_transcript_hash<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_interim_transcript_hash<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
@@ -1182,7 +1186,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
         )
     }
 
-    fn remove_proposal<
+    async fn remove_proposal<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ProposalRef: traits::ProposalRef<CURRENT_VERSION>,
     >(
@@ -1200,7 +1204,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "extensions-draft")]
-    fn write_application_export_tree<
+    async fn write_application_export_tree<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ApplicationExportTree: traits::ApplicationExportTree<CURRENT_VERSION>,
     >(
@@ -1216,7 +1220,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "extensions-draft")]
-    fn application_export_tree<
+    async fn application_export_tree<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ApplicationExportTree: traits::ApplicationExportTree<CURRENT_VERSION>,
     >(
@@ -1235,7 +1239,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "extensions-draft")]
-    fn delete_application_export_tree<
+    async fn delete_application_export_tree<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         ApplicationExportTree: traits::ApplicationExportTree<CURRENT_VERSION>,
     >(
@@ -1249,7 +1253,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn write_vc_derivation_epoch_state<
+    async fn write_vc_derivation_epoch_state<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcDerivationEpochState: traits::VcDerivationEpochState<CURRENT_VERSION>,
     >(
@@ -1265,7 +1269,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn vc_derivation_epoch_state<
+    async fn vc_derivation_epoch_state<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcDerivationEpochState: traits::VcDerivationEpochState<CURRENT_VERSION>,
     >(
@@ -1281,7 +1285,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_unreferenced_vc_derivation_epoch_states<
+    async fn delete_unreferenced_vc_derivation_epoch_states<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
     >(
         &self,
@@ -1339,7 +1343,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn write_vc_emulation_binding<
+    async fn write_vc_emulation_binding<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
@@ -1366,7 +1370,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn vc_emulation_binding<
+    async fn vc_emulation_binding<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
         VcEmulationBinding: traits::VcEmulationBinding<CURRENT_VERSION>,
@@ -1389,7 +1393,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn vc_emulation_bindings<
+    async fn vc_emulation_bindings<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         VcEmulationBinding: traits::VcEmulationBinding<CURRENT_VERSION>,
     >(
@@ -1411,7 +1415,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_vc_emulation_bindings<
+    async fn delete_vc_emulation_bindings<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochKey: traits::EpochKey<CURRENT_VERSION>,
     >(
@@ -1433,7 +1437,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_all_vc_emulation_bindings<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_all_vc_emulation_bindings<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
@@ -1445,7 +1449,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn write_vc_derivation_epoch_log_entry<
+    async fn write_vc_derivation_epoch_log_entry<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcDerivationEpochLogEntry: traits::VcDerivationEpochLogEntry<CURRENT_VERSION>,
@@ -1468,7 +1472,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn vc_derivation_epoch_log_entries<
+    async fn vc_derivation_epoch_log_entries<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         VcDerivationEpochLogEntry: traits::VcDerivationEpochLogEntry<CURRENT_VERSION>,
     >(
@@ -1490,7 +1494,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_vc_derivation_epoch_log_entries<
+    async fn delete_vc_derivation_epoch_log_entries<
         GroupId: traits::GroupId<CURRENT_VERSION>,
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
     >(
@@ -1512,7 +1516,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_vc_derivation_epoch_log<GroupId: traits::GroupId<CURRENT_VERSION>>(
+    async fn delete_vc_derivation_epoch_log<GroupId: traits::GroupId<CURRENT_VERSION>>(
         &self,
         group_id: &GroupId,
     ) -> Result<(), Self::Error> {
@@ -1524,7 +1528,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn write_vc_operation_tree<
+    async fn write_vc_operation_tree<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcOperationTree: traits::VcOperationTree<CURRENT_VERSION>,
     >(
@@ -1540,7 +1544,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn vc_operation_tree<
+    async fn vc_operation_tree<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcOperationTree: traits::VcOperationTree<CURRENT_VERSION>,
     >(
@@ -1556,7 +1560,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn write_retained_key_package_material_batch<
+    async fn write_retained_key_package_material_batch<
         EpochId: traits::VcEpochId<CURRENT_VERSION>,
         VcOperationTree: traits::VcOperationTree<CURRENT_VERSION>,
         KeyPackageRef: traits::HashReference<CURRENT_VERSION>,
@@ -1594,7 +1598,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn retained_key_package_material<
+    async fn retained_key_package_material<
         KeyPackageRef: traits::HashReference<CURRENT_VERSION>,
         RetainedKeyPackageMaterial: traits::RetainedKeyPackageMaterial<CURRENT_VERSION>,
     >(
@@ -1613,7 +1617,7 @@ impl StorageProvider<CURRENT_VERSION> for MemoryStorage {
     }
 
     #[cfg(feature = "virtual-clients-draft")]
-    fn delete_retained_key_package_material<
+    async fn delete_retained_key_package_material<
         KeyPackageRef: traits::HashReference<CURRENT_VERSION>,
     >(
         &self,

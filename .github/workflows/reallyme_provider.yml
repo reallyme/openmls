@@ -98,7 +98,7 @@ jobs:
           done
           reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
             <<<"${dependency_tree}" | sort -u)"
-          if grep -Ev ' v0\.3\.13$' <<<"${reallyme_packages}"; then
+          if grep -Ev ' v0\.3\.15$' <<<"${reallyme_packages}"; then
             echo "::error::mixed ReallyMe Crypto publication versions entered production"
             exit 1
           fi
@@ -123,8 +123,8 @@ jobs:
         run: cargo clippy -p openmls_reallyme_provider --all-targets --all-features --locked -- -D warnings
       - name: Provider conformance, interoperability, and MLS flows
         run: cargo test -p openmls_reallyme_provider --all-features --locked -- --test-threads=1
-      - name: Capability defaults and explicit builder settings
-        run: cargo test -p openmls --test provider_capabilities --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked
+      - name: Capability policy public API
+        run: cargo test -p openmls --test capabilities_policy_api --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked
       - name: Virtual-client capabilities and cross-suite derivation
         run: |
           cargo test -p openmls --lib --features reallyme-provider,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft --locked \

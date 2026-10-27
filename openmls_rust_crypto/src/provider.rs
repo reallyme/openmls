@@ -11,8 +11,6 @@ use hkdf::Hkdf;
 use hpke::Hpke;
 use hpke_rs_crypto::types as hpke_types;
 use hpke_rs_rust_crypto::HpkeRustCrypto;
-#[cfg(feature = "targeted-messages-draft")]
-use openmls_traits::crypto::HpkeSealPskResolvedAadError;
 use openmls_traits::{
     crypto::OpenMlsCrypto,
     random::OpenMlsRand,
@@ -55,21 +53,23 @@ impl Default for RustCrypto {
 }
 
 #[inline(always)]
-fn kem_mode(kem: HpkeKemType) -> Result<hpke_types::KemAlgorithm, CryptoError> {
+fn kem_mode(kem: HpkeKemType) -> hpke_types::KemAlgorithm {
     match kem {
-        HpkeKemType::DhKemP256 => Ok(hpke_types::KemAlgorithm::DhKemP256),
-        HpkeKemType::DhKemP384 => Ok(hpke_types::KemAlgorithm::DhKemP384),
-        HpkeKemType::DhKemP521 => Ok(hpke_types::KemAlgorithm::DhKemP521),
-        HpkeKemType::DhKem25519 => Ok(hpke_types::KemAlgorithm::DhKem25519),
-        HpkeKemType::DhKem448 => Ok(hpke_types::KemAlgorithm::DhKem448),
+        HpkeKemType::DhKemP256 => hpke_types::KemAlgorithm::DhKemP256,
+        HpkeKemType::DhKemP384 => hpke_types::KemAlgorithm::DhKemP384,
+        HpkeKemType::DhKemP521 => hpke_types::KemAlgorithm::DhKemP521,
+        HpkeKemType::DhKem25519 => hpke_types::KemAlgorithm::DhKem25519,
+        HpkeKemType::DhKem448 => hpke_types::KemAlgorithm::DhKem448,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKemType::XWingKemDraft6 => Ok(hpke_types::KemAlgorithm::XWingDraft06),
+        HpkeKemType::XWingKemDraft6 => hpke_types::KemAlgorithm::XWingDraft06,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKemType::MlKem768 => Ok(hpke_types::KemAlgorithm::MlKem768),
+        HpkeKemType::MlKem768 => hpke_types::KemAlgorithm::MlKem768,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKemType::MlKem1024 => Ok(hpke_types::KemAlgorithm::MlKem1024),
+        HpkeKemType::MlKem1024 => hpke_types::KemAlgorithm::MlKem1024,
         #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-        HpkeKemType::MlKem1024P384 => Err(CryptoError::UnsupportedCiphersuite),
+        HpkeKemType::MlKem768P256 => hpke_types::KemAlgorithm::MlKem768P256,
+        #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+        HpkeKemType::MlKem1024P384 => hpke_types::KemAlgorithm::MlKem1024P384,
     }
 }
 
@@ -108,6 +108,8 @@ impl OpenMlsCrypto for RustCrypto {
             | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA384_MLDSA87
             | Ciphersuite::MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87
             | Ciphersuite::MLS_128_MLKEM768_AES256GCM_SHA384_Ed25519 => Ok(()),
+            // This includes the ML-KEM + P-256/P-384 hybrid ciphersuites, because
+            // hpke-rs-rust-crypto does not implement those KEMs.
             _ => Err(CryptoError::UnsupportedCiphersuite),
         }
     }
@@ -507,7 +509,7 @@ impl OpenMlsCrypto for RustCrypto {
         aad: &[u8],
         ptxt: &[u8],
     ) -> Result<types::HpkeCiphertext, CryptoError> {
-        let (kem_output, ciphertext) = hpke_from_config(config)?
+        let (kem_output, ciphertext) = hpke_from_config(config)
             .seal(&pk_r.into(), info, aad, ptxt, None, None, None)
             .map_err(|e| match e {
                 hpke::HpkeError::InvalidInput => CryptoError::InvalidLength,
@@ -527,7 +529,7 @@ impl OpenMlsCrypto for RustCrypto {
         info: &[u8],
         aad: &[u8],
     ) -> Result<Vec<u8>, CryptoError> {
-        hpke_from_config(config)?
+        hpke_from_config(config)
             .open(
                 input.kem_output.as_slice(),
                 &sk_r.into(),
@@ -549,7 +551,7 @@ impl OpenMlsCrypto for RustCrypto {
         exporter_context: &[u8],
         exporter_length: usize,
     ) -> Result<(Vec<u8>, ExporterSecret), CryptoError> {
-        let (kem_output, context) = hpke_from_config(config)?
+        let (kem_output, context) = hpke_from_config(config)
             .setup_sender(&pk_r.into(), info, None, None, None)
             .map_err(|_| CryptoError::SenderSetupError)?;
         let exported_secret = context
@@ -567,7 +569,7 @@ impl OpenMlsCrypto for RustCrypto {
         exporter_context: &[u8],
         exporter_length: usize,
     ) -> Result<ExporterSecret, CryptoError> {
-        let context = hpke_from_config(config)?
+        let context = hpke_from_config(config)
             .setup_receiver(enc, &sk_r.into(), info, None, None, None)
             .map_err(|_| CryptoError::ReceiverSetupError)?;
         let exported_secret = context
@@ -581,7 +583,7 @@ impl OpenMlsCrypto for RustCrypto {
         config: HpkeConfig,
         ikm: &[u8],
     ) -> Result<types::HpkeKeyPair, CryptoError> {
-        let kp = hpke_from_config(config)?
+        let kp = hpke_from_config(config)
             .derive_key_pair(ikm)
             .map_err(|e| match e {
                 hpke::HpkeError::InvalidInput => CryptoError::InvalidLength,
@@ -605,7 +607,7 @@ impl OpenMlsCrypto for RustCrypto {
         psk: &[u8],
         psk_id: &[u8],
     ) -> Result<Vec<u8>, CryptoError> {
-        hpke_psk_from_config(config)?
+        hpke_psk_from_config(config)
             .open(
                 input.kem_output.as_slice(),
                 &sk_r.into(),
@@ -620,35 +622,22 @@ impl OpenMlsCrypto for RustCrypto {
     }
 
     #[cfg(feature = "targeted-messages-draft")]
-    fn hpke_seal_psk_resolved_aad<F, E>(
+    fn hpke_seal_psk(
         &self,
         config: HpkeConfig,
         pk_r: &[u8],
         info: &[u8],
+        aad: &[u8],
         ptxt: &[u8],
         psk: &[u8],
         psk_id: &[u8],
-        aad_builder: F,
-    ) -> Result<HpkeCiphertext, HpkeSealPskResolvedAadError<E>>
-    where
-        F: FnOnce(&[u8]) -> Result<Vec<u8>, E>,
-    {
-        let mut hpke =
-            hpke_psk_from_config(config).map_err(HpkeSealPskResolvedAadError::CryptoError)?;
-        let (kem_output, mut context) = hpke
-            .setup_sender(&pk_r.into(), info, Some(psk), Some(psk_id), None)
-            .map_err(|_| HpkeSealPskResolvedAadError::CryptoError(CryptoError::SenderSetupError))?;
-        let aad = aad_builder(kem_output.as_slice())
-            .map_err(HpkeSealPskResolvedAadError::AadBuildError)?;
-        let ciphertext = context.seal(&aad, ptxt).map_err(|e| match e {
-            hpke::HpkeError::InvalidInput => {
-                HpkeSealPskResolvedAadError::CryptoError(CryptoError::InvalidLength)
-            }
-            hpke::HpkeError::InsufficientRandomness => {
-                HpkeSealPskResolvedAadError::CryptoError(CryptoError::InsufficientRandomness)
-            }
-            _ => HpkeSealPskResolvedAadError::CryptoError(CryptoError::HpkeEncryptionError),
-        })?;
+    ) -> Result<HpkeCiphertext, CryptoError> {
+        let (kem_output, ciphertext) = hpke_psk_from_config(config)
+            .seal(&pk_r.into(), info, aad, ptxt, Some(psk), Some(psk_id), None)
+            .map_err(|e| match e {
+                hpke::HpkeError::InvalidInput => CryptoError::InvalidLength,
+                _ => CryptoError::CryptoLibraryError,
+            })?;
         Ok(HpkeCiphertext {
             kem_output: kem_output.into(),
             ciphertext: ciphertext.into(),
@@ -666,23 +655,23 @@ impl OpenMlsCrypto for RustCrypto {
     }
 }
 
-fn hpke_from_config(config: HpkeConfig) -> Result<Hpke<HpkeRustCrypto>, CryptoError> {
-    Ok(Hpke::<HpkeRustCrypto>::new(
+fn hpke_from_config(config: HpkeConfig) -> Hpke<HpkeRustCrypto> {
+    Hpke::<HpkeRustCrypto>::new(
         hpke::Mode::Base,
-        kem_mode(config.0)?,
+        kem_mode(config.0),
         kdf_mode(config.1),
         aead_mode(config.2),
-    ))
+    )
 }
 
 #[cfg(feature = "targeted-messages-draft")]
-fn hpke_psk_from_config(config: HpkeConfig) -> Result<Hpke<HpkeRustCrypto>, CryptoError> {
-    Ok(Hpke::<HpkeRustCrypto>::new(
+fn hpke_psk_from_config(config: HpkeConfig) -> Hpke<HpkeRustCrypto> {
+    Hpke::<HpkeRustCrypto>::new(
         hpke::Mode::Psk,
-        kem_mode(config.0)?,
+        kem_mode(config.0),
         kdf_mode(config.1),
         aead_mode(config.2),
-    ))
+    )
 }
 
 impl OpenMlsRand for RustCrypto {

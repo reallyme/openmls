@@ -40,10 +40,17 @@ fn complete_mls_flow(ciphersuite: Ciphersuite) {
         credential: BasicCredential::new(b"Bob".to_vec()).into(),
         signature_key: bob_signer.public_key().into(),
     };
-    // Global OpenMLS defaults intentionally cover draft suites implemented by
-    // several providers. Bind each leaf to this provider's exact executable
-    // set so it cannot advertise an unsupported or unintended suite.
-    let capabilities = Capabilities::for_provider(alice_provider.crypto());
+    // Bind each leaf to this provider's exact executable suite set. Explicit
+    // capabilities must also name the credential the leaf actually uses;
+    // upstream intentionally rejects incomplete explicit advertisements.
+    let supported_ciphersuites = alice_provider.crypto().supported_ciphersuites();
+    let capabilities = Capabilities::new(
+        None,
+        Some(&supported_ciphersuites),
+        None,
+        None,
+        Some(&[CredentialType::Basic]),
+    );
 
     let bob_key_package = KeyPackage::builder()
         .leaf_node_capabilities(capabilities.clone())
@@ -277,4 +284,9 @@ fn complete_mlkem1024_ml_dsa_87_mls_flow() {
 #[test]
 fn complete_hybrid_mlkem1024_p384_mls_flow() {
     complete_mls_flow(Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384);
+}
+
+#[test]
+fn complete_draft_hybrid_mlkem1024_p384_mls_flow() {
+    complete_mls_flow(Ciphersuite::MLS_192_MLKEM1024P384_AES256GCM_SHA384_P384_DRAFT);
 }

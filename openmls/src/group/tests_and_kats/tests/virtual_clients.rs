@@ -63,10 +63,12 @@ fn virtual_client_derivation_tests_have_executable_provider_lanes() {
     assert_sources(&openmls_reallyme_provider::Provider::in_memory());
 }
 
-/// `Capabilities` declaring `AppDataDictionary` support.
+/// `Capabilities` declaring `AppDataDictionary` support, for a leaf built at
+/// `ciphersuite`.
 fn vc_capabilities(ciphersuite: Ciphersuite) -> Capabilities {
     Capabilities::builder()
         .ciphersuites(vec![ciphersuite])
+        .credentials(vec![crate::credentials::CredentialType::Basic])
         .extensions(vec![ExtensionType::AppDataDictionary])
         .build()
 }
@@ -171,6 +173,7 @@ fn vc_commit_path_material_imports_into_group_ciphersuite() {
         new_credential(bob_provider, b"Bob", ciphersuite.signature_algorithm());
     let bob_key_package = KeyPackage::builder()
         .key_package_extensions(Extensions::empty())
+        .leaf_node_capabilities(vc_capabilities(ciphersuite))
         .build(ciphersuite, bob_provider, &bob_signer, bob_credential)
         .expect("bob KP build")
         .key_package()

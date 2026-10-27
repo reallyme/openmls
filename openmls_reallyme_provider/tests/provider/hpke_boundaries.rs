@@ -1,14 +1,8 @@
 use super::*;
 
-#[cfg(feature = "targeted-messages-draft")]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum AadBuildError {}
-
 #[test]
 #[cfg(feature = "targeted-messages-draft")]
 fn hpke_psk_mode_round_trips_and_rejects_short_psks() {
-    use openmls_traits::crypto::HpkeSealPskResolvedAadError;
-
     let crypto = CryptoProvider;
     let keypair = crypto
         .derive_hpke_keypair(
@@ -19,15 +13,16 @@ fn hpke_psk_mode_round_trips_and_rejects_short_psks() {
     let psk = [0x42; 32];
     let psk_id = b"reallyme-targeted-message-psk";
     let plaintext = b"targeted message payload";
+    let aad = b"targeted-message-aad";
     let ciphertext = crypto
-        .hpke_seal_psk_resolved_aad(
+        .hpke_seal_psk(
             CIPHERSUITE.hpke_config(),
             &keypair.public,
             b"targeted-message-info",
+            aad,
             plaintext,
             &psk,
             psk_id,
-            |kem_output| Ok::<Vec<u8>, AadBuildError>(kem_output.to_vec()),
         )
         .expect("valid PSK-mode encryption should succeed");
     assert_eq!(
@@ -37,7 +32,7 @@ fn hpke_psk_mode_round_trips_and_rejects_short_psks() {
                 &ciphertext,
                 &keypair.private,
                 b"targeted-message-info",
-                ciphertext.kem_output.as_slice(),
+                aad,
                 &psk,
                 psk_id,
             )
@@ -46,21 +41,16 @@ fn hpke_psk_mode_round_trips_and_rejects_short_psks() {
     );
 
     let short_psk = [0x24; 31];
-    let result = crypto.hpke_seal_psk_resolved_aad(
+    let result = crypto.hpke_seal_psk(
         CIPHERSUITE.hpke_config(),
         &keypair.public,
         b"targeted-message-info",
+        aad,
         plaintext,
         &short_psk,
         psk_id,
-        |kem_output| Ok::<Vec<u8>, AadBuildError>(kem_output.to_vec()),
     );
-    assert!(matches!(
-        result,
-        Err(HpkeSealPskResolvedAadError::CryptoError(
-            CryptoError::SenderSetupError
-        ))
-    ));
+    assert!(matches!(result, Err(CryptoError::SenderSetupError)));
 }
 
 #[test]

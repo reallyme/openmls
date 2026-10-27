@@ -22,12 +22,14 @@ fn app_ephemeral_proposals() {
     let bob_provider = &Provider::default();
 
     // Include the AppEphemeral proposal type in the LeafNode capabilities
+    // Capabilities set explicitly are taken at face value, so they must also
+    // cover what the leaf itself uses: its ciphersuite and credential type.
     let capabilities = Capabilities::new(
         None,
         Some(&[ciphersuite]),
         None,
         Some(&[ProposalType::AppEphemeral]),
-        None,
+        Some(&[CredentialType::Basic]),
     );
 
     // Define the MlsGroup configuration
@@ -174,7 +176,7 @@ fn app_ephemeral_capabilities(ciphersuite: Ciphersuite) -> Capabilities {
         Some(&[ciphersuite]),
         None,
         Some(&[ProposalType::AppEphemeral]),
-        None,
+        Some(&[CredentialType::Basic]),
     )
 }
 

@@ -11,6 +11,7 @@ fn advertises_only_reallyme_reviewed_suites() {
             MLKEM768_MLDSA65_SUITE,
             PURE_MLKEM1024_P384_SUITE,
             CNSA_MLKEM1024_MLDSA87_SUITE,
+            DRAFT_HYBRID_MLKEM1024_P384_SUITE,
             HYBRID_MLKEM1024_P384_SUITE,
         ]
     );
@@ -75,6 +76,16 @@ fn reviewed_suite_codepoints_and_components_are_exact() {
             HashType::Sha2_384,
             AeadType::Aes256Gcm,
             SignatureScheme::MLDSA87,
+        ),
+        (
+            DRAFT_HYBRID_MLKEM1024_P384_SUITE,
+            0xf052,
+            HpkeKemType::MlKem1024P384,
+            HpkeKdfType::HkdfSha384,
+            HpkeAeadType::AesGcm256,
+            HashType::Sha2_384,
+            AeadType::Aes256Gcm,
+            SignatureScheme::ECDSA_SECP384R1_SHA384,
         ),
         (
             HYBRID_MLKEM1024_P384_SUITE,
