@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT
 
@@ -98,7 +98,7 @@ jobs:
           done
           reallyme_packages="$(grep -Eo 'reallyme-crypto[^ ]* v[^ )]+' \
             <<<"${dependency_tree}" | sort -u)"
-          if grep -Ev ' v0\.3\.15$' <<<"${reallyme_packages}"; then
+          if grep -Ev ' v0\.3\.17$' <<<"${reallyme_packages}"; then
             echo "::error::mixed ReallyMe Crypto publication versions entered production"
             exit 1
           fi

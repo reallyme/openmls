@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT
 

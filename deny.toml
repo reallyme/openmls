@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe LLC
+# SPDX-FileCopyrightText: Copyright © 2026 ReallyMe Technologies Limited
 #
 # SPDX-License-Identifier: MIT
 
@@ -11,15 +11,6 @@ multiple-versions = "deny"
 wildcards = "deny"
 highlight = "all"
 skip = [
-    # The optional upstream virtual-client FF1 adapter is still built on the
-    # RustCrypto 0.8 generation, while ReallyMe Crypto uses the audited 0.9
-    # generation. These five entries are the exact transitive split; do not
-    # broaden this exception to the rest of the dependency tree.
-    { crate = "aes@0.8.4", reason = "Required by the optional upstream FF1 virtual-client adapter" },
-    { crate = "cipher@0.4.4", reason = "Required by aes 0.8.4 in the optional FF1 adapter" },
-    { crate = "cpufeatures@0.2.17", reason = "Required by aes 0.8.4 in the optional FF1 adapter" },
-    { crate = "crypto-common@0.1.7", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
-    { crate = "inout@0.1.4", reason = "Required by cipher 0.4.4 in the optional FF1 adapter" },
     # Current serde and thiserror derive macros use Syn 3, while tls_codec and
     # several cryptographic derive macros still use Syn 2. Both are build-time
     # proc-macro dependencies and do not create duplicate runtime parsers.

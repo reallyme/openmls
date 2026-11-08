@@ -46,14 +46,14 @@ Do not use `--all-features` for the `cargo deny` release gate: that would enable
 `interop-tests`, `mls-flow-tests`, and `test-utils`, which are test adapters,
 not production inputs.
 
-ReallyMe Crypto 0.3.13 exposes only the HPKE components this provider needs:
+ReallyMe Crypto 0.3.17 exposes only the HPKE components this provider needs:
 ML-KEM-768, ML-KEM-1024, ML-KEM-1024/P-384, X-Wing, HKDF-SHA256,
 HKDF-SHA384, AES-256-GCM, and ChaCha20-Poly1305 where required. Release checks
 must show that the production graph contains only those HPKE components, does
 not expose deterministic test-vector APIs, and uses a single `reallyme-crypto`
 patch version.
 
-Version 0.3.13 is the reviewed dependency baseline for this release. Focused
+Version 0.3.17 is the reviewed dependency baseline for this release. Focused
 interoperability, large-context, and generic external-join regressions must pass
 against the registry dependency before changing that baseline.
 
@@ -80,6 +80,21 @@ serialization, storage, credential, or FFI boundary.
 Before a public production release, review the publishing controls for every
 ReallyMe Crypto crate used by the provider. Record the publisher or trusted
 publishing workflow identity, crate versions, and lockfile checksums.
+
+## Historical Compatibility Fixtures
+
+`compat_tests` deliberately locks historical OpenMLS 0.7.4 and 0.8.1
+credential providers so storage migrations remain executable. Those providers
+depend on `p256` 0.13.2 and therefore `crypto-bigint` 0.5.5, which is affected
+by RUSTSEC-2026-0387. No patched `crypto-bigint` release satisfies that
+historical dependency graph.
+
+This exception is limited to the unpublished, workspace-excluded migration
+test crate. It must not enter a production dependency graph, release artifact,
+or deployed binary. The provider-rooted `cargo deny` gate and the current-code
+lockfiles must remain free of the advisory. Re-evaluate the fixture when the
+historical migration inputs can be generated without executing the old
+credential providers.
 
 ## Notices And Publishing
 

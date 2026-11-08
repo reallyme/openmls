@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.9.2 (2026-11-09)
 
 ### Added
 
@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned the fork release line with OpenMLS 0.9.2 while incorporating upstream
+  `main` through commit `28369d5b48608bef4ddf8371d91503b0f3852bb3`.
+- Updated the ReallyMe provider to ReallyMe Crypto 0.3.17 and its ReallyMe
+  Codec 0.3.2 dependency baseline.
 - [#2202](https://github.com/openmls/openmls/pull/2202): The secret export functions on `MlsGroup`, `StagedCommit`, `StagedWelcome`, `ProcessedWelcome` and `ProcessedMessage` now return `ExportedSecret<T>` instead of `Vec<u8>`. The new type zeroizes the secret on drop and is parameterized with a marker struct recording which function produced the secret. Use `as_slice()` to access the secret bytes.
 - [#2234](https://github.com/openmls/openmls/pull/2234): Raised MSRV to Rust 1.94.
 - [#2205](https://github.com/openmls/openmls/pull/2205): `Capabilities` no longer carry hardcoded defaults (a fixed ciphersuite list, `CredentialType::Basic`); every list but `versions` is empty unless the caller sets it. Leaf construction now validates capabilities against the leaf's own ciphersuite, credential type and extensions, plus what the group demands of it (its `RequiredCapabilitiesExtension`, its GroupContext extensions, and the credential types of its members), with a new `CapabilitiesPolicy` (`Reject`/`Widen`) controlling whether unset capabilities are rejected or auto-widened to match the leaf. The group's required capabilities are never widened. A self-update proposal whose leaf doesn't support the GroupContext extensions now fails with `ProposeSelfUpdateError::LeafNodeUpdateError` instead of `ProposeSelfUpdateError::UnsupportedGroupContextExtensions`.

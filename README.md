@@ -154,9 +154,9 @@ attributions and notices.
 ## Copyright and Trademarks
 
 Upstream OpenMLS portions are copyright © 2020 OpenMLS Authors. ReallyMe
-modifications are copyright © 2026 ReallyMe LLC.
+modifications are copyright © 2026 ReallyMe Technologies Limited.
 
 OpenMLS is a trademark or trade name of the OpenMLS project and its respective
 owners. ReallyMe does not claim ownership of the OpenMLS name or marks.
 
-ReallyMe<sup>®</sup> is a registered trademark of ReallyMe LLC.
+ReallyMe<sup>®</sup> is a registered trademark of ReallyMe Technologies Limited.

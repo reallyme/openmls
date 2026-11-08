@@ -6,7 +6,7 @@ other than the MIT License used by this repository.
 | Component | License | Copyright |
 |---|---|---|
 | [OpenMLS](https://github.com/openmls/openmls) | MIT | OpenMLS Authors |
-| [ReallyMe Crypto](https://github.com/reallyme/crypto) | Apache-2.0 | ReallyMe LLC |
+| [ReallyMe Crypto](https://github.com/reallyme/crypto) | Apache-2.0 | ReallyMe Technologies Limited |
 
 ## mls_interop_proto
 
