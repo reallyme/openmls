@@ -2540,7 +2540,7 @@ checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "openmls"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
  "base64 0.23.1",
  "clap",
@@ -3241,11 +3241,11 @@ dependencies = [
 
 [[package]]
 name = "reallyme-buffa"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31bd0cb979778af72031e54eb095b4cf2f0ebd656a2384555314ecfa959c4c8d"
+checksum = "1fc2662256cc4682ea0add47beb0df80bfe69d2ab0fc2fb5525771d712e285eb"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.23.1",
  "bytes",
  "foldhash 0.1.5",
  "hashbrown 0.15.5",
@@ -3260,9 +3260,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf1587389c38704cd7d2d3e5e541b4ad9380031505314d69b6437a9b3db09ab7"
+checksum = "04d9adee15be559d90a4c8a51182af4dab230bc73ce752096cb1cb88b909ce7d"
 dependencies = [
  "der",
  "reallyme-codec-proto",
@@ -3271,9 +3271,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-base64url"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "180f351fc814b55d62604b3aafda58ddd077550fb361d2c1f54ceca27b544408"
+checksum = "aff2949e3ac2498af4747c3a7d82d80b788a464035f668153c4d237b9a582a95"
 dependencies = [
  "base64 0.23.1",
  "thiserror",
@@ -3282,9 +3282,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-jcs"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77b0de7afcd27187feaaa42d9b3b3c30d472e4e697d98534924f8e20eee6e3ad"
+checksum = "d658fc4c8bed542073d483e8543de6703154ba33ef7907d2ef54bce087fd210c"
 dependencies = [
  "itoa",
  "ryu-js",
@@ -3296,9 +3296,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-multibase"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "528574f9f9bbdde21d37aad53757b53c3d592e1ac3cf2283c651948ddb8248f0"
+checksum = "22796124c9f786dcc8bc669c3b408e5018f48995c51bdff46234eb1f5e60c328"
 dependencies = [
  "base64 0.23.1",
  "bs58",
@@ -3309,18 +3309,18 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-multicodec"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5125e4490f9c29d0d9818e12561dded708b5c2d638b48deb2e93231b8dc905aa"
+checksum = "a1df902e2f8cad07b0b4f528dbf1408e56a466c36e45b38e0b6aae51cd45dcad"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "reallyme-codec-multikey"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b89ba3c17a4e4c9c182238956429b590dfd5aea0b2fa976e4dc7e29d40e4871"
+checksum = "9918db7b11bb8d5ad1914f3ae70e4a6991c200d4a256fec76108f41b6d1adeda"
 dependencies = [
  "reallyme-codec-multibase",
  "reallyme-codec-multicodec",
@@ -3330,9 +3330,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-pem"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ffae059159de7a9a392ebf39158cdecec2bf4f5785c0ccce48b172794c2569f"
+checksum = "9c3f9abacd6daf0ab6b7f5e85d08a4c0f9bb00d23b8e60d241fe1507397722c6"
 dependencies = [
  "base64 0.23.1",
  "thiserror",
@@ -3341,9 +3341,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-codec-proto"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80f4cf8372f6ecf73de9a6f0b15f295482579090deacd2c44d6b7da75042ca92"
+checksum = "f2ef69a50f005eee4540d76dbbd5c3db8a33a4c12082563d323b3681f2d708e3"
 dependencies = [
  "base64 0.23.1",
  "reallyme-buffa",
@@ -3355,9 +3355,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1e647f4cda4e39ddfb14d476cff1581f5d437cd3a65926b80a0068543a11612"
+checksum = "c2c2cb667bc735c1dc5df19703dbb0d234f62ec11c6ce1f76c5c9c2a5d80a2df"
 dependencies = [
  "reallyme-crypto-aes-kw",
  "reallyme-crypto-aes256-gcm",
@@ -3403,9 +3403,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-aes-kw"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce4890e34db0756103605f68d2273127fc4d437f961528d0dd99f1f2c82686b8"
+checksum = "a18dd8a79b6d7d6965fcea9c6c4ccafe305b1c138ce08557ad1c090a26467261"
 dependencies = [
  "aes-kw",
  "reallyme-crypto-core",
@@ -3414,9 +3414,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-aes256-gcm"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "364617ee0008e3742d63d071c62ba42d5dfe04ea0810daa4caaeb5a4639f7ac9"
+checksum = "5fb0ae83c4caead102603cb5aaea26595fadf973e2968ff3e7254c65d1189876"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -3427,9 +3427,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-aes256-gcm-siv"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfaa1e27f62bb7aa2e805852259d972c65739abd12b5de9b273ec4f99b2b03bd"
+checksum = "37bd7c21205bd396245d7c628d2676b670ca1179c90c5f084972b868c90ad1e1"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -3440,9 +3440,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-argon2id"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebed06998eec6270b83154caceb0292dedc59f883cb8415efeb04fb256dfc7e3"
+checksum = "5b555555c9e44255924cb9a80316e030bdfcf269029724f8cc816335311449d0"
 dependencies = [
  "argon2",
  "getrandom 0.4.3",
@@ -3452,9 +3452,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-chacha20-poly1305"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "596d7e0b64bd9352e2ffcc84385ebbd47d893129e741b171f105788964bbcafc"
+checksum = "65d1657de89dad079be184bf058e5234d6c59e89e414de64a607a5d5bc8615e7"
 dependencies = [
  "chacha20poly1305",
  "getrandom 0.4.3",
@@ -3464,9 +3464,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-concat-kdf"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9dc0b25d0d39b729a4381054113b8d06857e812884cd8cb9e4136ac9972f2a8"
+checksum = "36eadb7574b6249f0a359c7a78c4592694177ef1b5318bd5f2b91815662ee63e"
 dependencies = [
  "reallyme-crypto-core",
  "sha2",
@@ -3475,9 +3475,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-constant-time"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4506163d6d0d631b5cefcd07632c2e02830f0e68d3aeacd366b1ff686807d24b"
+checksum = "53857dae4ff7c847f90d8199591ffb006f5bcdad68a4f79340d04dcfdda1cc34"
 dependencies = [
  "reallyme-crypto-core",
  "subtle",
@@ -3485,18 +3485,18 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-core"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42519c3c6ec13aef9e869e31b0a6afc775abd63d49be0a3ec231b812945fc4dd"
+checksum = "9d6ddae08eb09bf1f538093df6ab3d4ae3defc330054e79d7ba14bff2b064c17"
 dependencies = [
  "reallyme-crypto-proto",
 ]
 
 [[package]]
 name = "reallyme-crypto-csprng"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82ff592431ee5da9de064f4be5b96a921ef43e38d94aa44848f614dcf36ba66f"
+checksum = "1b384ab8b16205cb68455929c8e84b8b0fc2e1d113f406bf36f19dff069bfea7"
 dependencies = [
  "getrandom 0.4.3",
  "reallyme-crypto-core",
@@ -3507,9 +3507,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-dispatch"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d5868402c9cfcc2409dc1ad5587ab6bf6e0a4f22ba4f377494cd710dd2c1962"
+checksum = "68d355afa1146c77280f7ae8a584063421bd7ab8d38b28e08f9e80ee11829536"
 dependencies = [
  "reallyme-codec-multikey",
  "reallyme-crypto-core",
@@ -3532,9 +3532,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ed25519"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dcc64d8ea966d8e63b223477d0253e445c39d721fbb0bb931ff9b85e3f92643"
+checksum = "ddf513eca797d76bee5e1a09c1600b96a1c9cca18211fff9434905fccd00c206"
 dependencies = [
  "curve25519-dalek",
  "ed25519-dalek",
@@ -3545,9 +3545,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-hkdf"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7768c9ae9a85b6d6830a7ec3b5e6958ff82e0aeabd9f58b9d013a32180a3a0cf"
+checksum = "837a21efee8ebcf119fd4d9de038c77a6ca98d1efae1f292a76c51ccea0205de"
 dependencies = [
  "getrandom 0.4.3",
  "hkdf",
@@ -3560,9 +3560,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-hmac"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f6deadc45beecdcb31cdeafe1d4a0eb08318c32b9ada7986fc7c13a9a1e21d"
+checksum = "cf9b0d7685e7ccd19377eb0d1fd3a9cb2ad2ba19b425f0da78d1729498364792"
 dependencies = [
  "hmac",
  "reallyme-crypto-core",
@@ -3573,9 +3573,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-hpke"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95fad518034372f3c6d4ab8004abc9b922520658ad76e4475d0fdb22f4e12281"
+checksum = "c59422fd4a735cd06836a9634c866155afd81ed0ba54f3c9ae7cb3c6262a3ac9"
 dependencies = [
  "aes-gcm",
  "chacha20poly1305",
@@ -3600,9 +3600,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-jwk"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f56611d53956bbc92f92bfb447bc40d721d8ae66f3b05eb2b56e4fc0b8cf48c1"
+checksum = "54c86d8516d47e75424de9f50afd71990c753b4272e0bde4e516657622cf03f8"
 dependencies = [
  "reallyme-codec-base64url",
  "reallyme-codec-jcs",
@@ -3617,9 +3617,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-jwk-multikey"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f20dbbe65df459c731930bdf770f9757205e4cbf27f1ef83b2be122e33bbf40"
+checksum = "64a8e50084325c022ee29dabb158f80fdefb7bfae715d10e42fc9f68d9c3e9f7"
 dependencies = [
  "reallyme-codec-multikey",
  "reallyme-crypto-core",
@@ -3629,9 +3629,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-kmac"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca674c1d00ef7e5a173cb33cdfb568ede26f2d2652c666568a9cdecc0bc0c864"
+checksum = "5c3945e526dd6d955a49872759e9b2628796739f2834e4988c33dbcae55a4722"
 dependencies = [
  "reallyme-crypto-core",
  "sha3 0.12.0",
@@ -3641,9 +3641,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-dsa-44"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f37c7340f67d74786fe9c46083c62145ff50d647d11a697ff5ade401ae3b04a"
+checksum = "4b1168e58169df5563723e8dd2fc8ae21fa2139d05d167edb7855b1104f81630"
 dependencies = [
  "getrandom 0.4.3",
  "ml-dsa",
@@ -3653,9 +3653,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-dsa-65"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0757c2f7cb2e69f9a2d6fdb157b3c752ed37c10336846f301982a3d4b4949d5"
+checksum = "afaaa38bc2036dd980c26d65351bbddd9c13e0eec528849a88ecd43cca1b49c0"
 dependencies = [
  "getrandom 0.4.3",
  "ml-dsa",
@@ -3665,9 +3665,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-dsa-87"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7370888240366f96785774f2ccc65a443bd3d3727bb03b82920e3fd07b6a2d0"
+checksum = "586fea03c393d220e3122e55691dd51ac162009a8fb34133bfd2ac27669b460a"
 dependencies = [
  "getrandom 0.4.3",
  "ml-dsa",
@@ -3677,9 +3677,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-kem-1024"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91c51e58a6ac07a6aadd552feeb21ef181c7379df9e3b41a56e1fc3ee96bc93d"
+checksum = "1c4a033adbcfa4f4d424a1309a86634253a475d8bf17e35f2da9f93577d10ba4"
 dependencies = [
  "getrandom 0.4.3",
  "ml-kem",
@@ -3689,9 +3689,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-kem-512"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "232348d200aa34f5ed317b2a5e7a6cce057ba7e7bcf499de660dc3dff7a9cf42"
+checksum = "26eb2b34f4c76f11a3c5f789cdd35ef664f3628c4cb61b568f36232300d79949"
 dependencies = [
  "getrandom 0.4.3",
  "ml-kem",
@@ -3701,9 +3701,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-ml-kem-768"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d07a2ec7474d52d4a4bfa29ed59f44c6678f59c518d6730377c1b809fc75dfa6"
+checksum = "8b9ed5078d017495dbf7e364e06d51e41e97f900aa68f803d72658bdf5147e23"
 dependencies = [
  "getrandom 0.4.3",
  "ml-kem",
@@ -3713,9 +3713,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-p256"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff310876e26ae46d3888b1afca8cd5b97eb8f92f9cb9c022d9d557fe4eb51976"
+checksum = "4068cd9f046cd13dfe588317a048151c1cec412bcd3bdb7253a9f8c5170e396b"
 dependencies = [
  "ecdsa",
  "getrandom 0.4.3",
@@ -3729,9 +3729,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-p384"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ae03b9c7251f62b14d688b270292517d640b7db3ca9fa7035da9fa7586d7a9c"
+checksum = "056b36a4052e9e90c8a1f1c1dbf6ae7e2caa56db2a5d5614ed2bd89eb940e6dc"
 dependencies = [
  "ecdsa",
  "getrandom 0.4.3",
@@ -3743,9 +3743,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-p521"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f63e32c2580d32adbaab8ea23b479488f5c31d5a03406c931b9e43bb1f7c24dc"
+checksum = "83041a55b9db95cb574cfb56b0ad3c85f259618d09ae2ee1289a48e2d561a97c"
 dependencies = [
  "ecdsa",
  "getrandom 0.4.3",
@@ -3757,9 +3757,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-pbkdf2"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb01ff6b7144fa69ba9cd9f39d4cf5bff4c52efa3f9f2037dff0454af99e3106"
+checksum = "af5c784b18aa19527ea11894e8555cb3ebbb6551c1e2bf1b78ffe72c7e13d596"
 dependencies = [
  "pbkdf2",
  "reallyme-crypto-core",
@@ -3769,9 +3769,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-poseidon2"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adb6ca53fd506df05005f0a761c389412cd5cd05c9d0c746c1fdf48a98a70043"
+checksum = "40fe8d3b8e3c6a48047d98fed4e4c56e5d30f9e3cd65e7180f36a05d66a78097"
 dependencies = [
  "ark-bn254",
  "ark-ff",
@@ -3783,9 +3783,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-proto"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3ed51098b67d0ff6d65edc3381f22a88383218919d58327a0f7c6887bca7f6b"
+checksum = "82573f3c234f67e5c6c126f356c0867b0036ba2d6449356a2ba1942fd490ed8f"
 dependencies = [
  "base64 0.23.1",
  "reallyme-buffa",
@@ -3798,9 +3798,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-rsa"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35567c1144d46d52cdede3645922d69d055b35560f81600182ec8a3f8a39f5ac"
+checksum = "a2cab0800ed246aae494f6fe4aa17486ea575d0b5b38d5e76be3ecb39b91d47d"
 dependencies = [
  "const-oid",
  "crypto-bigint",
@@ -3816,9 +3816,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-secp256k1"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed1c744674b496bcef2906100e94f109dac949cb8dfa8a5eac29069016ea7de7"
+checksum = "c915c3bf88992e270d99fb68c7d723384e9314a113eb7be1fd77fb6cdaeecbf4"
 dependencies = [
  "ecdsa",
  "getrandom 0.4.3",
@@ -3830,9 +3830,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-sha2"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6d9422bf9c29a7a3248fe864cfaa27cbc93970e3cd8b6ef65a58afab52ba42"
+checksum = "d44de45bfc27f5581ac69b9beb309855676a87904d05ccb480e74418f268df07"
 dependencies = [
  "reallyme-crypto-proto",
  "sha2",
@@ -3841,9 +3841,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-sha2-256"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be56dcd7a08b7766338fd0a78c1d7688f335f73b541edae1dc3ff09e9500a734"
+checksum = "5dae81ad22942f13ca5f7429bf485474145ff1c361580e152ec2888f00efeceb"
 dependencies = [
  "getrandom 0.4.3",
  "reallyme-crypto-proto",
@@ -3853,9 +3853,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-sha3"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e556c1334700c9ccfd7a39ba2c262d47dec31eece2adcc24cf4806067c564830"
+checksum = "506bfbffe1386b66b6565532357c6a02dd204163a6b20b874d8c6bcd3f539227"
 dependencies = [
  "reallyme-crypto-proto",
  "sha3 0.12.0",
@@ -3865,9 +3865,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-sha3-256"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95964bf5e45b7993c8b66f17608b4d0fd00d44ff28ef2df75d621b3f73639185"
+checksum = "8b9ef73902368450776e46a9baabc8e4ab2eea8cecabde1e47c08f2e6501ac0a"
 dependencies = [
  "getrandom 0.4.3",
  "reallyme-crypto-proto",
@@ -3877,9 +3877,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-signer"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaf88075ac8afd2d5ffb1bcb134bcc1a3f7ecbdc1a1414a530c222405e7a1090"
+checksum = "a1291f8f40964d69f0fdc93738846d84ae072da3ab58ab630895457a244d87cb"
 dependencies = [
  "reallyme-crypto-core",
  "reallyme-crypto-dispatch",
@@ -3890,9 +3890,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-slh-dsa"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e830bd20d155131fcef80bcb752133171a0454bdac59490f4248e075b3d553fa"
+checksum = "ece3bfbe0d94e2aab73b02e8e64a25eb1cad95ce1c822517775f86e68204c004"
 dependencies = [
  "reallyme-crypto-core",
  "reallyme-crypto-csprng",
@@ -3902,9 +3902,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-x-wing"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9a6fe59d09a3f0e47acd76745a3fea0af603094b24f4fb7b684956f7f0dbc0f"
+checksum = "8992ddca7cb428c8873bbfeb71fd13c1ab78950590862da3dcad54bb100c5f74"
 dependencies = [
  "getrandom 0.4.3",
  "ml-kem",
@@ -3917,9 +3917,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-x25519"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff7f7e6812235c77637aca72e05e4b20547de25daedbd95d03ac6d796ea05d0b"
+checksum = "ffa0ab3c1c6dd29b7a5d3396b9b3a4a872d5b1a08f0094bc5d5bfcbb814db281"
 dependencies = [
  "getrandom 0.4.3",
  "reallyme-crypto-core",
@@ -3929,9 +3929,9 @@ dependencies = [
 
 [[package]]
 name = "reallyme-crypto-x448"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7d9eec1e52d3008603d27e0fd3229825d2a2dcc7c2fde07a320ad5ca85017bb"
+checksum = "b27f54548362e958ca3ca3439a1f1f0fe7f01ab3464ddccad088f80842728371"
 dependencies = [
  "getrandom 0.4.3",
  "reallyme-crypto-core",

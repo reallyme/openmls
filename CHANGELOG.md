@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.4 (2026-11-15)
+
+### Changed
+
+- Pinned the ReallyMe provider to ReallyMe Crypto 0.4.1, which uses ReallyMe
+  Codec 0.4.2 and ReallyMe Buffa 0.1.2. The production graph now resolves to a
+  single `base64` version, so the duplicate-version audit exception was removed.
+
 ## 0.9.3 (2026-11-14)
 
 ### Changed
