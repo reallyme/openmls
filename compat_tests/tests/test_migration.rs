@@ -314,6 +314,40 @@ fn is_expected_schema_diff(path: &str) -> bool {
 /// Check that a migrated GroupMigration bundle matches the exported one,
 /// field-by-field ignoring the expected differences.
 fn assert_bundle_preserved(before: &serde_json::Value, after: &serde_json::Value) {
+    // Older groups have no virtual-client state. Check that migration supplies
+    // the defaults before excluding the new fields from the comparison.
+    #[cfg(feature = "virtual-clients-draft")]
+    let normalized_after = {
+        let mut after = after.clone();
+        let group = after["group"]
+            .as_object_mut()
+            .expect("group state is an object");
+        assert_eq!(
+            group.remove("emulation_group"),
+            Some(serde_json::json!(false))
+        );
+        let config = group
+            .get_mut("mls_group_config")
+            .and_then(serde_json::Value::as_object_mut)
+            .expect("group config is an object");
+        assert_eq!(
+            config.remove("vc_derivation_epoch_retention_policy"),
+            Some(serde_json::json!({"MaxEpochs": 5}))
+        );
+        if let Some(commit) = after
+            .pointer_mut("/group/group_state/PendingCommit/Member")
+            .and_then(serde_json::Value::as_object_mut)
+        {
+            assert_eq!(
+                commit.remove("marks_new_vc_derivation_epoch"),
+                Some(serde_json::json!(false))
+            );
+        }
+        after
+    };
+    #[cfg(feature = "virtual-clients-draft")]
+    let after = &normalized_after;
+
     let mut diffs = Vec::new();
     diff_json("$", before, after, &mut diffs);
     let unexpected: Vec<_> = diffs

@@ -19,13 +19,22 @@ that same revision.
 ## Required Gates
 
 Run the gates that match the release scope. Provider releases must include the
-provider and OpenMLS corpus checks below.
+provider and OpenMLS corpus checks below. Run the sync workspace and the async
+test workspace separately because Cargo unifies the storage trait features
+within each build and the SQLite provider requires sync traits.
 
 ```sh
 cargo fmt --all -- --check
-cargo check --workspace --all-features --locked
-cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-CARGO_PROFILE_TEST_DEBUG=0 cargo test --workspace --all-features --locked -- --test-threads=1
+sync_features=$(cargo metadata --locked --no-deps --format-version 1 | jq -r \
+  '.packages[] | .name as $p | .features | del(.async) | keys[] | "\($p)/\(.)"')
+test_features=$(printf '%s\n' "$sync_features" | grep -vxE \
+  'openmls/generate-kats|openmls_libcrux_crypto/legacy-pq-key-derivation')
+cargo check --workspace --features "$sync_features" --locked
+cargo clippy --workspace --all-targets --features "$sync_features" --locked -- -D warnings
+CARGO_PROFILE_TEST_DEBUG=0 cargo test --workspace --features "$test_features" --locked -- --test-threads=1
+cargo test -p openmls_libcrux_crypto --features legacy-pq-key-derivation --locked
+cargo clippy --manifest-path openmls_async_tests/Cargo.toml --all-targets --all-features --locked -- -D warnings
+cargo test --manifest-path openmls_async_tests/Cargo.toml --all-features --locked
 cargo deny --manifest-path openmls_reallyme_provider/Cargo.toml \
   --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
   --locked --exclude-dev check --deny warnings
@@ -34,6 +43,9 @@ cargo test -p openmls_reallyme_provider --all-features --locked
 cargo test -p openmls --lib --features reallyme-provider --locked -- --test-threads=1
 ```
 
+The test run excludes the vector generators so it validates the checked-in
+fixtures. Run the legacy libcrux derivation in its own test lane because it
+intentionally derives different X-Wing keys from the current provider.
 The workspace test gate is intentionally single-threaded. The all-provider,
 all-ciphersuite test binary can exceed ordinary CI memory limits when Rust runs
 many post-quantum test cases concurrently; a SIGKILL is not a passing result.
@@ -46,23 +58,24 @@ Do not use `--all-features` for the `cargo deny` release gate: that would enable
 `interop-tests`, `mls-flow-tests`, and `test-utils`, which are test adapters,
 not production inputs.
 
-ReallyMe Crypto 0.3.17 exposes only the HPKE components this provider needs:
+The ReallyMe Crypto 0.4.0 configuration enables the following HPKE components:
 ML-KEM-768, ML-KEM-1024, ML-KEM-1024/P-384, X-Wing, HKDF-SHA256,
 HKDF-SHA384, AES-256-GCM, and ChaCha20-Poly1305 where required. Release checks
 must show that the production graph contains only those HPKE components, does
-not expose deterministic test-vector APIs, and uses a single `reallyme-crypto`
-patch version.
+not expose deterministic test-vector APIs, and uses exactly version 0.4.0 for
+every `reallyme-crypto` crate.
 
-Version 0.3.17 is the reviewed dependency baseline for this release. Focused
-interoperability, large-context, and generic external-join regressions must pass
-against the registry dependency before changing that baseline.
+The 0.4.0 protobuf runtime pins ReallyMe Buffa 0.1.1. Its JSON support requires
+`base64` 0.22.1, while Crypto and Codec use 0.23.1. The provider audit allows
+that exact duplicate and the Zlib license of Buffa's `foldhash` 0.1.5 dependency.
+Focused interoperability, large-context, and generic external-join regressions
+must pass against the registry dependency before changing the baseline.
 
 ## Draft Suites
 
-The standards-tracking PQ suites remain IETF draft material. None of the six
-ReallyMe provider suites has a final IANA MLS ciphersuite assignment. Five
-values occupy currently unassigned registry space; the ML-KEM-1024/P-384
-hybrid suite uses a private-use value.
+The standards-tracking PQ suites remain IETF draft material. The seven ReallyMe
+provider suites use the provisional and compatibility values documented in
+[PQ_MLS_SUITES.md](PQ_MLS_SUITES.md).
 
 Enable these suites only when every participating implementation pins the same
 fork revision and suite registry. Do not advertise them to arbitrary public MLS

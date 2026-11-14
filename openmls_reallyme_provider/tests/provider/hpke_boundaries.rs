@@ -226,6 +226,39 @@ fn hpke_large_mls_contexts_roundtrip_and_bind_every_byte() {
 }
 
 #[test]
+fn hpke_receiver_distinguishes_invalid_key_from_authentication_failure() {
+    let crypto = CryptoProvider;
+    let keypair = crypto
+        .derive_hpke_keypair(CIPHERSUITE.hpke_config(), &[0x42; 32])
+        .expect("fixture key derivation should succeed");
+    let aad = b"authenticated context";
+    let ciphertext = crypto
+        .hpke_seal(
+            CIPHERSUITE.hpke_config(),
+            &keypair.public,
+            &[],
+            aad,
+            b"payload",
+        )
+        .expect("fixture encryption should succeed");
+
+    assert_eq!(
+        crypto.hpke_open(CIPHERSUITE.hpke_config(), &ciphertext, &[], &[], aad),
+        Err(CryptoError::InvalidLength)
+    );
+    assert_eq!(
+        crypto.hpke_open(
+            CIPHERSUITE.hpke_config(),
+            &ciphertext,
+            &keypair.private,
+            &[],
+            b"different context"
+        ),
+        Err(CryptoError::HpkeDecryptionError)
+    );
+}
+
+#[test]
 fn randomness_supports_fixed_and_dynamic_requests() {
     let crypto = CryptoProvider;
     let fixed = crypto

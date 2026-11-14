@@ -21,7 +21,7 @@ this fork to add post-quantum MLS ciphersuites backed by
 [`reallyme-crypto`](https://github.com/reallyme/crypto), while staying close to
 upstream OpenMLS.
 
-The fork currently supports six PQ ciphersuites. The cryptographic backend is
+The fork currently supports seven PQ ciphersuites. The cryptographic backend is
 pinned to an exact release, and changes to cryptographic dependencies or
 provisional ciphersuite mappings go through the fork's release review.
 

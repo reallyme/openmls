@@ -11,6 +11,9 @@ multiple-versions = "deny"
 wildcards = "deny"
 highlight = "all"
 skip = [
+    # Buffa requires base64 0.22 for JSON support. Crypto and Codec require
+    # base64 0.23, and neither range accepts the other version.
+    { crate = "base64@0.22.1", reason = "Required by the JSON feature of the pinned ReallyMe Buffa runtime" },
     # Current serde and thiserror derive macros use Syn 3, while tls_codec and
     # several cryptographic derive macros still use Syn 2. Both are build-time
     # proc-macro dependencies and do not create duplicate runtime parsers.
@@ -28,6 +31,11 @@ allow = [
     "Unicode-3.0",
 ]
 confidence-threshold = 0.8
+
+[[licenses.exceptions]]
+# Buffa uses foldhash via hashbrown for its protobuf map implementation.
+allow = ["Zlib"]
+crate = "foldhash@0.1.5"
 
 # The deployable provider graph may use crates.io and local workspace paths,
 # but it must not acquire code from an unreviewed registry or Git repository.

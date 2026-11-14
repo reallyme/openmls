@@ -1733,7 +1733,7 @@ dependencies = [
 
 [[package]]
 name = "openmls"
-version = "0.9.2"
+version = "0.9.3"
 dependencies = [
  "itertools 0.15.0",
  "log",
@@ -1804,7 +1804,7 @@ dependencies = [
  "openmls 0.7.1",
  "openmls 0.7.4",
  "openmls 0.8.1",
- "openmls 0.9.2",
+ "openmls 0.9.3",
  "openmls_basic_credential 0.4.1",
  "openmls_basic_credential 0.5.0",
  "openmls_basic_credential 0.6.0",

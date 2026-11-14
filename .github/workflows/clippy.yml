@@ -28,4 +28,4 @@ jobs:
           # here so this job retains its original maximal sync coverage.
           features=$(cargo metadata --locked --no-deps --format-version 1 | jq -r \
             '.packages[] | .name as $p | .features | del(.async) | keys[] | "\($p)/\(.)"')
-          cargo clippy -p openmls --tests --benches --examples -p openmls_basic_credential -p cli -p interop_client -p mls-ds -p ds-lib -p openmls_libcrux_crypto -p openmls_memory_storage -p openmls_rust_crypto -p openmls_test -p openmls-wasm -p openmls_traits -F "${features}" --locked -- -D warnings
+          cargo clippy -p openmls --tests --benches --examples -p openmls_basic_credential -p interop_client -p openmls_libcrux_crypto -p openmls_memory_storage -p openmls_rust_crypto -p openmls_test -p openmls-wasm -p openmls_traits -F "${features}" --locked -- -D warnings

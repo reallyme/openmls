@@ -134,7 +134,7 @@ pub(crate) fn sender_export(
         exporter_context,
         output_length,
     })
-    .map_err(map_sender_export_error)?;
+    .map_err(|error| map_operation_error(error, CryptoError::ExporterError))?;
     let encapsulated_key = core::mem::take(&mut output.encapsulated_key);
     let mut exporter_secret = output.into_exporter_secret();
     Ok((
@@ -161,7 +161,7 @@ pub(crate) fn receiver_export(
         exporter_context,
         output_length,
     })
-    .map_err(map_receiver_export_error)?;
+    .map_err(|error| map_receiver_error(error, CryptoError::ExporterError))?;
     // `HpkeExporterSecret` intentionally exposes only a borrow. The copy is
     // immediately moved into OpenMLS' zeroizing `SecretVLBytes` wrapper.
     Ok(output.as_slice().to_vec().into())
@@ -205,7 +205,7 @@ pub(crate) fn open_psk(
     )?;
     let mut output = context
         .open(aad, input.ciphertext.as_slice())
-        .map_err(map_open_psk_error)?;
+        .map_err(map_open_error)?;
     Ok(core::mem::take(&mut *output.plaintext))
 }
 
@@ -227,7 +227,7 @@ pub(crate) fn setup_sender_psk(
         psk,
         psk_id,
     })
-    .map_err(map_sender_setup_error)?;
+    .map_err(|error| map_operation_error(error, CryptoError::SenderSetupError))?;
     Ok((output.encapsulated_key, output.context))
 }
 
@@ -251,216 +251,54 @@ fn setup_receiver_psk(
         psk,
         psk_id,
     })
-    .map_err(map_receiver_setup_error)
+    .map_err(|error| map_receiver_error(error, CryptoError::ReceiverSetupError))
+}
+
+// Crypto 0.4 reports canonical reasons shared across primitives. Keep the MLS
+// operation as the fallback so authentication and backend failures retain the
+// error for the operation the caller invoked.
+fn map_operation_error(error: HpkeError, operation_error: CryptoError) -> CryptoError {
+    match error {
+        HpkeError::PROVIDER_UNSUPPORTED_ALGORITHM => CryptoError::UnsupportedCiphersuite,
+        HpkeError::PRIMITIVE_INVALID_PUBLIC_KEY => CryptoError::InvalidPublicKey,
+        HpkeError::PROVIDER_RANDOMNESS_UNAVAILABLE => CryptoError::InsufficientRandomness,
+        HpkeError::PRIMITIVE_RESOURCE_LIMIT_EXCEEDED => CryptoError::TooMuchData,
+        _ => operation_error,
+    }
+}
+
+fn map_receiver_error(error: HpkeError, operation_error: CryptoError) -> CryptoError {
+    match error {
+        HpkeError::PRIMITIVE_INVALID_PRIVATE_KEY | HpkeError::PRIMITIVE_MALFORMED_CIPHERTEXT => {
+            CryptoError::InvalidLength
+        }
+        _ => map_operation_error(error, operation_error),
+    }
 }
 
 fn map_seal_error(error: HpkeError) -> CryptoError {
     match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::InvalidInfoLength
-        | HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidRandomness => CryptoError::InvalidLength,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidExporterLength
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed => CryptoError::HpkeEncryptionError,
-        _ => CryptoError::HpkeEncryptionError,
+        HpkeError::PRIMITIVE_INVALID_LENGTH | HpkeError::PRIMITIVE_INVALID_PARAMETER => {
+            CryptoError::InvalidLength
+        }
+        _ => map_operation_error(error, CryptoError::HpkeEncryptionError),
     }
 }
 
 fn map_open_error(error: HpkeError) -> CryptoError {
     match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidRandomness => CryptoError::InvalidLength,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::OpenFailed
-        | HpkeError::SealFailed
-        | HpkeError::ExportFailed
-        | HpkeError::InvalidExporterLength
-        | HpkeError::KeyGenerationFailed => CryptoError::HpkeDecryptionError,
-        _ => CryptoError::HpkeDecryptionError,
-    }
-}
-
-fn map_sender_export_error(error: HpkeError) -> CryptoError {
-    match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidExporterLength
-        | HpkeError::InvalidRandomness
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed => CryptoError::ExporterError,
-        _ => CryptoError::ExporterError,
-    }
-}
-
-fn map_receiver_export_error(error: HpkeError) -> CryptoError {
-    match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext => CryptoError::InvalidLength,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidExporterLength
-        | HpkeError::InvalidRandomness
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed => CryptoError::ExporterError,
-        _ => CryptoError::ExporterError,
+        HpkeError::PRIMITIVE_INVALID_LENGTH | HpkeError::PRIMITIVE_INVALID_PARAMETER => {
+            CryptoError::InvalidLength
+        }
+        _ => map_receiver_error(error, CryptoError::HpkeDecryptionError),
     }
 }
 
 fn map_keygen_error(error: HpkeError) -> CryptoError {
     match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidInputKeyMaterial => CryptoError::InvalidLength,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::InvalidPublicKey
-        | HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidExporterLength
-        | HpkeError::LengthOverflow
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed
-        | HpkeError::InvalidRandomness => CryptoError::CryptoLibraryError,
+        HpkeError::PROVIDER_UNSUPPORTED_ALGORITHM => CryptoError::UnsupportedCiphersuite,
+        HpkeError::PROVIDER_RANDOMNESS_UNAVAILABLE => CryptoError::InsufficientRandomness,
+        HpkeError::PRIMITIVE_INVALID_LENGTH => CryptoError::InvalidLength,
         _ => CryptoError::CryptoLibraryError,
-    }
-}
-
-#[cfg(feature = "targeted-messages-draft")]
-fn map_sender_setup_error(error: HpkeError) -> CryptoError {
-    match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidExporterLength
-        | HpkeError::InvalidRandomness
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed => CryptoError::SenderSetupError,
-        _ => CryptoError::SenderSetupError,
-    }
-}
-
-#[cfg(feature = "targeted-messages-draft")]
-fn map_receiver_setup_error(error: HpkeError) -> CryptoError {
-    match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext => CryptoError::InvalidLength,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidExporterLength
-        | HpkeError::InvalidRandomness
-        | HpkeError::SealFailed
-        | HpkeError::OpenFailed
-        | HpkeError::ExportFailed
-        | HpkeError::KeyGenerationFailed => CryptoError::ReceiverSetupError,
-        _ => CryptoError::ReceiverSetupError,
-    }
-}
-
-#[cfg(feature = "targeted-messages-draft")]
-fn map_open_psk_error(error: HpkeError) -> CryptoError {
-    match error {
-        HpkeError::UnsupportedKem
-        | HpkeError::UnsupportedKdf
-        | HpkeError::UnsupportedAead
-        | HpkeError::UnsupportedSuite => CryptoError::UnsupportedCiphersuite,
-        HpkeError::InvalidPublicKey => CryptoError::InvalidPublicKey,
-        HpkeError::InvalidPrivateKey
-        | HpkeError::InvalidEncapsulatedKey
-        | HpkeError::InvalidCiphertext
-        | HpkeError::InvalidPsk
-        | HpkeError::InvalidPskIdentifier
-        | HpkeError::InvalidInfoLength
-        | HpkeError::InvalidInputKeyMaterial
-        | HpkeError::InvalidRandomness => CryptoError::InvalidLength,
-        HpkeError::LengthOverflow => CryptoError::TooMuchData,
-        HpkeError::RandomnessUnavailable => CryptoError::InsufficientRandomness,
-        HpkeError::OpenFailed
-        | HpkeError::SealFailed
-        | HpkeError::ExportFailed
-        | HpkeError::InvalidExporterLength
-        | HpkeError::KeyGenerationFailed => CryptoError::HpkeDecryptionError,
-        _ => CryptoError::HpkeDecryptionError,
     }
 }

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.3 (2026-11-14)
+
+### Changed
+
+- Pinned the ReallyMe provider to ReallyMe Crypto 0.4.0, which uses ReallyMe
+  Codec 0.4.0 and ReallyMe Buffa 0.1.1. The provider maps the new canonical
+  HPKE failure reasons to the existing OpenMLS error types.
+
+### Removed
+
+- Removed the unmaintained example CLI and delivery service, including their
+  workspace and CI entries. This incorporates upstream commit
+  [`6100df3fb1d8`](https://github.com/openmls/openmls/commit/6100df3fb1d8c3eeab53e349fcbd621f98c44fe2).
+
 ## 0.9.2 (2026-11-09)
 
 ### Added

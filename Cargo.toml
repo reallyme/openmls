@@ -6,11 +6,8 @@ members = [
     "openmls_reallyme_provider",
     "libcrux_crypto",
     "fuzz",
-    "cli",
     "interop_client",
     "memory_storage",
-    "delivery-service/ds",
-    "delivery-service/ds-lib",
     "basic_credential",
     "openmls-wasm",
     "openmls_test",
@@ -31,7 +28,7 @@ thiserror = { version = "^2.0" }
 # 0.2.11 is the first version that rewrites `-> impl Future` returns in sync mode.
 maybe-async = "0.2.11"
 
-openmls = { version = "0.9.2", path = "openmls" }
+openmls = { version = "0.9.3", path = "openmls" }
 
 openmls_traits = { version = "0.6.0", path = "traits" }
 openmls_test = { version = "0.3.0", path = "openmls_test" }
