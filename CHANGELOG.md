@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.9.6 (2026-11-15)
+
+### Changed
+
+- Call the published `reallyme-crypto-hpke` 0.4.2 crate directly with the
+  `openmls` feature. The production provider no longer enables Buffa's JSON
+  runtime through HPKE. The direct calls use the same implementation as the
+  0.9.5 adapter.
+- Remove the production license exception for `foldhash` 0.1.5 after Buffa
+  leaves the provider's production dependency graph.
+
 ## 0.9.5 (2026-11-15)
 
 ### Changed

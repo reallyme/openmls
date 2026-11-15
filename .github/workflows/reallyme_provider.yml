@@ -67,7 +67,7 @@ jobs:
             --features extensions-draft,draft-ietf-mls-pq-ciphersuites,targeted-messages-draft,virtual-clients-draft \
             --locked \
             --edges normal,build,features)"
-          if grep -E 'openmls_memory_storage|reallyme-crypto feature "test-vectors"|openmls v' \
+          if grep -E 'openmls_memory_storage|reallyme-crypto(-hpke)? feature "test-vectors"|openmls v' \
             <<<"${dependency_tree}"; then
             echo "::error::test-only dependency leaked into the production provider graph"
             exit 1
@@ -82,8 +82,14 @@ jobs:
             echo "::error::the full or draft-05 HPKE feature surface leaked into production"
             exit 1
           fi
+          if grep -E 'reallyme-crypto-hpke feature "proto"|reallyme-buffa feature "json"' \
+            <<<"${dependency_tree}"; then
+            echo "::error::HPKE protobuf or Buffa JSON features entered production"
+            exit 1
+          fi
           for required_feature in \
-            "reallyme-crypto feature \"hpke-openmls\"" \
+            "reallyme-crypto-hpke feature \"openmls\"" \
+            "reallyme-crypto-hpke feature \"kem-ml-kem-768\"" \
             "reallyme-crypto-hpke feature \"kem-ml-kem-1024\"" \
             "reallyme-crypto-hpke feature \"kem-ml-kem-1024-p384\"" \
             "reallyme-crypto-hpke feature \"kem-x-wing\"" \

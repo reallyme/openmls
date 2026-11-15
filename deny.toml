@@ -29,11 +29,6 @@ allow = [
 ]
 confidence-threshold = 0.8
 
-[[licenses.exceptions]]
-# Buffa uses foldhash via hashbrown for its protobuf map implementation.
-allow = ["Zlib"]
-crate = "foldhash@0.1.5"
-
 # The deployable provider graph may use crates.io and local workspace paths,
 # but it must not acquire code from an unreviewed registry or Git repository.
 # Git dependencies needed by upstream-only tools remain outside this

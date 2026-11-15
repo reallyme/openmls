@@ -65,9 +65,10 @@ must show that the production graph contains only those HPKE components, does
 not expose deterministic test-vector APIs, and uses exactly version 0.4.2 for
 every `reallyme-crypto` crate.
 
-The 0.4.2 protobuf runtime pins ReallyMe Buffa 0.1.2. Buffa, Crypto, and
-Codec 0.4.3 resolve to `base64` 0.23.1 in the production graph. The provider
-audit allows the Zlib license of Buffa's `foldhash` 0.1.5 dependency.
+The provider uses the published `reallyme-crypto-hpke` crate with its
+`openmls` feature and default features disabled. The production HPKE graph
+excludes the `proto` feature, and the production provider graph excludes Buffa
+JSON. Development tests use the ReallyMe Crypto facade for deterministic vectors.
 Focused interoperability, large-context, and generic external-join regressions
 must pass against the registry dependency before changing the baseline.
 

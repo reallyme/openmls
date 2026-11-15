@@ -1,6 +1,6 @@
 [package]
 name = "openmls"
-version = "0.9.5"
+version = "0.9.6"
 authors = ["OpenMLS Authors"]
 edition = "2021"
 rust-version.workspace = true

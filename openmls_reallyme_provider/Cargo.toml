@@ -25,7 +25,6 @@ reallyme-crypto = { version = "=0.4.2", default-features = false, optional = tru
     "csprng",
     "ed25519",
     "hmac",
-    "hpke-openmls",
     "ml-dsa-65",
     "ml-dsa-87",
     "p384",
@@ -33,6 +32,8 @@ reallyme-crypto = { version = "=0.4.2", default-features = false, optional = tru
     "sha3",
     "x-wing",
 ] }
+# The narrow crate profile supplies the Rust HPKE API without ProtoJSON.
+crypto_hpke = { package = "reallyme-crypto-hpke", version = "=0.4.2", default-features = false, optional = true, features = ["openmls"] }
 reallyme_crypto_sha3 = { package = "reallyme-crypto-sha3", version = "=0.4.2", optional = true }
 secrecy = "0.10.3"
 thiserror = { workspace = true }
@@ -48,11 +49,13 @@ fpe = { version = "0.7", optional = true }
 default = ["native"]
 native = [
     "dep:reallyme-crypto",
+    "dep:crypto_hpke",
     "dep:reallyme_crypto_sha3",
     "reallyme-crypto/native",
 ]
 wasm = [
     "dep:reallyme-crypto",
+    "dep:crypto_hpke",
     "dep:reallyme_crypto_sha3",
     "reallyme-crypto/wasm",
 ]

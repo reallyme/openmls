@@ -2,21 +2,21 @@
 //
 // SPDX-License-Identifier: MIT
 
+use crypto_hpke::{
+    self as reallyme_hpke, HpkeError, HpkeOpenRequest, HpkeReceiverExportRequest, HpkeSealRequest,
+    HpkeSenderExportRequest, HpkeSuite,
+};
+#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
+use crypto_hpke::{
+    HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM, HPKE_MLKEM1024_HKDF_SHA384_AES256GCM,
+    HPKE_MLKEM768_HKDF_SHA384_AES256GCM, HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305,
+    HPKE_XWING_HKDF_SHA384_AES256GCM,
+};
 use openmls_traits::types::{
     CryptoError, ExporterSecret, HpkeCiphertext, HpkeConfig, HpkeKdfType, HpkeKeyPair, KemOutput,
 };
 #[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
 use openmls_traits::types::{HpkeAeadType, HpkeKemType};
-use reallyme_crypto::hpke::{
-    self as reallyme_hpke, HpkeError, HpkeOpenRequest, HpkeReceiverExportRequest, HpkeSealRequest,
-    HpkeSenderExportRequest, HpkeSuite,
-};
-#[cfg(feature = "draft-ietf-mls-pq-ciphersuites")]
-use reallyme_crypto::hpke::{
-    HPKE_MLKEM1024P384_HKDF_SHA384_AES256GCM, HPKE_MLKEM1024_HKDF_SHA384_AES256GCM,
-    HPKE_MLKEM768_HKDF_SHA384_AES256GCM, HPKE_XWING_HKDF_SHA256_CHACHA20POLY1305,
-    HPKE_XWING_HKDF_SHA384_AES256GCM,
-};
 
 const HKDF_MAXIMUM_BLOCK_COUNT: usize = 255;
 // HPKE-PQ requires at least 32 bytes for hybrid KEM DeriveKeyPair inputs.
@@ -28,7 +28,7 @@ const SHA384_OUTPUT_LENGTH: usize = 48;
 const SHA512_OUTPUT_LENGTH: usize = 64;
 
 #[cfg(feature = "targeted-messages-draft")]
-use reallyme_crypto::hpke::{
+use crypto_hpke::{
     HpkePskIdRef, HpkePskReceiverSetupRequest, HpkePskRef, HpkePskSenderSetupRequest,
 };
 fn reallyme_suite(config: &HpkeConfig) -> Result<HpkeSuite, CryptoError> {
@@ -65,7 +65,7 @@ pub(crate) fn seal(
     plaintext: &[u8],
 ) -> Result<HpkeCiphertext, CryptoError> {
     let suite = reallyme_suite(&config)?;
-    let output = reallyme_hpke::seal_base_raw(&HpkeSealRequest {
+    let output = reallyme_hpke::seal_base(&HpkeSealRequest {
         suite,
         recipient_public_key: public_key,
         info,
@@ -87,7 +87,7 @@ pub(crate) fn open(
     aad: &[u8],
 ) -> Result<Vec<u8>, CryptoError> {
     let suite = reallyme_suite(&config)?;
-    let mut output = reallyme_hpke::open_base_raw(&HpkeOpenRequest {
+    let mut output = reallyme_hpke::open_base(&HpkeOpenRequest {
         suite,
         encapsulated_key: input.kem_output.as_slice(),
         recipient_private_key: secret_key,
@@ -110,8 +110,7 @@ pub(crate) fn derive_keypair(config: HpkeConfig, ikm: &[u8]) -> Result<HpkeKeyPa
     // The patched hpke-rs dependency implements the current HPKE-PQ labeled
     // DeriveKeyPair procedure for X-Wing. Delegate every X-Wing profile to the
     // backend so ReallyMe and libcrux derive matching MLS tree key material.
-    let keypair =
-        reallyme_hpke::derive_keypair_from_ikm_raw(suite, ikm).map_err(map_keygen_error)?;
+    let keypair = reallyme_hpke::derive_keypair_from_ikm(suite, ikm).map_err(map_keygen_error)?;
     Ok(HpkeKeyPair {
         private: keypair.private_key().into(),
         public: keypair.public_key,
@@ -127,7 +126,7 @@ pub(crate) fn sender_export(
 ) -> Result<(KemOutput, ExporterSecret), CryptoError> {
     validate_export_length(&config, output_length)?;
     let suite = reallyme_suite(&config)?;
-    let mut output = reallyme_hpke::sender_export_raw(&HpkeSenderExportRequest {
+    let mut output = reallyme_hpke::sender_export(&HpkeSenderExportRequest {
         suite,
         recipient_public_key: public_key,
         info,
@@ -153,7 +152,7 @@ pub(crate) fn receiver_export(
 ) -> Result<ExporterSecret, CryptoError> {
     validate_export_length(&config, output_length)?;
     let suite = reallyme_suite(&config)?;
-    let output = reallyme_hpke::receiver_export_raw(&HpkeReceiverExportRequest {
+    let output = reallyme_hpke::receiver_export(&HpkeReceiverExportRequest {
         suite,
         encapsulated_key: encapsulated,
         recipient_private_key: secret_key,
@@ -216,11 +215,11 @@ pub(crate) fn setup_sender_psk(
     info: &[u8],
     psk: &[u8],
     psk_id: &[u8],
-) -> Result<(KemOutput, reallyme_hpke::RawHpkePskSenderContext), CryptoError> {
+) -> Result<(KemOutput, reallyme_hpke::HpkePskSenderContext), CryptoError> {
     let suite = reallyme_suite(&config)?;
     let psk = HpkePskRef::new(psk).map_err(|_| CryptoError::SenderSetupError)?;
     let psk_id = HpkePskIdRef::new(psk_id).map_err(|_| CryptoError::SenderSetupError)?;
-    let output = reallyme_hpke::setup_sender_psk_raw(&HpkePskSenderSetupRequest {
+    let output = reallyme_hpke::setup_sender_psk(&HpkePskSenderSetupRequest {
         suite,
         recipient_public_key: public_key,
         info,
@@ -239,11 +238,11 @@ fn setup_receiver_psk(
     info: &[u8],
     psk: &[u8],
     psk_id: &[u8],
-) -> Result<reallyme_hpke::RawHpkeReceiverContext, CryptoError> {
+) -> Result<reallyme_hpke::HpkeReceiverContext, CryptoError> {
     let suite = reallyme_suite(&config)?;
     let psk = HpkePskRef::new(psk).map_err(|_| CryptoError::ReceiverSetupError)?;
     let psk_id = HpkePskIdRef::new(psk_id).map_err(|_| CryptoError::ReceiverSetupError)?;
-    reallyme_hpke::setup_receiver_psk_raw(&HpkePskReceiverSetupRequest {
+    reallyme_hpke::setup_receiver_psk(&HpkePskReceiverSetupRequest {
         suite,
         encapsulated_key: encapsulated,
         recipient_private_key: secret_key,
