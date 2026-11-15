@@ -58,15 +58,15 @@ Do not use `--all-features` for the `cargo deny` release gate: that would enable
 `interop-tests`, `mls-flow-tests`, and `test-utils`, which are test adapters,
 not production inputs.
 
-The ReallyMe Crypto 0.4.1 configuration enables the following HPKE components:
+The ReallyMe Crypto 0.4.2 configuration enables the following HPKE components:
 ML-KEM-768, ML-KEM-1024, ML-KEM-1024/P-384, X-Wing, HKDF-SHA256,
 HKDF-SHA384, AES-256-GCM, and ChaCha20-Poly1305 where required. Release checks
 must show that the production graph contains only those HPKE components, does
-not expose deterministic test-vector APIs, and uses exactly version 0.4.1 for
+not expose deterministic test-vector APIs, and uses exactly version 0.4.2 for
 every `reallyme-crypto` crate.
 
-The 0.4.1 protobuf runtime pins ReallyMe Buffa 0.1.2. Buffa, Crypto, and
-Codec 0.4.2 resolve to `base64` 0.23.1 in the production graph. The provider
+The 0.4.2 protobuf runtime pins ReallyMe Buffa 0.1.2. Buffa, Crypto, and
+Codec 0.4.3 resolve to `base64` 0.23.1 in the production graph. The provider
 audit allows the Zlib license of Buffa's `foldhash` 0.1.5 dependency.
 Focused interoperability, large-context, and generic external-join regressions
 must pass against the registry dependency before changing the baseline.
